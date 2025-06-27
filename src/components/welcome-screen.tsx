@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight, User, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -278,11 +278,8 @@ const WelcomeScreen = () => {
               onMouseEnter={() => setIsCreditExpanded(true)}
               onMouseLeave={() => setIsCreditExpanded(false)}
             >
-              <a
-                href={activeSlide.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+              <div
+                className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out"
               >
                 {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
                 <div
@@ -291,10 +288,19 @@ const WelcomeScreen = () => {
                     isCreditExpanded && 'grid-cols-[1fr]'
                   )}
                 >
-                  <span className="overflow-hidden whitespace-nowrap">by {activeSlide.photographer}</span>
+                  <a
+                    href={activeSlide.photographerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap hover:text-white"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="overflow-hidden whitespace-nowrap">by {activeSlide.photographer}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                  </a>
                 </div>
                 <User className="h-3 w-3 shrink-0" />
-              </a>
+              </div>
             </div>
           </div>
         </>
