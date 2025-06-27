@@ -186,7 +186,7 @@ const WelcomeScreen = () => {
           <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
             <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
-              <p className="mt-4 text-sm md:text-base text-white/90">Discover the hidden colors in your world.</p>
+              <p className="mt-4 text-xs md:text-sm text-white/90">Discover the hidden colors in your world.</p>
             </div>
           </div>
 
