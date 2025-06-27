@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -284,15 +284,16 @@ const WelcomeScreen = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
               >
+                <User className="h-3 w-3 shrink-0" />
                 <div
                   className={cn(
                     'grid grid-cols-[0fr] transition-[grid-template-columns,padding-right] duration-300 ease-in-out',
                     isCreditExpanded && 'grid-cols-[1fr] pr-1'
                   )}
                 >
-                  <span className="overflow-hidden whitespace-nowrap">Photo by {activeSlide.photographer}</span>
+                  <span className="overflow-hidden whitespace-nowrap">by {activeSlide.photographer}</span>
                 </div>
-                {isCreditExpanded ? <ChevronLeft className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
               </a>
             </div>
           </div>
