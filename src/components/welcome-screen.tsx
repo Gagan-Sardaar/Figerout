@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UserCircle, BadgeCheck, ShieldCheck, ChevronUp } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -292,7 +292,7 @@ const WelcomeScreen = () => {
                 >
                   <span className="overflow-hidden whitespace-nowrap">Photo by {activeSlide.photographer}</span>
                 </div>
-                <UserCircle className="h-4 w-4 shrink-0" />
+                {isCreditExpanded ? <ChevronLeft className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
               </a>
             </div>
           </div>
