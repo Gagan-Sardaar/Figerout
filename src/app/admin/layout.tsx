@@ -33,7 +33,7 @@ export default function AdminLayout({
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
-            <div className="font-headline text-lg font-bold">ColorSnap</div>
+            <div className="font-headline text-lg font-bold">Figerout</div>
             <SidebarTrigger />
           </div>
         </SidebarHeader>

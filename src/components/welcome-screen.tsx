@@ -10,6 +10,7 @@ import { BadgeCheck, Info, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getPexelsImages } from '@/app/actions';
 
 type Position = {
   top: string;
@@ -23,6 +24,11 @@ type Callout = {
   mobilePosition?: Position;
 };
 
+type SlideConfig = {
+    id: number;
+    callouts: Callout[];
+}
+
 type Slide = {
   id: number;
   src: string;
@@ -32,94 +38,58 @@ type Slide = {
   hint: string;
 };
 
-const slidesData: Slide[] = [
+const slidesConfig: SlideConfig[] = [
     { 
-        id: 1, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/32648254/", 
-        hint: "fashion model pink", 
+        id: 32648254, 
         callouts: [
             { name: "", hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
-        id: 2, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/6988665/", 
-        hint: "woman fashion green", 
+        id: 6988665, 
         callouts: [
             { name: "", hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        id: 3, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/8367798/", 
-        hint: "man fashion red", 
+        id: 8367798,
         callouts: [
             { name: "", hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        id: 4, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/3755021/", 
-        hint: "couple fashion", 
+        id: 3755021, 
         callouts: [
             { name: "", hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
             { name: "", hex: "#c3b9b3", position: { top: "65%", left: "55%" }, mobilePosition: { top: "62%", left: "56%" } }
         ] 
     },
     { 
-        id: 5, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/6686434/", 
-        hint: "woman blue dress", 
+        id: 6686434, 
         callouts: [
             { name: "", hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
-        id: 6, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/7680203/", 
-        hint: "woman pink dress", 
+        id: 7680203,
         callouts: [
             { name: "", hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        id: 7, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/8317652/", 
-        hint: "woman purple coat", 
+        id: 8317652,
         callouts: [
             { name: "", hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        id: 8, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/720815/", 
-        hint: "woman yellow sweater", 
+        id: 720815,
         callouts: [
             { name: "", hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
-        id: 9, 
-        src: "https://placehold.co/1080x1920", 
-        photographer: "Pexels", 
-        photographerUrl: "https://www.pexels.com/photo/4668556/", 
-        hint: "woman grey coat", 
+        id: 4668556,
         callouts: [
             { name: "", hex: "#596e73", position: { top: "60%", left: "55%" } }
         ] 
@@ -127,54 +97,69 @@ const slidesData: Slide[] = [
 ];
 
 const WelcomeScreen = () => {
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    const totalSlides = slidesData.length;
-    let loadedCount = 0;
+    const fetchSlides = async () => {
+        const ids = slidesConfig.map(s => s.id);
+        const pexelsData = await getPexelsImages(ids);
+        
+        const populatedSlides = slidesConfig.map(config => {
+            const imageData = pexelsData[config.id];
+            if (!imageData) return null;
+            return {
+                ...config,
+                ...imageData,
+            };
+        }).filter((slide): slide is Slide => slide !== null);
 
-    slidesData.forEach((slide) => {
+        setSlides(populatedSlides);
+    };
+
+    fetchSlides();
+  }, []);
+
+  useEffect(() => {
+    if (slides.length === 0) return;
+
+    let loadedCount = 0;
+    slides.forEach((slide) => {
         const img = new window.Image();
         img.src = slide.src;
         img.onload = () => {
             loadedCount++;
-            setLoadingProgress((loadedCount / totalSlides) * 100);
-            if (loadedCount === totalSlides) {
+            setLoadingProgress((loadedCount / slides.length) * 100);
+            if (loadedCount === slides.length) {
                 setTimeout(() => setIsLoaded(true), 500);
             }
         };
     });
-
-    if (totalSlides === 0) {
-        setIsLoaded(true);
-        setLoadingProgress(100);
-    }
-  }, []);
+  }, [slides]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || slides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slidesData.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [isLoaded]);
+  }, [isLoaded, slides.length]);
 
-  const activeSlide = useMemo(() => slidesData[currentSlide], [currentSlide]);
+  const activeSlide = useMemo(() => slides[currentSlide], [currentSlide, slides]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
-      {slidesData.map((slide, index) => (
+      {slides.length > 0 && slides.map((slide, index) => (
         <Image
           key={slide.id}
           src={slide.src}
-          alt={`Background slide ${slide.id}`}
+          alt={slide.hint || `Background slide ${slide.id}`}
           fill
-          objectFit="cover"
           className={cn(
-            "transition-opacity duration-1000 ease-in-out",
+            "object-cover transition-opacity duration-1000 ease-in-out",
             currentSlide === index ? "opacity-100" : "opacity-0"
           )}
           priority={index === 0}
@@ -191,7 +176,7 @@ const WelcomeScreen = () => {
           </div>
       )}
 
-      {isLoaded && (
+      {isLoaded && activeSlide && (
         <>
           <div className="absolute top-4 right-4 z-20">
             <Popover>
@@ -208,7 +193,7 @@ const WelcomeScreen = () => {
 
           <div className="absolute inset-0 flex flex-col justify-end items-center p-8 z-10 text-white text-center">
             <div className="max-w-md">
-              <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-shadow-lg">ColorSnap Studio</h1>
+              <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-shadow-lg">Figerout</h1>
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
             

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ColorSnap Studio',
+  title: 'Figerout',
   description: 'Discover the hidden colors in your world.',
 };
 

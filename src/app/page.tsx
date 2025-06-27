@@ -15,7 +15,7 @@ function PageContent({ color }: { color?: string }) {
   return <WelcomeScreen />;
 }
 
-export default function HomePage({ searchParams }: { searchParams?: { color?: string } }) {
+export default async function HomePage({ searchParams }: { searchParams?: { color?: string } }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <PageContent color={searchParams?.color} />
