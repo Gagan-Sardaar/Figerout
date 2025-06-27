@@ -192,8 +192,8 @@ const WelcomeScreen = () => {
           </div>
 
           {/* Top Center Content */}
-          <div className="absolute top-0 inset-x-0 pt-12 md:pt-24 z-10 text-white text-center">
-            <div className="max-w-md px-4">
+          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full text-white text-center">
+            <div className="max-w-md px-4 mx-auto">
               <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-shadow-lg">Figerout</h1>
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
