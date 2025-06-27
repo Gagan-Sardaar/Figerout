@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { BadgeCheck, UserCircle, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getPexelsImages } from '@/app/actions';
 
 type Position = {
