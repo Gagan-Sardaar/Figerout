@@ -103,6 +103,7 @@ const WelcomeScreen = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const [isCreditExpanded, setIsCreditExpanded] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -236,28 +237,15 @@ const WelcomeScreen = () => {
             </div>
           ))}
           
-          {/* Photographer Credit */}
-          <div className="absolute bottom-4 left-4 z-20 text-xs text-white/80">
-            <a
-              href={activeSlide.photographerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white flex items-center gap-1.5 rounded-lg bg-black/40 p-2 backdrop-blur-sm transition-colors"
-            >
-              <span>Photo by {activeSlide.photographer}</span>
-              <UserCircle className="h-4 w-4" />
-            </a>
-          </div>
-
           {/* Copyright & Legal Links */}
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-4 left-4 z-20">
             <div
               className="relative"
               onMouseEnter={() => setIsFooterExpanded(true)}
               onMouseLeave={() => setIsFooterExpanded(false)}
             >
               <div className="rounded-lg bg-black/40 p-3 text-xs text-white/80 backdrop-blur-sm">
-                <p className="cursor-default text-right">
+                <p className="cursor-default">
                   &copy; {new Date().getFullYear()} Figerout
                 </p>
                 <div
@@ -267,7 +255,7 @@ const WelcomeScreen = () => {
                   )}
                 >
                   <div className="overflow-hidden">
-                    <div className="flex flex-col items-end gap-2 border-t border-white/20 pt-2">
+                    <div className="flex flex-col items-start gap-2 border-t border-white/20 pt-2">
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                       <Link href="/terms" className="hover:text-white">Terms of Service</Link>
                       <p className="text-white/60">All rights reserved.</p>
@@ -275,6 +263,32 @@ const WelcomeScreen = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Photographer Credit */}
+          <div className="absolute bottom-4 right-4 z-20">
+            <div
+              className="relative"
+              onMouseEnter={() => setIsCreditExpanded(true)}
+              onMouseLeave={() => setIsCreditExpanded(false)}
+            >
+              <a
+                href={activeSlide.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-black/40 p-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+              >
+                <div
+                  className={cn(
+                    'grid grid-cols-[0fr] transition-[grid-template-columns,padding-right] duration-300 ease-in-out',
+                    isCreditExpanded && 'grid-cols-[1fr] pr-1.5'
+                  )}
+                >
+                  <span className="overflow-hidden whitespace-nowrap">Photo by {activeSlide.photographer}</span>
+                </div>
+                <UserCircle className="h-4 w-4 shrink-0" />
+              </a>
             </div>
           </div>
         </>
