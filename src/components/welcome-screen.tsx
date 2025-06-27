@@ -187,7 +187,7 @@ const WelcomeScreen = () => {
           <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
             <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
-              <p className="mt-4 text-xs">Discover the hidden colors in your world.</p>
+              <p className="mt-4 text-[10px] md:text-xs">Discover the hidden colors in your world.</p>
             </div>
           </div>
 
@@ -220,17 +220,17 @@ const WelcomeScreen = () => {
               className="absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out" 
               style={isMobile && callout.mobilePosition ? callout.mobilePosition : callout.position}
             >
-              <div className="flex items-center gap-2 rounded-full bg-black/50 py-1 pl-1 pr-3 text-white shadow-lg backdrop-blur-md">
+              <div className="flex items-center gap-2 rounded-full bg-black/50 py-1 pl-1 pr-3 text-white shadow-lg backdrop-blur-md md:gap-3 md:py-2 md:pl-2 md:pr-4">
                 <div 
-                  className="relative h-5 w-5 shrink-0"
+                  className="relative h-5 w-5 shrink-0 md:h-8 md:w-8"
                   style={{ color: callout.hex }}
                 >
                   <div className="absolute inset-0 rounded-full border border-current opacity-70"></div>
-                  <div className="absolute top-1/2 left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
+                  <div className="absolute top-1/2 left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current md:h-4 md:w-4"></div>
                 </div>
                 <div>
-                  <p className="font-bold font-code text-[9px] tracking-wide text-white">{callout.hex.toUpperCase()}</p>
-                  <p className="text-[8px] uppercase text-white/80 leading-tight">{callout.name}</p>
+                  <p className="font-bold font-code text-[9px] tracking-wide text-white md:text-xs">{callout.hex.toUpperCase()}</p>
+                  <p className="text-[8px] uppercase text-white/80 leading-tight md:text-[10px]">{callout.name}</p>
                 </div>
               </div>
             </div>
