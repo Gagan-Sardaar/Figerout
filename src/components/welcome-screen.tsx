@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UserCircle, BadgeCheck, ShieldCheck, ChevronDown } from 'lucide-react';
+import { UserCircle, BadgeCheck, ShieldCheck, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -244,7 +244,7 @@ const WelcomeScreen = () => {
             >
               <div className="rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm">
                 <div className="flex cursor-default items-center gap-1">
-                  <ChevronDown
+                  <ChevronUp
                     className={cn(
                       'h-3 w-3 shrink-0 transition-transform duration-300',
                       isFooterExpanded && 'rotate-180'
