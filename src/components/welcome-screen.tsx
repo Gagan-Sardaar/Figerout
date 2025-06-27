@@ -9,11 +9,18 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { BadgeCheck, Info, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+type Position = {
+  top: string;
+  left: string;
+};
 
 type Callout = {
   name: string;
   hex: string;
-  position: { top: string; left: string };
+  position: Position;
+  mobilePosition?: Position;
 };
 
 type Slide = {
@@ -26,15 +33,104 @@ type Slide = {
 };
 
 const slidesData: Slide[] = [
-    { id: 1, src: "https://placehold.co/1080x1920", photographer: "Jane Doe", photographerUrl: "#", hint: "fashion model", callouts: [{ name: "Crimson", hex: "#DC143C", position: { top: "30%", left: "60%" } }] },
-    { id: 2, src: "https://placehold.co/1080x1920", photographer: "John Smith", photographerUrl: "#", hint: "street style", callouts: [{ name: "Royal Blue", hex: "#4169E1", position: { top: "50%", left: "25%" } }] },
-    { id: 3, src: "https://placehold.co/1080x1920", photographer: "Emily White", photographerUrl: "#", hint: "haute couture", callouts: [{ name: "Emerald Green", hex: "#50C878", position: { top: "65%", left: "70%" } }, { name: "Gold", hex: "#FFD700", position: { top: "20%", left: "15%" } }] },
+    { 
+        id: 1, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/32648254/", 
+        hint: "fashion model pink", 
+        callouts: [
+            { name: "", hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
+        ] 
+    },
+    { 
+        id: 2, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/6988665/", 
+        hint: "woman fashion green", 
+        callouts: [
+            { name: "", hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
+        ] 
+    },
+    { 
+        id: 3, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/8367798/", 
+        hint: "man fashion red", 
+        callouts: [
+            { name: "", hex: "#6a1910", position: { top: "60%", left: "50%" } }
+        ] 
+    },
+    { 
+        id: 4, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/3755021/", 
+        hint: "couple fashion", 
+        callouts: [
+            { name: "", hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
+            { name: "", hex: "#c3b9b3", position: { top: "65%", left: "55%" }, mobilePosition: { top: "62%", left: "56%" } }
+        ] 
+    },
+    { 
+        id: 5, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/6686434/", 
+        hint: "woman blue dress", 
+        callouts: [
+            { name: "", hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
+        ] 
+    },
+    { 
+        id: 6, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/7680203/", 
+        hint: "woman pink dress", 
+        callouts: [
+            { name: "", hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
+        ] 
+    },
+    { 
+        id: 7, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/8317652/", 
+        hint: "woman purple coat", 
+        callouts: [
+            { name: "", hex: "#a794bb", position: { top: "60%", left: "45%" } }
+        ] 
+    },
+    { 
+        id: 8, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/720815/", 
+        hint: "woman yellow sweater", 
+        callouts: [
+            { name: "", hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
+        ] 
+    },
+    { 
+        id: 9, 
+        src: "https://placehold.co/1080x1920", 
+        photographer: "Pexels", 
+        photographerUrl: "https://www.pexels.com/photo/4668556/", 
+        hint: "woman grey coat", 
+        callouts: [
+            { name: "", hex: "#596e73", position: { top: "60%", left: "55%" } }
+        ] 
+    },
 ];
 
 const WelcomeScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const totalSlides = slidesData.length;
@@ -135,7 +231,11 @@ const WelcomeScreen = () => {
           </div>
           
           {activeSlide.callouts.map((callout, index) => (
-            <div key={index} className="absolute transition-opacity duration-1000 ease-in-out" style={callout.position}>
+            <div 
+              key={index} 
+              className="absolute transition-opacity duration-1000 ease-in-out" 
+              style={isMobile && callout.mobilePosition ? callout.mobilePosition : callout.position}
+            >
                  <div className="relative group">
                     <div className="absolute w-4 h-4 rounded-full transition-all duration-300 group-hover:w-28 group-hover:h-28" style={{ background: callout.hex, boxShadow: `0 0 20px ${callout.hex}` }}></div>
                     <div className="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-white/50 group-hover:w-28 group-hover:h-28 group-hover:border-white/80 transition-all duration-300" style={{ background: callout.hex }}>

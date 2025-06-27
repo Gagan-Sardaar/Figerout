@@ -23,6 +23,16 @@ const colorMap: { [hex: string]: string } = {
   '#673AB7': 'Blue-Purple',
   '#F0F0F0': 'Light Gray',
   '#263238': 'Dark Blue-Gray',
+  '#F2BFC8': 'Pastel Pink',
+  '#C3C7A6': 'Sage Green',
+  '#6A1910': 'Russet',
+  '#37251B': 'Seal Brown',
+  '#C3B9B3': 'Pale Taupe',
+  '#80A6CB': 'Dusty Blue',
+  '#E9CFD3': 'Powder Pink',
+  '#A794BB': 'Lavender Gray',
+  '#EED137': 'Mustard',
+  '#596E73': 'Steel Gray',
 };
 
 // Helper function to convert a hex color to an [r, g, b] array.
