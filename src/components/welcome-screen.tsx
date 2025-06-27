@@ -116,7 +116,7 @@ const WelcomeScreen = () => {
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
             
-            <Link href="/camera" passHref legacyBehavior>
+            <Link href="/camera" asChild>
               <Button size="lg" className="mt-8 rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
                 Find Your Color
               </Button>

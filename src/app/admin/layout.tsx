@@ -40,7 +40,7 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/admin" passHref legacyBehavior>
+              <Link href="/admin" asChild>
                 <SidebarMenuButton
                   isActive={isActive("/admin")}
                   tooltip="Dashboard"
@@ -51,7 +51,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-               <Link href="/admin/content-assistant" passHref legacyBehavior>
+               <Link href="/admin/content-assistant" asChild>
                 <SidebarMenuButton
                   isActive={isActive("/admin/content-assistant")}
                   tooltip="Content Assistant"
