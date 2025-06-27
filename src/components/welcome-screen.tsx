@@ -186,7 +186,7 @@ const WelcomeScreen = () => {
           <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
             <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
-              <p className="mt-4 text-[10px] md:text-xs">Discover the hidden colors in your world.</p>
+              <p className="mt-4 text-xs md:text-sm whitespace-nowrap">Discover the hidden colors in your world.</p>
             </div>
           </div>
 
@@ -272,35 +272,35 @@ const WelcomeScreen = () => {
           </div>
 
           {/* Footer right */}
-          <div className="absolute bottom-2 right-2 z-20">
+          <div
+            className="absolute bottom-2 right-2 z-20"
+            onMouseEnter={() => setIsCreditExpanded(true)}
+            onMouseLeave={() => setIsCreditExpanded(false)}
+          >
             <div
-              className="relative"
-              onMouseEnter={() => setIsCreditExpanded(true)}
-              onMouseLeave={() => setIsCreditExpanded(false)}
+              className="relative flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out"
             >
+              {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
               <div
-                className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out"
+                className={cn(
+                  'grid grid-cols-[0fr] transition-[grid-template-columns] duration-300 ease-in-out',
+                  isCreditExpanded && 'grid-cols-[1fr]'
+                )}
               >
-                {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
-                <div
-                  className={cn(
-                    'grid grid-cols-[0fr] transition-[grid-template-columns] duration-300 ease-in-out',
-                    isCreditExpanded && 'grid-cols-[1fr]'
-                  )}
-                >
+                <div className="overflow-hidden whitespace-nowrap">
                   <a
                     href={activeSlide.photographerUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap hover:text-white"
+                    className="inline-flex items-center gap-1.5 hover:text-white"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="overflow-hidden whitespace-nowrap">by {activeSlide.photographer}</span>
+                    <span>by {activeSlide.photographer}</span>
                     <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
                 </div>
-                <User className="h-3 w-3 shrink-0" />
               </div>
+              <User className="h-3 w-3 shrink-0" />
             </div>
           </div>
         </>
