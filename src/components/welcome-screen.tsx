@@ -102,7 +102,7 @@ const WelcomeScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isCreditVisible, setIsCreditVisible] = useState(false);
+  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -236,28 +236,41 @@ const WelcomeScreen = () => {
             </div>
           ))}
 
-          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-1">
+          <div className="absolute bottom-4 right-4 z-20">
             <div
-              className="flex items-center rounded-full bg-black/30 backdrop-blur-sm text-xs text-white/80 transition-all duration-300 ease-in-out"
-              onMouseEnter={() => setIsCreditVisible(true)}
-              onMouseLeave={() => setIsCreditVisible(false)}
+              className="relative"
+              onMouseEnter={() => setIsFooterExpanded(true)}
+              onMouseLeave={() => setIsFooterExpanded(false)}
             >
-              <a
-                href={activeSlide.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "whitespace-nowrap transition-all duration-300 ease-in-out",
-                  isCreditVisible ? "max-w-xs pl-3 pr-1.5 opacity-100" : "max-w-0 opacity-0"
-                )}
-              >
-                Photo by <span className="font-semibold">{activeSlide.photographer}</span>
-              </a>
-              <div className="p-1.5">
-                <UserCircle className="h-4 w-4" />
+              <div className="rounded-lg bg-black/40 p-3 text-xs text-white/80 backdrop-blur-sm">
+                <p className="cursor-default text-right">
+                  &copy; {new Date().getFullYear()} Figerout
+                </p>
+                <div
+                  className={cn(
+                    'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
+                    isFooterExpanded && 'grid-rows-[1fr] pt-2 mt-2'
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="flex flex-col items-end gap-2 border-t border-white/20 pt-2">
+                      <a
+                        href={activeSlide.photographerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-white flex items-center gap-1.5"
+                      >
+                        <span>Photo by {activeSlide.photographer}</span>
+                        <UserCircle className="h-4 w-4" />
+                      </a>
+                      <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
+                      <Link href="/terms" className="hover:text-white">Terms of Service</Link>
+                      <p className="text-white/60">All rights reserved.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="text-[10px] text-white/40">&copy; {new Date().getFullYear()} Figerout. All rights reserved.</p>
           </div>
         </>
       )}
