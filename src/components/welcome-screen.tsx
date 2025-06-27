@@ -5,8 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UserCircle } from 'lucide-react';
-import { BadgeCheck, ShieldCheck } from 'lucide-react';
+import { UserCircle, BadgeCheck, ShieldCheck, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -244,9 +243,17 @@ const WelcomeScreen = () => {
               onMouseLeave={() => setIsFooterExpanded(false)}
             >
               <div className="rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm">
-                <p className="cursor-default">
-                  &copy; {new Date().getFullYear()} Figerout
-                </p>
+                <div className="flex cursor-default items-center gap-1">
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 shrink-0 transition-transform duration-300',
+                      isFooterExpanded && 'rotate-180'
+                    )}
+                  />
+                  <span>
+                    &copy; {new Date().getFullYear()} Figerout
+                  </span>
+                </div>
                 <div
                   className={cn(
                     'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
