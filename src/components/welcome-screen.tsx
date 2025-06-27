@@ -114,6 +114,7 @@ const WelcomeScreen = () => {
             return {
                 ...config,
                 ...imageData,
+                callouts: config.callouts.map(c => ({...c, name: getColorName(c.hex)}))
             };
         }).filter((slide): slide is Slide => slide !== null);
 
@@ -223,13 +224,13 @@ const WelcomeScreen = () => {
                   {/* Text */}
                   <div>
                     <p className="font-bold font-code text-base tracking-wide text-white">{callout.hex.toUpperCase()}</p>
-                    <p className="text-sm uppercase text-white/80">{getColorName(callout.hex)}</p>
+                    <p className="text-sm uppercase text-white/80">{callout.name}</p>
                   </div>
               </div>
             </div>
           ))}
 
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
             <div
               className="flex items-center rounded-full bg-black/50 backdrop-blur-sm text-sm text-white/90 transition-all duration-300 ease-in-out"
               onMouseEnter={() => setIsCreditVisible(true)}
@@ -250,6 +251,7 @@ const WelcomeScreen = () => {
                 <UserCircle className="h-5 w-5" />
               </div>
             </div>
+            <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} Figerout. All rights reserved.</p>
           </div>
         </>
       )}
