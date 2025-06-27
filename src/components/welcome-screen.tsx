@@ -235,7 +235,21 @@ const WelcomeScreen = () => {
               </div>
             </div>
           ))}
+          
+          {/* Photographer Credit */}
+          <div className="absolute bottom-4 left-4 z-20 text-xs text-white/80">
+            <a
+              href={activeSlide.photographerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white flex items-center gap-1.5 rounded-lg bg-black/40 p-2 backdrop-blur-sm transition-colors"
+            >
+              <span>Photo by {activeSlide.photographer}</span>
+              <UserCircle className="h-4 w-4" />
+            </a>
+          </div>
 
+          {/* Copyright & Legal Links */}
           <div className="absolute bottom-4 right-4 z-20">
             <div
               className="relative"
@@ -254,15 +268,6 @@ const WelcomeScreen = () => {
                 >
                   <div className="overflow-hidden">
                     <div className="flex flex-col items-end gap-2 border-t border-white/20 pt-2">
-                      <a
-                        href={activeSlide.photographerUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-white flex items-center gap-1.5"
-                      >
-                        <span>Photo by {activeSlide.photographer}</span>
-                        <UserCircle className="h-4 w-4" />
-                      </a>
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                       <Link href="/terms" className="hover:text-white">Terms of Service</Link>
                       <p className="text-white/60">All rights reserved.</p>
