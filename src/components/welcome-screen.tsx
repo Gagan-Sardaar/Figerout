@@ -189,11 +189,11 @@ const WelcomeScreen = () => {
 
           {/* Bottom Center Content */}
           <div className="absolute bottom-0 inset-x-0 pb-8 z-10 flex flex-col items-center text-white text-center">
-            <Button asChild size="lg" className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
-              <Link href="/camera">
-                Find Your Color
-              </Link>
-            </Button>
+             <Button asChild size="lg" className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
+               <Link href="/camera">
+                 Find Your Color
+               </Link>
+             </Button>
             <div className="mt-6 flex items-center space-x-4 text-sm text-white/70">
               <div className="flex items-center space-x-1.5">
                 <BadgeCheck className="w-4 h-4" />
@@ -230,9 +230,9 @@ const WelcomeScreen = () => {
             </div>
           ))}
 
-          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-1">
             <div
-              className="flex items-center rounded-full bg-black/50 backdrop-blur-sm text-sm text-white/90 transition-all duration-300 ease-in-out"
+              className="flex items-center rounded-full bg-black/30 backdrop-blur-sm text-xs text-white/80 transition-all duration-300 ease-in-out"
               onMouseEnter={() => setIsCreditVisible(true)}
               onMouseLeave={() => setIsCreditVisible(false)}
             >
@@ -242,16 +242,16 @@ const WelcomeScreen = () => {
                 rel="noopener noreferrer"
                 className={cn(
                   "whitespace-nowrap transition-all duration-300 ease-in-out",
-                  isCreditVisible ? "max-w-xs pl-4 pr-2 opacity-100" : "max-w-0 opacity-0"
+                  isCreditVisible ? "max-w-xs pl-3 pr-1.5 opacity-100" : "max-w-0 opacity-0"
                 )}
               >
                 Photo by <span className="font-semibold">{activeSlide.photographer}</span>
               </a>
-              <div className="p-2">
-                <UserCircle className="h-5 w-5" />
+              <div className="p-1.5">
+                <UserCircle className="h-4 w-4" />
               </div>
             </div>
-            <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} Figerout. All rights reserved.</p>
+            <p className="text-[10px] text-white/40">&copy; {new Date().getFullYear()} Figerout. All rights reserved.</p>
           </div>
         </>
       )}
