@@ -191,18 +191,21 @@ const WelcomeScreen = () => {
             </Popover>
           </div>
 
-          <div className="absolute inset-0 flex flex-col justify-end items-center p-8 z-10 text-white text-center">
-            <div className="max-w-md">
+          {/* Top Center Content */}
+          <div className="absolute top-0 inset-x-0 pt-12 md:pt-24 z-10 text-white text-center">
+            <div className="max-w-md px-4">
               <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-shadow-lg">Figerout</h1>
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
-            
-            <Button asChild size="lg" className="mt-8 rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
+          </div>
+
+          {/* Bottom Center Content */}
+          <div className="absolute bottom-0 inset-x-0 pb-8 z-10 flex flex-col items-center text-white text-center">
+            <Button asChild size="lg" className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
               <Link href="/camera">
                 Find Your Color
               </Link>
             </Button>
-
             <div className="mt-6 flex items-center space-x-4 text-sm text-white/70">
               <div className="flex items-center space-x-1.5">
                 <BadgeCheck className="w-4 h-4" />
