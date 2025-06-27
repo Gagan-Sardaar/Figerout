@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, CreditCard, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, UserCircle, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { getPexelsImages } from '@/app/actions';
 
 type Position = {
@@ -247,7 +247,7 @@ const WelcomeScreen = () => {
                 Photo by <span className="font-semibold">{activeSlide.photographer}</span>
               </a>
               <div className="p-2">
-                <CreditCard className="h-5 w-5" />
+                <UserCircle className="h-5 w-5" />
               </div>
             </div>
           </div>
