@@ -171,7 +171,7 @@ const WelcomeScreen = () => {
           key={slide.id}
           src={slide.src}
           alt={`Background slide ${slide.id}`}
-          layout="fill"
+          fill
           objectFit="cover"
           className={cn(
             "transition-opacity duration-1000 ease-in-out",
@@ -212,11 +212,11 @@ const WelcomeScreen = () => {
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
             
-            <Link href="/camera" asChild>
-              <Button size="lg" className="mt-8 rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
+            <Button asChild size="lg" className="mt-8 rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
+              <Link href="/camera">
                 Find Your Color
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
             <div className="mt-6 flex items-center space-x-4 text-sm text-white/70">
               <div className="flex items-center space-x-1.5">
