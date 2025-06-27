@@ -5,11 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, UserCircle, ShieldCheck } from 'lucide-react';
+import { UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getPexelsImages } from '@/app/actions';
+import { BadgeCheck, ShieldCheck } from 'lucide-react';
+
 
 type Position = {
   top: string;
@@ -189,11 +191,15 @@ const WelcomeScreen = () => {
 
           {/* Bottom Center Content */}
           <div className="absolute bottom-0 inset-x-0 pb-8 z-10 flex flex-col items-center text-white text-center">
-            <Button asChild size="lg" className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300">
-               <Link href="/camera">
-                 Find Your Color
-               </Link>
-             </Button>
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300"
+            >
+              <Link href="/camera">
+                Find Your Color
+              </Link>
+            </Button>
             <div className="mt-6 flex items-center space-x-4 text-sm text-white/70">
               <div className="flex items-center space-x-1.5">
                 <BadgeCheck className="w-4 h-4" />
