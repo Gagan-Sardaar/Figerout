@@ -284,16 +284,16 @@ const WelcomeScreen = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
               >
-                <User className="h-3 w-3 shrink-0" />
+                {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
                 <div
                   className={cn(
-                    'grid grid-cols-[0fr] transition-[grid-template-columns,padding-right] duration-300 ease-in-out',
-                    isCreditExpanded && 'grid-cols-[1fr] pr-1'
+                    'grid grid-cols-[0fr] transition-[grid-template-columns] duration-300 ease-in-out',
+                    isCreditExpanded && 'grid-cols-[1fr]'
                   )}
                 >
                   <span className="overflow-hidden whitespace-nowrap">by {activeSlide.photographer}</span>
                 </div>
-                {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
+                <User className="h-3 w-3 shrink-0" />
               </a>
             </div>
           </div>
