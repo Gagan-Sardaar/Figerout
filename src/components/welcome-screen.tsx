@@ -262,6 +262,9 @@ const WelcomeScreen = () => {
                 >
                   <div className="overflow-hidden">
                     <div className="flex flex-col items-start gap-1 border-t border-white/20 pt-1">
+                      <Link href="/about" className="hover:text-white">About Us</Link>
+                      <Link href="/contact" className="hover:text-white">Contact Us</Link>
+                      <Link href="/admin" className="hover:text-white">Dashboard</Link>
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                       <Link href="/terms" className="hover:text-white">Terms of Service</Link>
                     </div>
@@ -280,15 +283,20 @@ const WelcomeScreen = () => {
             <div
               className="relative flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out"
             >
-              {isCreditExpanded ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
+              <ChevronLeft
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-transform duration-300',
+                  isCreditExpanded && 'rotate-180'
+                )}
+              />
               <div
                 className={cn(
                   'grid grid-cols-[0fr] transition-[grid-template-columns] duration-300 ease-in-out',
                   isCreditExpanded && 'grid-cols-[1fr]'
                 )}
               >
-                <div className="overflow-hidden whitespace-nowrap">
-                  <a
+                <div className="overflow-hidden whitespace-nowrap pr-1.5">
+                   <a
                     href={activeSlide.photographerUrl}
                     target="_blank"
                     rel="noopener noreferrer"
