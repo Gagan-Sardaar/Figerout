@@ -154,7 +154,7 @@ const WelcomeScreen = () => {
   const activeSlide = useMemo(() => slides[currentSlide], [currentSlide, slides]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
+    <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
         <Image
           key={slide.id}

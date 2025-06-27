@@ -124,7 +124,7 @@ const ColorPickerView = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-screen bg-black overflow-hidden cursor-crosshair"
+      className="relative w-full h-svh bg-black overflow-hidden cursor-crosshair"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={() => setIsDragging(false)}

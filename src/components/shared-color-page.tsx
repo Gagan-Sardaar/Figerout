@@ -24,7 +24,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
   return (
     <div
       style={containerStyle}
-      className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground overflow-hidden"
+      className="relative flex flex-col items-center justify-center min-h-svh bg-background text-foreground overflow-hidden"
     >
       <div className="absolute inset-0 z-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--glow-color)_0%,_transparent_50%)] opacity-30" />
       <div className="z-10 text-center">
