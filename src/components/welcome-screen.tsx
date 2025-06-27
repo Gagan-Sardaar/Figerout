@@ -186,7 +186,7 @@ const WelcomeScreen = () => {
           <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
             <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
-              <p className="mt-4 text-base md:text-lg text-white/90">Discover the hidden colors in your world.</p>
+              <p className="mt-4 text-sm md:text-base text-white/90">Discover the hidden colors in your world.</p>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ const WelcomeScreen = () => {
                 Find Your Color
               </Link>
             </Button>
-            <div className="mt-6 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-white/70">
+            <div className="mt-6 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-white/70 mb-4 sm:mb-0">
               <div className="flex items-center space-x-1.5">
                 <BadgeCheck className="w-4 h-4" />
                 <span>Free to use</span>
@@ -228,8 +228,8 @@ const WelcomeScreen = () => {
                   <div className="absolute top-1/2 left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
                 </div>
                 <div>
-                  <p className="font-bold font-code text-[10px] tracking-wide text-white">{callout.hex.toUpperCase()}</p>
-                  <p className="text-[9px] uppercase text-white/80 leading-tight">{callout.name}</p>
+                  <p className="font-bold font-code text-[9px] tracking-wide text-white">{callout.hex.toUpperCase()}</p>
+                  <p className="text-[8px] uppercase text-white/80 leading-tight">{callout.name}</p>
                 </div>
               </div>
             </div>
