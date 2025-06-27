@@ -31,7 +31,7 @@ const colorMap: { [hex: string]: string } = {
   '#80A6CB': 'Dusty Blue',
   '#E9CFD3': 'Powder Pink',
   '#A794BB': 'Lavender Gray',
-  '#EED137': 'Mustard',
+  '#EED137': 'Goldenrod',
   '#596E73': 'Steel Gray',
 };
 

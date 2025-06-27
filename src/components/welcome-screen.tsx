@@ -218,18 +218,24 @@ const WelcomeScreen = () => {
           {activeSlide.callouts.map((callout, index) => (
             <div 
               key={index} 
-              className="absolute transition-opacity duration-1000 ease-in-out" 
+              className="absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out" 
               style={isMobile && callout.mobilePosition ? callout.mobilePosition : callout.position}
             >
-                 <div className="relative group">
-                    <div className="absolute w-4 h-4 rounded-full transition-all duration-300 group-hover:w-28 group-hover:h-28" style={{ background: callout.hex, boxShadow: `0 0 20px ${callout.hex}` }}></div>
-                    <div className="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-white/50 group-hover:w-28 group-hover:h-28 group-hover:border-white/80 transition-all duration-300" style={{ background: callout.hex }}>
-                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center text-white font-bold text-shadow-md">
-                           <div className="text-lg">{getColorName(callout.hex)}</div>
-                           <div className="text-sm font-code">{callout.hex}</div>
-                       </div>
-                    </div>
-                </div>
+                <div className="flex items-center gap-3 rounded-full bg-black/70 py-2 pl-2 pr-4 text-white shadow-lg backdrop-blur-md">
+                  {/* Color Swatch */}
+                  <div 
+                    className="relative h-10 w-10 shrink-0"
+                    style={{ color: callout.hex }}
+                  >
+                    <div className="absolute inset-0 rounded-full border-2 border-current opacity-70"></div>
+                    <div className="absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
+                  </div>
+                  {/* Text */}
+                  <div>
+                    <p className="font-bold font-code text-base tracking-wide text-white">{callout.hex.toUpperCase()}</p>
+                    <p className="text-sm uppercase text-white/80">{getColorName(callout.hex)}</p>
+                  </div>
+              </div>
             </div>
           ))}
         </>
