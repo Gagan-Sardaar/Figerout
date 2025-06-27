@@ -40,26 +40,28 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/admin" asChild>
-                <SidebarMenuButton
-                  isActive={isActive("/admin")}
-                  tooltip="Dashboard"
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/admin")}
+                tooltip="Dashboard"
+              >
+                <Link href="/admin">
                   <LayoutDashboard />
                   <span>Dashboard</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-               <Link href="/admin/content-assistant" asChild>
-                <SidebarMenuButton
-                  isActive={isActive("/admin/content-assistant")}
-                  tooltip="Content Assistant"
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/admin/content-assistant")}
+                tooltip="Content Assistant"
+              >
+                <Link href="/admin/content-assistant">
                   <Newspaper />
                   <span>Content Assistant</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
