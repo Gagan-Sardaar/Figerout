@@ -5,12 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getPexelsImages } from '@/app/actions';
-import { BadgeCheck, ShieldCheck } from 'lucide-react';
 
 
 type Position = {
@@ -221,20 +220,21 @@ const WelcomeScreen = () => {
             >
               <div className="flex items-center gap-2 rounded-full bg-black/60 py-1 pl-1 pr-3 text-white shadow-lg backdrop-blur-md">
                 <div 
-                  className="relative h-8 w-8 shrink-0"
+                  className="relative h-6 w-6 shrink-0"
                   style={{ color: callout.hex }}
                 >
                   <div className="absolute inset-0 rounded-full border border-current opacity-70"></div>
-                  <div className="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
+                  <div className="absolute top-1/2 left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
                 </div>
                 <div>
-                  <p className="font-bold font-code text-sm tracking-wide text-white">{callout.hex.toUpperCase()}</p>
-                  <p className="text-xs uppercase text-white/80">{callout.name}</p>
+                  <p className="font-bold font-code text-xs tracking-wide text-white">{callout.hex.toUpperCase()}</p>
+                  <p className="text-[10px] uppercase text-white/80 leading-tight">{callout.name}</p>
                 </div>
               </div>
             </div>
           ))}
           
+          {/* Footer left */}
           <div className="absolute bottom-2 left-2 z-20">
             <div
               className="relative"
@@ -262,6 +262,7 @@ const WelcomeScreen = () => {
             </div>
           </div>
 
+          {/* Footer right */}
           <div className="absolute bottom-2 right-2 z-20">
             <div
               className="relative"
