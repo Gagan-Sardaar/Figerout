@@ -1,5 +1,7 @@
-# Firebase Studio
+# ColorSnap Studio
 
-This is a NextJS starter in Firebase Studio.
+This is a Next.js application called ColorSnap Studio, built with Firebase Studio.
 
-To get started, take a look at src/app/page.tsx.
+It allows users to capture colors from their environment using their device's camera, explore color palettes, and share their discoveries. The project also includes an admin dashboard with AI-powered content generation features.
+
+To get started, run `npm install` and then `npm run dev`.
