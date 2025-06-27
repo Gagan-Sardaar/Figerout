@@ -5,8 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { BadgeCheck, Info, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, CreditCard, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -101,6 +100,7 @@ const WelcomeScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isCreditVisible, setIsCreditVisible] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -178,22 +178,9 @@ const WelcomeScreen = () => {
 
       {isLoaded && activeSlide && (
         <>
-          <div className="absolute top-4 right-4 z-20">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10 rounded-full">
-                  <Info className="w-5 h-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto text-sm">
-                Photo by <a href={activeSlide.photographerUrl} target="_blank" rel="noopener noreferrer" className="underline">{activeSlide.photographer}</a>
-              </PopoverContent>
-            </Popover>
-          </div>
-
           {/* Top Center Content */}
-          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full text-white text-center">
-            <div className="max-w-md px-4 mx-auto">
+          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
+            <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-shadow-lg">Figerout</h1>
               <p className="mt-4 text-lg md:text-xl text-white/90">Discover the hidden colors in your world.</p>
             </div>
@@ -241,6 +228,29 @@ const WelcomeScreen = () => {
               </div>
             </div>
           ))}
+
+          <div className="absolute bottom-4 right-4 z-20">
+            <div
+              className="flex items-center rounded-full bg-black/50 backdrop-blur-sm text-sm text-white/90 transition-all duration-300 ease-in-out"
+              onMouseEnter={() => setIsCreditVisible(true)}
+              onMouseLeave={() => setIsCreditVisible(false)}
+            >
+              <a
+                href={activeSlide.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "whitespace-nowrap transition-all duration-300 ease-in-out",
+                  isCreditVisible ? "max-w-xs pl-4 pr-2 opacity-100" : "max-w-0 opacity-0"
+                )}
+              >
+                Photo by <span className="font-semibold">{activeSlide.photographer}</span>
+              </a>
+              <div className="p-2">
+                <CreditCard className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>
