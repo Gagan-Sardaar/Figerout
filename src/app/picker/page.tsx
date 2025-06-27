@@ -147,7 +147,7 @@ const ColorPickerView = () => {
           </div>
 
           {/* Callout */}
-          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-64">
+          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-56 sm:w-64">
             <div className="bg-background/80 backdrop-blur-md rounded-lg shadow-2xl p-2 text-foreground transition-all duration-200">
                {isPaletteOpen ? (
                    <div className="p-2">
@@ -182,7 +182,7 @@ const ColorPickerView = () => {
 
       {!isPickerVisible && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-white text-2xl font-bold bg-black/50 px-6 py-3 rounded-lg">Tap and drag to pick a color</p>
+          <p className="text-white text-2xl font-bold bg-black/50 px-6 py-3 rounded-lg text-center mx-4">Tap and drag to pick a color</p>
         </div>
       )}
 

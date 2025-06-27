@@ -201,7 +201,7 @@ const WelcomeScreen = () => {
                 Find Your Color
               </Link>
             </Button>
-            <div className="mt-6 flex items-center space-x-4 text-sm text-white/70">
+            <div className="mt-6 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-white/70">
               <div className="flex items-center space-x-1.5">
                 <BadgeCheck className="w-4 h-4" />
                 <span>Free to use</span>
@@ -219,26 +219,23 @@ const WelcomeScreen = () => {
               className="absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out" 
               style={isMobile && callout.mobilePosition ? callout.mobilePosition : callout.position}
             >
-                <div className="flex items-center gap-3 rounded-full bg-black/70 py-2 pl-2 pr-4 text-white shadow-lg backdrop-blur-md">
-                  {/* Color Swatch */}
-                  <div 
-                    className="relative h-10 w-10 shrink-0"
-                    style={{ color: callout.hex }}
-                  >
-                    <div className="absolute inset-0 rounded-full border-2 border-current opacity-70"></div>
-                    <div className="absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
-                  </div>
-                  {/* Text */}
-                  <div>
-                    <p className="font-bold font-code text-base tracking-wide text-white">{callout.hex.toUpperCase()}</p>
-                    <p className="text-sm uppercase text-white/80">{callout.name}</p>
-                  </div>
+              <div className="flex items-center gap-2 rounded-full bg-black/60 py-1 pl-1 pr-3 text-white shadow-lg backdrop-blur-md">
+                <div 
+                  className="relative h-8 w-8 shrink-0"
+                  style={{ color: callout.hex }}
+                >
+                  <div className="absolute inset-0 rounded-full border border-current opacity-70"></div>
+                  <div className="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"></div>
+                </div>
+                <div>
+                  <p className="font-bold font-code text-sm tracking-wide text-white">{callout.hex.toUpperCase()}</p>
+                  <p className="text-xs uppercase text-white/80">{callout.name}</p>
+                </div>
               </div>
             </div>
           ))}
           
-          {/* Copyright & Legal Links */}
-          <div className="absolute bottom-4 left-4 z-20">
+          <div className="absolute bottom-2 left-2 z-20">
             <div
               className="relative"
               onMouseEnter={() => setIsFooterExpanded(true)}
@@ -265,8 +262,7 @@ const WelcomeScreen = () => {
             </div>
           </div>
 
-          {/* Photographer Credit */}
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-2 right-2 z-20">
             <div
               className="relative"
               onMouseEnter={() => setIsCreditExpanded(true)}
