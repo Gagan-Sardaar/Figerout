@@ -244,7 +244,7 @@ const WelcomeScreen = () => {
               onMouseEnter={() => setIsFooterExpanded(true)}
               onMouseLeave={() => setIsFooterExpanded(false)}
             >
-              <div className="rounded-lg bg-black/40 p-3 text-xs text-white/80 backdrop-blur-sm">
+              <div className="rounded-lg bg-black/40 p-2 text-xs text-white/80 backdrop-blur-sm">
                 <p className="cursor-default">
                   &copy; {new Date().getFullYear()} Figerout
                 </p>
@@ -258,7 +258,6 @@ const WelcomeScreen = () => {
                     <div className="flex flex-col items-start gap-2 border-t border-white/20 pt-2">
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                       <Link href="/terms" className="hover:text-white">Terms of Service</Link>
-                      <p className="text-white/60">All rights reserved.</p>
                     </div>
                   </div>
                 </div>
