@@ -244,18 +244,18 @@ const WelcomeScreen = () => {
               onMouseEnter={() => setIsFooterExpanded(true)}
               onMouseLeave={() => setIsFooterExpanded(false)}
             >
-              <div className="rounded-lg bg-black/30 p-1.5 text-xs text-white/70 backdrop-blur-sm">
+              <div className="rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm">
                 <p className="cursor-default">
                   &copy; {new Date().getFullYear()} Figerout
                 </p>
                 <div
                   className={cn(
                     'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
-                    isFooterExpanded && 'grid-rows-[1fr] pt-1.5 mt-1.5'
+                    isFooterExpanded && 'grid-rows-[1fr] pt-1 mt-1'
                   )}
                 >
                   <div className="overflow-hidden">
-                    <div className="flex flex-col items-start gap-1 border-t border-white/20 pt-1.5">
+                    <div className="flex flex-col items-start gap-1 border-t border-white/20 pt-1">
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                       <Link href="/terms" className="hover:text-white">Terms of Service</Link>
                     </div>
@@ -276,7 +276,7 @@ const WelcomeScreen = () => {
                 href={activeSlide.photographerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-lg bg-black/30 p-1.5 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+                className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
               >
                 <div
                   className={cn(
