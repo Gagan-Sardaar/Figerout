@@ -252,6 +252,7 @@ const ColorPickerView = () => {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      style={{ touchAction: 'none' }}
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       

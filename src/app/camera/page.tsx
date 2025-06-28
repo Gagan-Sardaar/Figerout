@@ -178,7 +178,7 @@ const CameraView = () => {
   const Icon = currentInstruction.icon;
 
   return (
-    <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center">
+    <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center overflow-hidden">
       <video
         ref={videoRef}
         autoPlay
