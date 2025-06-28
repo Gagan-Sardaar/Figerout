@@ -4,13 +4,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon } from 'lucide-react';
+import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon, MousePointer2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel"
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const CameraView = () => {
@@ -26,6 +21,21 @@ const CameraView = () => {
   const [isDigitalFlashActive, setIsDigitalFlashActive] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const isMobile = useIsMobile();
+  const [instructionIndex, setInstructionIndex] = useState(0);
+
+  const instructions = [
+    { icon: Camera, title: 'Snap a Photo', subtitle: 'Use the camera to capture inspiration.' },
+    { icon: MousePointer2, title: 'Drag to Pick', subtitle: 'Move the picker to select a color.' },
+    { icon: Copy, title: 'Copy the Code', subtitle: 'Your hex code is ready to share.' },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setInstructionIndex(prev => (prev + 1) % instructions.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [instructions.length]);
+
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) {
@@ -163,6 +173,9 @@ const CameraView = () => {
       capturePhoto();
     }
   };
+  
+  const currentInstruction = instructions[instructionIndex];
+  const Icon = currentInstruction.icon;
 
   return (
     <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center">
@@ -187,18 +200,17 @@ const CameraView = () => {
         </div>
       )}
 
-      <div className="absolute top-5 inset-x-0 z-10 p-4 flex justify-center">
-         <div className="w-full max-w-sm bg-black/30 backdrop-blur-sm rounded-xl p-2">
-             <Carousel opts={{ loop: true }}>
-                <CarouselContent>
-                    <CarouselItem className="text-white text-center text-sm">1. Snap a Photo</CarouselItem>
-                    <CarouselItem className="text-white text-center text-sm">2. Drag to Pick</CarouselItem>
-                    <CarouselItem className="text-white text-center text-sm">3. Copy the Code</CarouselItem>
-                </CarouselContent>
-             </Carousel>
-         </div>
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10">
+        <div key={instructionIndex} className="bg-black/40 backdrop-blur-md rounded-full animate-in fade-in duration-500">
+            <div className="flex w-max items-center gap-3 px-4 py-2 text-white">
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                <div>
+                    <p className="font-bold text-sm">{currentInstruction.title}</p>
+                    <p className="text-xs text-white/70">{currentInstruction.subtitle}</p>
+                </div>
+            </div>
+        </div>
       </div>
-
 
       <div className="absolute bottom-5 inset-x-0 z-10 p-4">
         <div className="relative flex h-20 w-full items-center justify-center">
