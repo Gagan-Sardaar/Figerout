@@ -94,12 +94,12 @@ const CameraView = () => {
         description: message,
         variant: 'destructive',
       });
-      if (mode === 'environment') {
+      if (isMobile && mode === 'environment') {
         setFacingMode('user');
         getCameraStream('user');
       }
     }
-  }, [cleanupStream, toast]);
+  }, [cleanupStream, toast, isMobile]);
 
   useEffect(() => {
     getCameraStream(facingMode);
@@ -143,7 +143,7 @@ const CameraView = () => {
   };
 
   const handleCapture = () => {
-    if (facingMode === 'user' && isFlashOn) {
+    if (isMobile && facingMode === 'user' && isFlashOn) {
       let count = 3;
       setCountdown(count);
       const countdownInterval = setInterval(() => {
@@ -204,7 +204,7 @@ const CameraView = () => {
         <div className="relative flex h-20 w-full items-center justify-center">
           {/* Flash Button */}
           <div className="absolute left-[20%] -translate-x-1/2">
-            {(hasFlash || facingMode === 'user') && (
+            {isMobile && (hasFlash || facingMode === 'user') && (
               <Button
                 onClick={toggleFlash}
                 variant="ghost"
@@ -235,15 +235,17 @@ const CameraView = () => {
 
           {/* Switch Camera Button */}
           <div className="absolute right-[20%] translate-x-1/2">
-            <Button
-              onClick={switchCamera}
-              variant="ghost"
-              size="icon"
-              className="h-12 w-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-              aria-label="Switch camera"
-            >
-              <SwitchCamera className="h-6 w-6" />
-            </Button>
+            {isMobile && (
+              <Button
+                onClick={switchCamera}
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+                aria-label="Switch camera"
+              >
+                <SwitchCamera className="h-6 w-6" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
