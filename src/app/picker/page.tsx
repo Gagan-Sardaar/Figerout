@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Share2, Palette, X, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Copy, Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
 
@@ -33,7 +33,9 @@ const ColorPickerView = () => {
     }
   }, [router]);
 
-  const shades = useMemo(() => generateColorShades(pickedColor), [pickedColor]);
+  const shades = useMemo(() => generateColorShades(pickedColor, 4), [pickedColor]);
+  const palette = useMemo(() => [...shades.darker, pickedColor, ...shades.lighter], [shades, pickedColor]);
+
 
   const updateColor = useCallback((x: number, y: number) => {
     if (!canvasRef.current) return;
@@ -107,8 +109,8 @@ const ColorPickerView = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
 
-  const handleCopy = () => {
-    const text = `${pickedColor.toUpperCase()} - ${getColorName(pickedColor)}`;
+  const handleCopy = (color: string) => {
+    const text = `${color.toUpperCase()} - ${getColorName(color)}`;
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!', description: text });
   };
@@ -149,41 +151,75 @@ const ColorPickerView = () => {
         {/* Reticle */}
         <div className="relative w-16 h-16 flex items-center justify-center text-white">
           <div className="w-5 h-5 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm"></div>
-          <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-          <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-          <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-          <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+          {!isDragging && (
+            <>
+              <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+              <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+              <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+              <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+            </>
+          )}
         </div>
 
         {/* Callout */}
-        <div className="absolute bottom-[calc(100%_+_1rem)] left-1/2 -translate-x-1/2 w-max">
-            <div className="bg-black/50 backdrop-blur-md rounded-full shadow-2xl text-white transition-all duration-200">
-               {isPaletteOpen ? (
-                   <div className="p-2 w-64">
-                     <div className="flex justify-between items-center mb-2">
-                       <h3 className="font-bold">Color Palette</h3>
-                       <Button variant="ghost" size="icon" className="w-6 h-6 text-white" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(false)}}>
-                         <X className="w-4 h-4" />
-                       </Button>
-                     </div>
-                     <div className="flex justify-center items-center gap-1">
-                        {shades.darker.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-7 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
-                        <div className="w-9 h-12 rounded border-2" style={{backgroundColor: pickedColor, borderColor: 'hsl(var(--primary))'}}/>
-                        {shades.lighter.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-7 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
-                     </div>
-                   </div>
-               ) : (
-                <div className="flex items-center space-x-2 p-1.5 pl-2">
-                    <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: pickedColor }} />
-                    <div className="flex-grow pr-2">
-                        <p className="font-bold font-code text-sm tracking-wider">{pickedColor.toUpperCase()}</p>
-                        <p className="text-xs text-white/70">{getColorName(pickedColor)}</p>
+        <div 
+          className="absolute bottom-[calc(100%_+_1rem)] left-1/2 -translate-x-1/2 w-max pointer-events-auto"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+            <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-64">
+                <div className="flex items-center p-3">
+                    <div className="w-10 h-10 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
+                    <div className="ml-3 flex-grow">
+                        <p className="font-bold font-code text-lg tracking-wider">{pickedColor.toUpperCase()}</p>
+                        <p className="text-sm text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleCopy()}}><Copy className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleShare()}}><Share2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(true)}}><Palette className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => handleCopy(pickedColor)}><Copy className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
+                        <ChevronUp className={cn("w-5 h-5 transition-transform", isPaletteOpen && "rotate-180")} />
+                    </Button>
                 </div>
-               )}
+                
+                {isPaletteOpen && (
+                    <div className="flex flex-col border-t border-white/10">
+                        {palette.map((shade, index) => (
+                            <div
+                                key={index}
+                                className={cn(
+                                    "group flex items-center justify-between px-3 py-2 cursor-pointer",
+                                    "hover:bg-white/10",
+                                    shade.toLowerCase() === pickedColor.toLowerCase() && "bg-primary/30"
+                                )}
+                                onClick={() => {
+                                  setPickedColor(shade);
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-5 h-5 rounded-full" style={{ backgroundColor: shade }}></div>
+                                  <span className="font-code text-sm font-semibold text-white">{shade.toUpperCase()}</span>
+                                </div>
+                                
+                                <div className="flex items-center">
+                                    {shade.toLowerCase() === pickedColor.toLowerCase() &&
+                                        <Check className="w-5 h-5 text-white mr-2" />
+                                    }
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className={cn(
+                                            "w-7 h-7 rounded-md bg-black/20 text-white/80",
+                                            "opacity-0 group-hover:opacity-100",
+                                            shade.toLowerCase() === pickedColor.toLowerCase() && "opacity-0"
+                                        )}
+                                        onClick={(e) => { e.stopPropagation(); handleCopy(shade) }}
+                                    >
+                                        <Copy className="w-4 h-4"/>
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
       </div>
