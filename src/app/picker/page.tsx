@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Copy, Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
 
@@ -17,12 +17,14 @@ const ColorPickerView = () => {
   const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const calloutRef = useRef<HTMLDivElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [pickerPos, setPickerPos] = useState<Point>({ x: 0, y: 0 });
   const [pickedColor, setPickedColor] = useState('#000000');
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const [calloutPosition, setCalloutPosition] = useState<'top' | 'bottom'>('top');
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -33,7 +35,7 @@ const ColorPickerView = () => {
     }
   }, [router]);
 
-  const shades = useMemo(() => generateColorShades(pickedColor, 4), [pickedColor]);
+  const shades = useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
   const palette = useMemo(() => [...shades.darker, pickedColor, ...shades.lighter], [shades, pickedColor]);
 
 
@@ -47,6 +49,16 @@ const ColorPickerView = () => {
     const hex = `#${('000000' + ((pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16)).slice(-6)}`;
     setPickedColor(hex);
   }, []);
+
+  useEffect(() => {
+    if (!calloutRef.current) return;
+    const calloutHeight = calloutRef.current.offsetHeight;
+    if (pickerPos.y < calloutHeight + 40) { // 40px for reticle and margin
+        setCalloutPosition('bottom');
+    } else {
+        setCalloutPosition('top');
+    }
+  }, [pickerPos, isPaletteOpen]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !containerRef.current) return;
@@ -116,9 +128,11 @@ const ColorPickerView = () => {
   };
 
   const handleShare = () => {
+    const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: 'Share link copied!', description: 'Send it to a friend.' });
+    const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
+    navigator.clipboard.writeText(textToCopy);
+    toast({ title: 'Share info copied!', description: 'Color details and link ready to paste.' });
   };
 
   return (
@@ -162,8 +176,12 @@ const ColorPickerView = () => {
         </div>
 
         {/* Callout */}
-        <div 
-          className="absolute bottom-[calc(100%_+_1rem)] left-1/2 -translate-x-1/2 w-max pointer-events-auto"
+        <div
+          ref={calloutRef}
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 w-max pointer-events-auto",
+            calloutPosition === 'top' ? "bottom-[calc(100%_+_1rem)]" : "top-[calc(100%_+_1rem)]"
+          )}
           onPointerDown={(e) => e.stopPropagation()}
         >
             <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-64">
@@ -173,10 +191,9 @@ const ColorPickerView = () => {
                         <p className="font-bold font-code text-lg tracking-wider">{pickedColor.toUpperCase()}</p>
                         <p className="text-sm text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => handleCopy(pickedColor)}><Copy className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
-                        <ChevronUp className={cn("w-5 h-5 transition-transform", isPaletteOpen && "rotate-180")} />
+                        <Palette className="w-5 h-5" />
                     </Button>
                 </div>
                 
