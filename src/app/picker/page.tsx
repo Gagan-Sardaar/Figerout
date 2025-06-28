@@ -23,7 +23,6 @@ const ColorPickerView = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [isAtBoundary, setIsAtBoundary] = useState(false);
-  const [messageSide, setMessageSide] = useState<'left' | 'right'>('right');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -100,12 +99,6 @@ const ColorPickerView = () => {
     const rawX = e.clientX - rect.left;
     const rawY = e.clientY - rect.top;
     
-    if (rawX > rect.width / 2) {
-        setMessageSide('left');
-    } else {
-        setMessageSide('right');
-    }
-
     const atBoundary = 
       rawY <= boundaryTop || 
       rawY >= boundaryBottom || 
@@ -236,6 +229,15 @@ const ColorPickerView = () => {
     </div>
   );
 
+  const BoundaryAlertMessage = (
+    <div
+      className="bg-white text-black rounded-xl shadow-2xl text-center font-sans p-3 max-w-40"
+      onClick={(e) => e.stopPropagation()}
+    >
+      Whoa! Almost crossed the line 😅
+    </div>
+  );
+
   return (
     <div
       ref={containerRef}
@@ -307,23 +309,14 @@ const ColorPickerView = () => {
                 </>
               )}
             </div>
-
-            {isAtBoundary && (
-              <div className={cn(
-                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-xs px-2 py-0.5 rounded-full shadow-lg animate-in fade-in text-center max-w-40",
-                messageSide === 'right' ? "left-full ml-3" : "right-full mr-3"
-              )}>
-                Whoa! Almost crossed the line 😅
-              </div>
-            )}
           </div>
-          {/* Color Callout */}
+          {/* Color Callout or Boundary Alert */}
           <div
               ref={calloutRef}
               style={calloutStyle}
               onPointerDown={(e) => e.stopPropagation()}
             >
-              {CalloutContent}
+              {isAtBoundary ? BoundaryAlertMessage : CalloutContent}
           </div>
         </>
       )}
