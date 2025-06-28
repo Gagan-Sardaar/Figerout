@@ -22,9 +22,13 @@ const ColorPickerView = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
-  const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({});
   const [isAtBoundary, setIsAtBoundary] = useState(false);
   const [messageSide, setMessageSide] = useState<'left' | 'right'>('right');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -48,38 +52,41 @@ const ColorPickerView = () => {
     const hex = `#${('000000' + ((pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16)).slice(-6)}`;
     setPickedColor(hex);
   }, []);
-
-  useEffect(() => {
-    if (isPaletteOpen || !calloutRef.current || !containerRef.current) return;
   
+  const calloutStyle = useMemo<React.CSSProperties>(() => {
+    if (!isMounted || !containerRef.current || !calloutRef.current) {
+      return { opacity: 0, position: 'absolute', pointerEvents: 'none' };
+    }
+
     const containerRect = containerRef.current.getBoundingClientRect();
     const calloutWidth = calloutRef.current.offsetWidth;
-  
-    const pickerSize = 40; 
-    const margin = 48; 
-  
-    const newStyle: React.CSSProperties = {};
-  
+    const calloutHeight = calloutRef.current.offsetHeight;
+
+    const pickerSize = 40;
+    const verticalMargin = 32;
+    const horizontalMargin = 16;
+
+    const newStyle: React.CSSProperties = { position: 'absolute', pointerEvents: 'auto', willChange: 'top, left' };
+
     // Vertical Positioning
     const spaceAbove = pickerPos.y;
-    if (spaceAbove > calloutRef.current.offsetHeight + pickerSize + margin + 10) {
-      newStyle.top = pickerPos.y - calloutRef.current.offsetHeight - margin;
+    if (spaceAbove > calloutHeight + pickerSize + verticalMargin) {
+      newStyle.top = pickerPos.y - calloutHeight - verticalMargin;
     } else {
-      newStyle.top = pickerPos.y + pickerSize / 2 + margin;
+      newStyle.top = pickerPos.y + pickerSize / 2 + 16;
     }
-  
+
     // Horizontal positioning
     let left = pickerPos.x - calloutWidth / 2;
-    if (left < margin) {
-      left = margin;
-    } else if (left + calloutWidth > containerRect.width - margin) {
-      left = containerRect.width - calloutWidth - margin;
+    if (left < horizontalMargin) {
+      left = horizontalMargin;
+    } else if (left + calloutWidth > containerRect.width - horizontalMargin) {
+      left = containerRect.width - calloutWidth - horizontalMargin;
     }
     newStyle.left = left;
-  
-    setCalloutStyle(newStyle);
-  
-  }, [pickerPos, isPaletteOpen]);
+
+    return newStyle;
+  }, [pickerPos, isMounted]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !containerRef.current) return;
@@ -279,7 +286,7 @@ const ColorPickerView = () => {
                     "w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm",
                     isAtBoundary && "animate-pulse"
                 )} />
-              {(!isDragging && !isAtBoundary) && (
+              {!isAtBoundary && (
                 <>
                   <ChevronUp
                     className="absolute -top-1 w-6 h-6"
@@ -313,7 +320,6 @@ const ColorPickerView = () => {
           {/* Color Callout */}
           <div
               ref={calloutRef}
-              className="absolute pointer-events-auto"
               style={calloutStyle}
               onPointerDown={(e) => e.stopPropagation()}
             >
