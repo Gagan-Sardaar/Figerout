@@ -25,6 +25,7 @@ const ColorPickerView = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [calloutPosition, setCalloutPosition] = useState<'top' | 'bottom'>('top');
+  const [isAtBoundary, setIsAtBoundary] = useState(false);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -38,7 +39,6 @@ const ColorPickerView = () => {
   const shades = useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
   const palette = useMemo(() => [...shades.darker, pickedColor, ...shades.lighter], [shades, pickedColor]);
 
-
   const updateColor = useCallback((x: number, y: number) => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -51,23 +51,39 @@ const ColorPickerView = () => {
   }, []);
 
   useEffect(() => {
-    if (!calloutRef.current) return;
+    if (!calloutRef.current || !containerRef.current) return;
+
     const calloutHeight = calloutRef.current.offsetHeight;
-    if (pickerPos.y < calloutHeight + 40) { // 40px for reticle and margin
-        setCalloutPosition('bottom');
+    const spaceAbove = pickerPos.y;
+    const spaceBelow = containerRef.current.clientHeight - pickerPos.y;
+
+    if (spaceBelow > calloutHeight + 40) {
+      setCalloutPosition('bottom');
+    } else if (spaceAbove > calloutHeight + 40) {
+      setCalloutPosition('top');
     } else {
-        setCalloutPosition('top');
+      setCalloutPosition('bottom');
     }
   }, [pickerPos, isPaletteOpen]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
+
+    const boundaryY = rect.height * 0.83;
+    const rawY = e.clientY - rect.top;
+
+    if (rawY > boundaryY - 10) {
+        setIsAtBoundary(true);
+    } else {
+        setIsAtBoundary(false);
+    }
+
     let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    let y = rawY;
 
     x = Math.max(0, Math.min(x, rect.width - 1));
-    y = Math.max(0, Math.min(y, rect.height - 1));
+    y = Math.max(0, Math.min(y, boundaryY));
     
     setPickerPos({ x, y });
     updateColor(x, y);
@@ -78,7 +94,13 @@ const ColorPickerView = () => {
     if (showHint) {
         setShowHint(false);
     }
+    setIsAtBoundary(false);
     handlePointerMove(e);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+    setIsAtBoundary(false);
   };
 
   const onImageLoad = (img: HTMLImageElement) => {
@@ -141,8 +163,8 @@ const ColorPickerView = () => {
       className="relative w-full h-svh bg-black overflow-hidden cursor-crosshair"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={() => setIsDragging(false)}
-      onPointerLeave={() => setIsDragging(false)}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
@@ -162,20 +184,23 @@ const ColorPickerView = () => {
           transform: 'translate(-50%, -50%)',
         }}
       >
-        {/* Reticle */}
-        <div className="relative w-16 h-16 flex items-center justify-center text-white">
-          <div className="w-5 h-5 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm"></div>
-          {!isDragging && (
-            <>
-              <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-              <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-              <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-              <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-            </>
-          )}
+        <div
+            className={cn(
+                "relative w-16 h-16 flex items-center justify-center transition-colors",
+                isAtBoundary ? "text-red-500" : "text-white"
+            )}
+            >
+            <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
+            {!isDragging && (
+                <>
+                <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                </>
+            )}
         </div>
 
-        {/* Callout */}
         <div
           ref={calloutRef}
           className={cn(
@@ -184,16 +209,16 @@ const ColorPickerView = () => {
           )}
           onPointerDown={(e) => e.stopPropagation()}
         >
-            <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-64">
-                <div className="flex items-center p-3">
-                    <div className="w-10 h-10 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
+            <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-60">
+                <div className="flex items-center p-2">
+                    <div className="w-8 h-8 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
                     <div className="ml-3 flex-grow">
-                        <p className="font-bold font-code text-lg tracking-wider">{pickedColor.toUpperCase()}</p>
-                        <p className="text-sm text-white/70 uppercase">{getColorName(pickedColor)}</p>
+                        <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
+                        <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
-                        <Palette className="w-5 h-5" />
+                    <Button variant="ghost" size="icon" className="w-7 h-7 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-7 h-7 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
+                        <Palette className="w-4 h-4" />
                     </Button>
                 </div>
                 
@@ -226,7 +251,6 @@ const ColorPickerView = () => {
                                         className={cn(
                                             "w-7 h-7 rounded-md bg-black/20 text-white/80",
                                             "opacity-0 group-hover:opacity-100",
-                                            shade.toLowerCase() === pickedColor.toLowerCase() && "opacity-0"
                                         )}
                                         onClick={(e) => { e.stopPropagation(); handleCopy(shade) }}
                                     >
