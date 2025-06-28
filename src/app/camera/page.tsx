@@ -36,15 +36,22 @@ const CameraView = () => {
     return () => clearInterval(timer);
   }, [instructions.length]);
 
+  const cleanupStream = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
     }
     idleTimerRef.current = setTimeout(() => {
+      cleanupStream();
       router.push('/');
     }, 2 * 60 * 1000); // 2 minutes
-  }, [router]);
+  }, [router, cleanupStream]);
 
   useEffect(() => {
     resetIdleTimer();
@@ -58,13 +65,6 @@ const CameraView = () => {
       events.forEach(event => window.removeEventListener(event, resetIdleTimer));
     };
   }, [resetIdleTimer]);
-
-  const cleanupStream = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  }, [stream]);
 
   const getCameraStream = useCallback(async (mode: 'environment' | 'user') => {
     cleanupStream();
@@ -178,7 +178,7 @@ const CameraView = () => {
   const Icon = currentInstruction.icon;
 
   return (
-    <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center overflow-hidden">
+    <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center overflow-hidden" style={{ touchAction: 'none' }}>
       <video
         ref={videoRef}
         autoPlay
