@@ -54,7 +54,6 @@ const ColorPickerView = () => {
   
     const containerRect = containerRef.current.getBoundingClientRect();
     const calloutWidth = calloutRef.current.offsetWidth;
-    const calloutHeight = calloutRef.current.offsetHeight;
   
     const pickerSize = 40; 
     const margin = 48; 
@@ -63,8 +62,8 @@ const ColorPickerView = () => {
   
     // Vertical Positioning
     const spaceAbove = pickerPos.y;
-    if (spaceAbove > calloutHeight + pickerSize + margin) {
-      newStyle.top = pickerPos.y - calloutHeight - margin;
+    if (spaceAbove > calloutRef.current.offsetHeight + pickerSize + margin) {
+      newStyle.top = pickerPos.y - calloutRef.current.offsetHeight - margin;
     } else {
       newStyle.top = pickerPos.y + pickerSize / 2 + margin;
     }
@@ -318,8 +317,8 @@ const ColorPickerView = () => {
 
             {isAtBoundary && (
               <div className={cn(
-                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-sm px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-in fade-in",
-                messageSide === 'right' ? "left-full ml-4" : "right-full mr-4"
+                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-xs px-2.5 py-1 rounded-xl shadow-lg animate-in fade-in text-center max-w-40",
+                messageSide === 'right' ? "left-full ml-3" : "right-full mr-3"
               )}>
                 Whoa! Almost crossed the line 😅
               </div>
