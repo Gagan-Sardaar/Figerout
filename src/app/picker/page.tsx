@@ -90,7 +90,7 @@ const ColorPickerView = () => {
     const boundaryTop = rect.height * 0.05;
     const boundaryLeft = rect.width * 0.05;
     const boundaryRight = rect.width * 0.95;
-    const boundaryBottom = rect.height * 0.83;
+    const boundaryBottom = rect.height * 0.80;
 
     const rawX = e.clientX - rect.left;
     const rawY = e.clientY - rect.top;
@@ -275,11 +275,11 @@ const ColorPickerView = () => {
             <div
               className={cn(
                 'relative w-16 h-16 flex items-center justify-center transition-colors',
-                isAtBoundary ? 'text-red-500' : 'text-white'
+                isAtBoundary ? 'text-red-500 animate-pulse' : 'text-white'
               )}
             >
               <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
-              {!isDragging && (
+              {!isDragging && !isAtBoundary && (
                 <>
                   <ChevronUp
                     className="absolute -top-1 w-6 h-6"
