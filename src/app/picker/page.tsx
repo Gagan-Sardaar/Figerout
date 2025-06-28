@@ -19,10 +19,10 @@ const ColorPickerView = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [pickerPos, setPickerPos] = useState<Point>({ x: 0, y: 0 });
-  const [isPickerVisible, setIsPickerVisible] = useState(true);
   const [pickedColor, setPickedColor] = useState('#000000');
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -61,6 +61,9 @@ const ColorPickerView = () => {
   
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(true);
+    if (showHint) {
+        setShowHint(false);
+    }
     handlePointerMove(e);
   };
 
@@ -105,7 +108,7 @@ const ColorPickerView = () => {
   }, [imageSrc]);
 
   const handleCopy = () => {
-    const text = `${getColorName(pickedColor)} - ${pickedColor}`;
+    const text = `${pickedColor.toUpperCase()} - ${getColorName(pickedColor)}`;
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!', description: text });
   };
@@ -127,13 +130,20 @@ const ColorPickerView = () => {
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
+      {showHint && (
+        <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+          <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
+            Touch and drag to find your colour.
+          </div>
+        </div>
+      )}
+      
       <div
         className="absolute pointer-events-none"
         style={{
           left: pickerPos.x,
           top: pickerPos.y,
           transform: 'translate(-50%, -50%)',
-          opacity: isPickerVisible ? 1 : 0,
         }}
       >
         {/* Reticle */}
@@ -166,7 +176,8 @@ const ColorPickerView = () => {
                 <div className="flex items-center space-x-2 p-1.5 pl-2">
                     <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: pickedColor }} />
                     <div className="flex-grow pr-2">
-                        <p className="font-bold text-sm">{getColorName(pickedColor)}</p>
+                        <p className="font-bold font-code text-sm tracking-wider">{pickedColor.toUpperCase()}</p>
+                        <p className="text-xs text-white/70">{getColorName(pickedColor)}</p>
                     </div>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleCopy()}}><Copy className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleShare()}}><Share2 className="w-4 h-4" /></Button>
@@ -177,8 +188,11 @@ const ColorPickerView = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-5 right-5 z-20">
-         <Button onClick={() => router.push('/camera')} variant="secondary" size="lg" className="rounded-full">
+      <div className={cn(
+        "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300 pointer-events-none",
+        isDragging ? "opacity-0" : "opacity-100"
+        )}>
+         <Button onClick={() => router.push('/camera')} variant="secondary" size="lg" className="rounded-full pointer-events-auto">
             <RefreshCw className="w-5 h-5 mr-2" /> Retake
          </Button>
       </div>
