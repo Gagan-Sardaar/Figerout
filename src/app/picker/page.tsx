@@ -24,7 +24,7 @@ const ColorPickerView = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
-  const [calloutPosition, setCalloutPosition] = useState<'top' | 'bottom'>('top');
+  const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({});
   const [isAtBoundary, setIsAtBoundary] = useState(false);
 
   useEffect(() => {
@@ -52,35 +52,59 @@ const ColorPickerView = () => {
 
   useEffect(() => {
     if (isPaletteOpen || !calloutRef.current || !containerRef.current) return;
-
+  
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const calloutWidth = calloutRef.current.offsetWidth;
     const calloutHeight = calloutRef.current.offsetHeight;
+  
+    const pickerSize = 40; // Approximate size of the picker reticle
+    const margin = 16; // 1rem
+  
+    const newStyle: React.CSSProperties = {};
+  
+    // Vertical Positioning
     const spaceAbove = pickerPos.y;
-
-    if (spaceAbove > calloutHeight + 40) {
-      setCalloutPosition('top');
+    if (spaceAbove > calloutHeight + pickerSize + margin) {
+      newStyle.top = pickerPos.y - calloutHeight - margin;
     } else {
-      setCalloutPosition('bottom');
+      newStyle.top = pickerPos.y + pickerSize / 2 + margin;
     }
+  
+    // Horizontal positioning
+    let left = pickerPos.x - calloutWidth / 2;
+    if (left < margin) {
+      left = margin;
+    } else if (left + calloutWidth > containerRect.width - margin) {
+      left = containerRect.width - calloutWidth - margin;
+    }
+    newStyle.left = left;
+  
+    setCalloutStyle(newStyle);
+  
   }, [pickerPos, isPaletteOpen]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
-    const boundaryY = rect.height * 0.83;
+    const boundaryTop = rect.height * 0.05;
+    const boundaryLeft = rect.width * 0.05;
+    const boundaryRight = rect.width * 0.95;
+    const boundaryBottom = rect.height * 0.83;
+
+    const rawX = e.clientX - rect.left;
     const rawY = e.clientY - rect.top;
 
-    if (rawY >= boundaryY) {
-        setIsAtBoundary(true);
-    } else {
-        setIsAtBoundary(false);
-    }
-
-    let x = e.clientX - rect.left;
-    let y = rawY;
-
-    x = Math.max(0, Math.min(x, rect.width - 1));
-    y = Math.max(0, Math.min(y, boundaryY));
+    const atBoundary = 
+      rawY <= boundaryTop || 
+      rawY >= boundaryBottom || 
+      rawX <= boundaryLeft || 
+      rawX >= boundaryRight;
+      
+    setIsAtBoundary(atBoundary);
+    
+    const x = Math.max(boundaryLeft, Math.min(rawX, boundaryRight));
+    const y = Math.max(boundaryTop, Math.min(rawY, boundaryBottom));
     
     setPickerPos({ x, y });
     updateColor(x, y);
@@ -99,7 +123,6 @@ const ColorPickerView = () => {
 
   const handlePointerUp = () => {
     setIsDragging(false);
-    setIsAtBoundary(false);
   };
 
   const onImageLoad = (img: HTMLImageElement) => {
@@ -229,50 +252,50 @@ const ColorPickerView = () => {
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
-      {!isPaletteOpen && showHint && !isDragging && (
+      {showHint && !isDragging && (
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
           <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
             Touch and drag to find your colour.
           </div>
         </div>
       )}
-      
+
       {!isPaletteOpen && (
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            left: pickerPos.x,
-            top: pickerPos.y,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
+        <>
           <div
-              className={cn(
-                  "relative w-16 h-16 flex items-center justify-center transition-colors",
-                  isAtBoundary ? "text-red-500" : "text-white"
+            className="absolute pointer-events-none"
+            style={{
+              left: pickerPos.x,
+              top: pickerPos.y,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div
+                className={cn(
+                    "relative w-16 h-16 flex items-center justify-center transition-colors",
+                    isAtBoundary ? "text-red-500" : "text-white"
+                )}
+            >
+              <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
+              {!isDragging && (
+                  <>
+                  <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                  <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                  <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                  <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+                  </>
               )}
-          >
-            <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
-            {!isDragging && (
-                <>
-                <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                </>
-            )}
+            </div>
           </div>
           <div
-            ref={calloutRef}
-            className={cn(
-                "absolute left-1/2 -translate-x-1/2 w-max pointer-events-auto",
-                calloutPosition === 'top' ? "bottom-[calc(100%_+_1rem)]" : "top-[calc(100%_+_1rem)]"
-            )}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {CalloutContent}
+              ref={calloutRef}
+              className="absolute pointer-events-auto"
+              style={calloutStyle}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {CalloutContent}
           </div>
-        </div>
+        </>
       )}
 
       {isPaletteOpen && (
