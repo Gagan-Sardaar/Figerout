@@ -169,7 +169,10 @@ const CameraView = () => {
         ref={videoRef}
         autoPlay
         playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover transform scale-x-[-1]"
+        className={cn(
+          "absolute top-0 left-0 w-full h-full object-cover",
+          facingMode === 'user' && "scale-x-[-1]"
+        )}
       />
        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none">
         <Circle className="w-16 h-16 text-white/50" />
