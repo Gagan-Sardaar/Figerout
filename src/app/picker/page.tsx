@@ -5,7 +5,6 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { Copy, Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
@@ -14,7 +13,6 @@ type Point = { x: number; y: number };
 
 const ColorPickerView = () => {
   const router = useRouter();
-  const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const calloutRef = useRef<HTMLDivElement>(null);
@@ -26,6 +24,7 @@ const ColorPickerView = () => {
   const [showHint, setShowHint] = useState(true);
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({});
   const [isAtBoundary, setIsAtBoundary] = useState(false);
+  const [messageSide, setMessageSide] = useState<'left' | 'right'>('right');
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -57,8 +56,8 @@ const ColorPickerView = () => {
     const calloutWidth = calloutRef.current.offsetWidth;
     const calloutHeight = calloutRef.current.offsetHeight;
   
-    const pickerSize = 40; // Approximate size of the picker reticle
-    const margin = 48; // 3rem. Was 16, increased to prevent overlap with top arrow
+    const pickerSize = 40; 
+    const margin = 48; 
   
     const newStyle: React.CSSProperties = {};
   
@@ -94,6 +93,12 @@ const ColorPickerView = () => {
 
     const rawX = e.clientX - rect.left;
     const rawY = e.clientY - rect.top;
+    
+    if (rawX > rect.width / 2) {
+        setMessageSide('left');
+    } else {
+        setMessageSide('right');
+    }
 
     const atBoundary = 
       rawY <= boundaryTop || 
@@ -111,7 +116,7 @@ const ColorPickerView = () => {
   };
   
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (calloutRef.current?.contains(e.target as Node)) {
+    if (calloutRef.current?.contains(e.target as Node) || isPaletteOpen) {
         return;
     }
     setIsDragging(true);
@@ -168,7 +173,6 @@ const ColorPickerView = () => {
   const handleCopy = (color: string) => {
     const text = `${color.toUpperCase()} - ${getColorName(color)}`;
     navigator.clipboard.writeText(text);
-    toast({ title: 'Copied to clipboard!', description: text });
   };
 
   const handleShare = () => {
@@ -176,7 +180,6 @@ const ColorPickerView = () => {
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
     navigator.clipboard.writeText(textToCopy);
-    toast({ title: 'Share info copied!', description: 'Color details and link ready to paste.' });
   };
 
   const CalloutContent = (
@@ -282,7 +285,7 @@ const ColorPickerView = () => {
                     "w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm",
                     isAtBoundary && "animate-pulse"
                 )} />
-              {!isDragging && !isAtBoundary && !isAtBoundary && (
+              {(!isDragging && !isAtBoundary) && (
                 <>
                   <ChevronUp
                     className="absolute -top-1 w-6 h-6"
@@ -305,7 +308,10 @@ const ColorPickerView = () => {
             </div>
 
             {isAtBoundary && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white text-black text-sm px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-in fade-in">
+              <div className={cn(
+                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-sm px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-in fade-in",
+                messageSide === 'right' ? "left-full ml-4" : "right-full mr-4"
+              )}>
                 Whoa! Almost crossed the line 😅
               </div>
             )}
