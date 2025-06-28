@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -7,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon, MousePointer2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CameraView = () => {
   const router = useRouter();
@@ -22,6 +24,7 @@ const CameraView = () => {
   const [countdown, setCountdown] = useState(0);
   const isMobile = useIsMobile();
   const [instructionIndex, setInstructionIndex] = useState(0);
+  const [hasCameraPermission, setHasCameraPermission] = useState(true);
 
   const instructions = [
     { icon: Camera, title: 'Snap a Photo', subtitle: 'Use the camera to capture inspiration.' },
@@ -80,6 +83,7 @@ const CameraView = () => {
         videoRef.current.srcObject = newStream;
       }
       setStream(newStream);
+      setHasCameraPermission(true);
 
       const videoTrack = newStream.getVideoTracks()[0];
       const capabilities = videoTrack.getCapabilities();
@@ -95,6 +99,7 @@ const CameraView = () => {
       }
 
     } catch (err) {
+      setHasCameraPermission(false);
       let message = 'Camera access was denied.';
       if(err instanceof Error && err.name === "NotFoundError") {
         message = `Could not find ${mode} camera.`;
@@ -106,7 +111,6 @@ const CameraView = () => {
       });
       if (isMobile && mode === 'environment') {
         setFacingMode('user');
-        getCameraStream('user');
       }
     }
   }, [cleanupStream, toast, isMobile]);
@@ -153,6 +157,14 @@ const CameraView = () => {
   };
 
   const handleCapture = () => {
+    if (!hasCameraPermission) {
+      toast({
+        title: 'Camera Permission Required',
+        description: 'Please grant camera access in your browser settings to take a photo.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (isMobile && facingMode === 'user' && isFlashOn) {
       let count = 3;
       setCountdown(count);
@@ -200,7 +212,19 @@ const CameraView = () => {
         </div>
       )}
 
-      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10">
+      {!hasCameraPermission && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+            <Alert variant="destructive" className="max-w-md">
+                <Camera className="h-4 w-4" />
+                <AlertTitle>Camera Access Denied</AlertTitle>
+                <AlertDescription>
+                    Figerout needs access to your camera to work. Please enable camera permissions in your browser settings and refresh the page.
+                </AlertDescription>
+            </Alert>
+        </div>
+      )}
+
+      <div className={cn("absolute top-[10%] left-1/2 -translate-x-1/2 z-10", !hasCameraPermission && "hidden")}>
         <div key={instructionIndex} className="bg-black/40 backdrop-blur-md rounded-full animate-in fade-in duration-500">
             <div className="flex w-max items-center gap-3 px-4 py-2 text-white">
                 <Icon className="h-5 w-5 flex-shrink-0" />
@@ -212,7 +236,7 @@ const CameraView = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-5 inset-x-0 z-10 p-4">
+      <div className={cn("absolute bottom-5 inset-x-0 z-10 p-4", !hasCameraPermission && "hidden")}>
         <div className="relative flex h-20 w-full items-center justify-center">
           {/* Flash Button */}
           <div className="absolute left-[20%] -translate-x-1/2">
