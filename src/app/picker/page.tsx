@@ -192,8 +192,12 @@ const ColorPickerView = () => {
         "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300 pointer-events-none",
         isDragging ? "opacity-0" : "opacity-100"
         )}>
-         <Button onClick={() => router.push('/camera')} variant="secondary" size="lg" className="rounded-full pointer-events-auto">
-            <RefreshCw className="w-5 h-5 mr-2" /> Retake
+         <Button
+            onClick={() => router.push('/camera')}
+            className="h-20 w-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform pointer-events-auto"
+            aria-label="Retake photo"
+          >
+            <RefreshCw className="h-9 w-9 text-white" />
          </Button>
       </div>
 
