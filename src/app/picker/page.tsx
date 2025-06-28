@@ -93,7 +93,7 @@ const ColorPickerView = () => {
 
     const initialPos = { x: container.clientWidth / 2, y: container.clientHeight / 2 };
     setPickerPos(initialPos);
-    updateColor(initialPos.x, initialPos);
+    updateColor(initialPos.x, initialPos.y);
   };
 
   useEffect(() => {
@@ -178,12 +178,6 @@ const ColorPickerView = () => {
             </div>
         </div>
       </div>
-
-      {!isPickerVisible && (
-        <div className="absolute bottom-24 inset-x-0 flex items-center justify-center pointer-events-none">
-            <p className="text-white text-lg bg-black/50 px-5 py-2.5 rounded-full backdrop-blur-sm">Touch and drag to find your colour.</p>
-        </div>
-      )}
 
       <div className="absolute bottom-5 right-5 z-20">
          <Button onClick={() => router.push('/camera')} variant="secondary" size="lg" className="rounded-full">
