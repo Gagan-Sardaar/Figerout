@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -5,10 +6,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Share2, Palette, X, RefreshCw } from 'lucide-react';
+import { Copy, Share2, Palette, X, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
-import { Popover, PopoverTrigger } from '@/components/ui/popover';
 
 type Point = { x: number; y: number };
 
@@ -23,7 +23,6 @@ const ColorPickerView = () => {
   const [pickedColor, setPickedColor] = useState('#000000');
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
-  const [atBoundary, setAtBoundary] = useState(false);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -58,8 +57,6 @@ const ColorPickerView = () => {
     
     setPickerPos({ x, y });
     updateColor(x, y);
-
-    setAtBoundary(y >= rect.height - 20);
   };
   
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -73,17 +70,16 @@ const ColorPickerView = () => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     
-    // Fit image to container while maintaining aspect ratio
     const containerAspect = container.clientWidth / container.clientHeight;
     const imageAspect = img.width / img.height;
 
     let drawWidth, drawHeight, offsetX, offsetY;
-    if (containerAspect > imageAspect) { // Container is wider than image
+    if (containerAspect > imageAspect) {
       drawWidth = container.clientWidth;
       drawHeight = container.clientWidth / imageAspect;
       offsetX = 0;
       offsetY = (container.clientHeight - drawHeight) / 2;
-    } else { // Container is taller than image
+    } else {
       drawHeight = container.clientHeight;
       drawWidth = container.clientHeight * imageAspect;
       offsetY = 0;
@@ -97,7 +93,7 @@ const ColorPickerView = () => {
 
     const initialPos = { x: container.clientWidth / 2, y: container.clientHeight / 2 };
     setPickerPos(initialPos);
-    updateColor(initialPos.x, initialPos.y);
+    updateColor(initialPos.x, initialPos);
   };
 
   useEffect(() => {
@@ -132,57 +128,60 @@ const ColorPickerView = () => {
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
-      {isPickerVisible && (
-        <div
-          className="absolute pointer-events-none transition-all duration-75"
-          style={{
-            left: pickerPos.x,
-            top: pickerPos.y,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          {/* Reticle */}
-          <div className={cn("w-16 h-16 rounded-full border-4 bg-white/20 backdrop-blur-sm transition-colors", atBoundary && "border-red-500 animate-pulse")} style={{ borderColor: atBoundary ? undefined : pickedColor }}>
-             <div className="w-full h-full rounded-full border-2 border-white/50" />
-          </div>
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: pickerPos.x,
+          top: pickerPos.y,
+          transform: 'translate(-50%, -50%)',
+          opacity: isPickerVisible ? 1 : 0,
+          transition: 'opacity 300ms ease-in-out',
+        }}
+      >
+        {/* Reticle */}
+        <div className="relative w-16 h-16 flex items-center justify-center text-white">
+          <div className="w-5 h-5 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm"></div>
+          <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+          <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+          <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+          <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
+        </div>
 
-          {/* Callout */}
-          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-56 sm:w-64">
-            <div className="bg-background/80 backdrop-blur-md rounded-lg shadow-2xl p-2 text-foreground transition-all duration-200">
+        {/* Callout */}
+        <div className="absolute bottom-[calc(100%_+_1rem)] left-1/2 -translate-x-1/2 w-max">
+            <div className="bg-black/50 backdrop-blur-md rounded-full shadow-2xl text-white transition-all duration-200">
                {isPaletteOpen ? (
-                   <div className="p-2">
+                   <div className="p-2 w-64">
                      <div className="flex justify-between items-center mb-2">
-                       <h3 className="font-bold">Shades</h3>
-                       <Button variant="ghost" size="icon" className="w-6 h-6" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(false)}}>
+                       <h3 className="font-bold">Color Palette</h3>
+                       <Button variant="ghost" size="icon" className="w-6 h-6 text-white" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(false)}}>
                          <X className="w-4 h-4" />
                        </Button>
                      </div>
                      <div className="flex justify-center items-center gap-1">
-                        {shades.darker.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-6 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
-                        <div className="w-8 h-12 rounded border-2" style={{backgroundColor: pickedColor, borderColor: 'hsl(var(--primary))'}}/>
-                        {shades.lighter.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-6 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
+                        {shades.darker.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-7 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
+                        <div className="w-9 h-12 rounded border-2" style={{backgroundColor: pickedColor, borderColor: 'hsl(var(--primary))'}}/>
+                        {shades.lighter.map(s => <div key={s} onClick={(e) => { e.stopPropagation(); setPickedColor(s)}} className="w-7 h-10 rounded cursor-pointer" style={{backgroundColor: s}}/>)}
                      </div>
                    </div>
                ) : (
-                <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 rounded-md" style={{ backgroundColor: pickedColor }} />
-                    <div className="flex-grow">
+                <div className="flex items-center space-x-2 p-1.5 pl-2">
+                    <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: pickedColor }} />
+                    <div className="flex-grow pr-2">
                         <p className="font-bold text-sm">{getColorName(pickedColor)}</p>
-                        <p className="font-code text-xs text-muted-foreground">{pickedColor}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={(e) => {e.stopPropagation(); handleCopy()}}><Copy className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={(e) => {e.stopPropagation(); handleShare()}}><Share2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(true)}}><Palette className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleCopy()}}><Copy className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); handleShare()}}><Share2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white rounded-full" onClick={(e) => {e.stopPropagation(); setIsPaletteOpen(true)}}><Palette className="w-4 h-4" /></Button>
                 </div>
                )}
             </div>
-          </div>
         </div>
-      )}
+      </div>
 
       {!isPickerVisible && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-white text-2xl font-bold bg-black/50 px-6 py-3 rounded-lg text-center mx-4">Tap and drag to pick a color</p>
+        <div className="absolute bottom-24 inset-x-0 flex items-center justify-center pointer-events-none">
+            <p className="text-white text-lg bg-black/50 px-5 py-2.5 rounded-full backdrop-blur-sm">Touch and drag to find your colour.</p>
         </div>
       )}
 
