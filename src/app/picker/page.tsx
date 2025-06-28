@@ -22,7 +22,7 @@ const ColorPickerView = () => {
   const [pickerPos, setPickerPos] = useState<Point>({ x: 0, y: 0 });
   const [pickedColor, setPickedColor] = useState('#000000');
   const [isDragging, setIsDragging] = useState(false);
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(true);
   const [showHint, setShowHint] = useState(true);
   const [calloutPosition, setCalloutPosition] = useState<'top' | 'bottom'>('top');
   const [isAtBoundary, setIsAtBoundary] = useState(false);
@@ -90,6 +90,10 @@ const ColorPickerView = () => {
   };
   
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Stop propagation if the click is on the callout itself
+    if (calloutRef.current?.contains(e.target as Node)) {
+        return;
+    }
     setIsDragging(true);
     if (showHint) {
         setShowHint(false);
@@ -167,7 +171,7 @@ const ColorPickerView = () => {
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
-      {showHint && (
+      {showHint && !isDragging && (
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
           <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
             Touch and drag to find your colour.
@@ -216,8 +220,9 @@ const ColorPickerView = () => {
                         <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
+                    <Button variant="ghost" className="h-8 px-2 text-white/80 hover:text-white flex items-center gap-1" onClick={() => setIsPaletteOpen(p => !p)}>
                         <Palette className="w-4 h-4" />
+                        {isPaletteOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                 </div>
                 
