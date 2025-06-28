@@ -197,15 +197,38 @@ const CameraView = () => {
 
 
       <div className="absolute bottom-5 inset-x-0 z-10 p-4">
-        <div className="flex w-full justify-center items-center gap-x-8">
-          <div className="w-12 h-12">
+        <div className="relative flex h-20 w-full items-center justify-center">
+          {/* Switch Camera Button */}
+          <div className="absolute left-[20%] -translate-x-1/2">
+            <Button
+              onClick={switchCamera}
+              variant="ghost"
+              size="icon"
+              className="h-12 w-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+              aria-label="Switch camera"
+            >
+              <SwitchCamera className="h-6 w-6" />
+            </Button>
+          </div>
+
+          {/* Capture Button */}
+          <Button
+            onClick={handleCapture}
+            className="h-20 w-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform"
+            aria-label="Capture photo"
+          >
+            <Camera className="h-9 w-9 text-white" />
+          </Button>
+
+          {/* Flash Button */}
+          <div className="absolute right-[20%] translate-x-1/2">
             {(hasFlash || facingMode === 'user') && (
               <Button
                 onClick={toggleFlash}
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'w-12 h-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors',
+                  'h-12 w-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors',
                   isFlashOn && 'bg-yellow-400 text-black hover:bg-yellow-500'
                 )}
                 aria-label="Toggle flash"
@@ -213,26 +236,6 @@ const CameraView = () => {
                 {isFlashOn ? <Zap className="w-6 h-6" /> : <ZapOff className="w-6 h-6" />}
               </Button>
             )}
-          </div>
-
-          <Button
-            onClick={handleCapture}
-            className="w-20 h-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform"
-            aria-label="Capture photo"
-          >
-            <Camera className="w-9 h-9 text-white" />
-          </Button>
-
-          <div className="w-12 h-12">
-            <Button
-              onClick={switchCamera}
-              variant="ghost"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-              aria-label="Switch camera"
-            >
-              <SwitchCamera className="w-6 h-6" />
-            </Button>
           </div>
         </div>
       </div>
