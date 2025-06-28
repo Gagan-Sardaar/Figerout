@@ -258,8 +258,16 @@ const ColorPickerView = () => {
       
       {showHint && (
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-          <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
-            Touch and drag to find your colour.
+          <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
+            <span>Touch and drag</span>
+            <div className="relative w-5 h-5 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full border border-current bg-current/20" />
+                <ChevronUp className="absolute -top-1 w-3 h-3" />
+                <ChevronDown className="absolute -bottom-1 w-3 h-3" />
+                <ChevronLeft className="absolute -left-1 w-3 h-3" />
+                <ChevronRight className="absolute -right-1 w-3 h-3" />
+            </div>
+            <span>to find your colour.</span>
           </div>
         </div>
       )}
