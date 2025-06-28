@@ -27,6 +27,19 @@ const ColorPickerView = () => {
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({});
   const [isAtBoundary, setIsAtBoundary] = useState(false);
 
+  const prevIsAtBoundaryRef = useRef(isAtBoundary);
+
+  useEffect(() => {
+    if (isAtBoundary && !prevIsAtBoundaryRef.current) {
+      toast({
+        title: "Whoa! Almost crossed the line 😅",
+        duration: 2000,
+      });
+    }
+    prevIsAtBoundaryRef.current = isAtBoundary;
+  }, [isAtBoundary, toast]);
+
+
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
     if (dataUrl) {
@@ -275,10 +288,13 @@ const ColorPickerView = () => {
             <div
               className={cn(
                 'relative w-16 h-16 flex items-center justify-center transition-colors',
-                isAtBoundary ? 'text-red-500 animate-pulse' : 'text-white'
+                isAtBoundary ? 'text-red-500' : 'text-white'
               )}
             >
-              <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
+                <div className={cn(
+                    "w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm",
+                    isAtBoundary && "animate-pulse"
+                )} />
               {!isDragging && !isAtBoundary && (
                 <>
                   <ChevronUp
