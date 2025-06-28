@@ -19,7 +19,7 @@ const ColorPickerView = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [pickerPos, setPickerPos] = useState<Point>({ x: 0, y: 0 });
-  const [isPickerVisible, setIsPickerVisible] = useState(false);
+  const [isPickerVisible, setIsPickerVisible] = useState(true);
   const [pickedColor, setPickedColor] = useState('#000000');
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
@@ -61,7 +61,6 @@ const ColorPickerView = () => {
   
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(true);
-    if (!isPickerVisible) setIsPickerVisible(true);
     handlePointerMove(e);
   };
 
@@ -135,7 +134,6 @@ const ColorPickerView = () => {
           top: pickerPos.y,
           transform: 'translate(-50%, -50%)',
           opacity: isPickerVisible ? 1 : 0,
-          transition: 'opacity 300ms ease-in-out',
         }}
       >
         {/* Reticle */}
