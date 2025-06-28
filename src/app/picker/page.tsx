@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Copy, Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
 
@@ -62,7 +62,7 @@ const ColorPickerView = () => {
   
     // Vertical Positioning
     const spaceAbove = pickerPos.y;
-    if (spaceAbove > calloutRef.current.offsetHeight + pickerSize + margin) {
+    if (spaceAbove > calloutRef.current.offsetHeight + pickerSize + margin + 10) {
       newStyle.top = pickerPos.y - calloutRef.current.offsetHeight - margin;
     } else {
       newStyle.top = pickerPos.y + pickerSize / 2 + margin;
@@ -158,6 +158,7 @@ const ColorPickerView = () => {
     const initialPos = { x: container.clientWidth / 2, y: container.clientHeight / 2 };
     setPickerPos(initialPos);
     updateColor(initialPos.x, initialPos.y);
+    setIsPaletteOpen(true);
   };
 
   useEffect(() => {
@@ -168,11 +169,6 @@ const ColorPickerView = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
-
-  const handleCopy = (color: string) => {
-    const text = `${color.toUpperCase()} - ${getColorName(color)}`;
-    navigator.clipboard.writeText(text);
-  };
 
   const handleShare = () => {
     const colorName = getColorName(pickedColor);
@@ -213,6 +209,7 @@ const ColorPickerView = () => {
                         )}
                         onClick={() => {
                           setPickedColor(shade);
+                          setIsPaletteOpen(false);
                         }}
                     >
                         <div className="flex items-center gap-3">
@@ -222,19 +219,8 @@ const ColorPickerView = () => {
                         
                         <div className="flex items-center">
                             {shade.toLowerCase() === pickedColor.toLowerCase() &&
-                                <Check className="w-5 h-5 text-white mr-2" />
+                                <Check className="w-5 h-5 text-white" />
                             }
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn(
-                                    "w-7 h-7 rounded-md bg-black/20 text-white/80",
-                                    "opacity-0 group-hover:opacity-100",
-                                )}
-                                onClick={(e) => { e.stopPropagation(); handleCopy(shade) }}
-                            >
-                                <Copy className="w-4 h-4"/>
-                            </Button>
                         </div>
                     </div>
                 ))}
@@ -317,7 +303,7 @@ const ColorPickerView = () => {
 
             {isAtBoundary && (
               <div className={cn(
-                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-xs px-2.5 py-1 rounded-xl shadow-lg animate-in fade-in text-center max-w-40",
+                "absolute top-1/2 -translate-y-1/2 bg-white text-black text-xs px-2 py-0.5 rounded-full shadow-lg animate-in fade-in text-center max-w-40",
                 messageSide === 'right' ? "left-full ml-3" : "right-full mr-3"
               )}>
                 Whoa! Almost crossed the line 😅
