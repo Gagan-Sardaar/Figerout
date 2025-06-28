@@ -58,7 +58,7 @@ const ColorPickerView = () => {
     const calloutHeight = calloutRef.current.offsetHeight;
   
     const pickerSize = 40; // Approximate size of the picker reticle
-    const margin = 16; // 1rem
+    const margin = 48; // 3rem. Was 16, increased to prevent overlap with top arrow
   
     const newStyle: React.CSSProperties = {};
   
@@ -252,7 +252,7 @@ const ColorPickerView = () => {
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       
-      {showHint && !isDragging && (
+      {showHint && (
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
           <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
             Touch and drag to find your colour.
@@ -260,8 +260,10 @@ const ColorPickerView = () => {
         </div>
       )}
 
+      {/* Picker UI */}
       {!isPaletteOpen && (
         <>
+          {/* Picker Reticle */}
           <div
             className="absolute pointer-events-none"
             style={{
@@ -271,22 +273,35 @@ const ColorPickerView = () => {
             }}
           >
             <div
-                className={cn(
-                    "relative w-16 h-16 flex items-center justify-center transition-colors",
-                    isAtBoundary ? "text-red-500" : "text-white"
-                )}
+              className={cn(
+                'relative w-16 h-16 flex items-center justify-center transition-colors',
+                isAtBoundary ? 'text-red-500' : 'text-white'
+              )}
             >
               <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
               {!isDragging && (
-                  <>
-                  <ChevronUp className="absolute -top-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                  <ChevronDown className="absolute -bottom-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                  <ChevronLeft className="absolute -left-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                  <ChevronRight className="absolute -right-1 w-6 h-6" style={{filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))'}} />
-                  </>
+                <>
+                  <ChevronUp
+                    className="absolute -top-1 w-6 h-6"
+                    style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                  />
+                  <ChevronDown
+                    className="absolute -bottom-1 w-6 h-6"
+                    style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                  />
+                  <ChevronLeft
+                    className="absolute -left-1 w-6 h-6"
+                    style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                  />
+                  <ChevronRight
+                    className="absolute -right-1 w-6 h-6"
+                    style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                  />
+                </>
               )}
             </div>
           </div>
+          {/* Color Callout */}
           <div
               ref={calloutRef}
               className="absolute pointer-events-auto"
@@ -298,6 +313,7 @@ const ColorPickerView = () => {
         </>
       )}
 
+      {/* Centered Expanded Palette */}
       {isPaletteOpen && (
         <div 
             className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in"
@@ -307,6 +323,7 @@ const ColorPickerView = () => {
         </div>
       )}
 
+      {/* Retake Button */}
       <div className={cn(
         "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300 pointer-events-none",
         isDragging || isPaletteOpen ? "opacity-0" : "opacity-100"
