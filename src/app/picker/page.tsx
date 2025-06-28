@@ -73,7 +73,7 @@ const ColorPickerView = () => {
     const boundaryY = rect.height * 0.83;
     const rawY = e.clientY - rect.top;
 
-    if (rawY > boundaryY - 10) {
+    if (rawY >= boundaryY) {
         setIsAtBoundary(true);
     } else {
         setIsAtBoundary(false);
@@ -94,7 +94,6 @@ const ColorPickerView = () => {
     if (showHint) {
         setShowHint(false);
     }
-    setIsAtBoundary(false);
     handlePointerMove(e);
   };
 
@@ -209,15 +208,15 @@ const ColorPickerView = () => {
           )}
           onPointerDown={(e) => e.stopPropagation()}
         >
-            <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-60">
-                <div className="flex items-center p-2">
+            <div className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-64">
+                <div className="flex items-center p-3">
                     <div className="w-8 h-8 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
                     <div className="ml-3 flex-grow">
                         <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
                         <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="w-7 h-7 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="w-7 h-7 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(p => !p)}>
                         <Palette className="w-4 h-4" />
                     </Button>
                 </div>
