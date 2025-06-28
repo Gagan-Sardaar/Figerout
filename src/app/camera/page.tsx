@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Zap, ZapOff, SwitchCamera, Circle } from 'lucide-react';
+import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Carousel,
@@ -79,7 +79,7 @@ const CameraView = () => {
       const isNight = hour < 6 || hour > 18;
       
       setIsFlashOn(isNight);
-      if (hasTorch) {
+      if (hasTorch && mode === 'environment') {
         videoTrack.applyConstraints({ advanced: [{ torch: isNight }] });
       }
 
@@ -111,7 +111,7 @@ const CameraView = () => {
   const toggleFlash = () => {
     const newFlashState = !isFlashOn;
     setIsFlashOn(newFlashState);
-    if (hasFlash && stream) {
+    if (hasFlash && stream && facingMode === 'environment') {
       const videoTrack = stream.getVideoTracks()[0];
       videoTrack.applyConstraints({ advanced: [{ torch: newFlashState }] });
     }
@@ -211,7 +211,11 @@ const CameraView = () => {
                 )}
                 aria-label="Toggle flash"
               >
-                {isFlashOn ? <Zap className="w-6 h-6" /> : <ZapOff className="w-6 h-6" />}
+                {facingMode === 'user' ? (
+                  isFlashOn ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />
+                ) : (
+                  isFlashOn ? <Zap className="w-6 h-6" /> : <ZapOff className="w-6 h-6" />
+                )}
               </Button>
             )}
           </div>
