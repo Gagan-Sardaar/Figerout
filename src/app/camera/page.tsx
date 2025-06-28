@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -12,6 +11,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel"
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const CameraView = () => {
   const router = useRouter();
@@ -25,6 +25,7 @@ const CameraView = () => {
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [isDigitalFlashActive, setIsDigitalFlashActive] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const isMobile = useIsMobile();
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) {
@@ -130,7 +131,7 @@ const CameraView = () => {
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
     if (context) {
-      if (facingMode === 'user') {
+      if (facingMode === 'user' || !isMobile) {
         context.translate(canvas.width, 0);
         context.scale(-1, 1);
       }
@@ -171,7 +172,7 @@ const CameraView = () => {
         playsInline
         className={cn(
           "absolute top-0 left-0 w-full h-full object-cover",
-          facingMode === 'user' && "scale-x-[-1]"
+          (facingMode === 'user' || !isMobile) && "scale-x-[-1]"
         )}
       />
        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none">
