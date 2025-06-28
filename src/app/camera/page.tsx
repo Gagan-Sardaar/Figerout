@@ -69,20 +69,19 @@ const CameraView = () => {
       }
       setStream(newStream);
 
-      // Check for flash capabilities
       const videoTrack = newStream.getVideoTracks()[0];
       const capabilities = videoTrack.getCapabilities();
-      if ('torch' in capabilities) {
-        setHasFlash(true);
-        // Auto-enable flash at night
-        const hour = new Date().getHours();
-        if (hour < 6 || hour > 18) {
-          setIsFlashOn(true);
-          videoTrack.applyConstraints({ advanced: [{ torch: true }] });
-        }
-      } else {
-        setHasFlash(false);
+      const hasTorch = 'torch' in capabilities;
+      setHasFlash(hasTorch);
+
+      const hour = new Date().getHours();
+      const isNight = hour < 6 || hour > 18;
+      
+      setIsFlashOn(isNight);
+      if (hasTorch) {
+        videoTrack.applyConstraints({ advanced: [{ torch: isNight }] });
       }
+
     } catch (err) {
       let message = 'Camera access was denied.';
       if(err instanceof Error && err.name === "NotFoundError") {
@@ -93,7 +92,6 @@ const CameraView = () => {
         description: message,
         variant: 'destructive',
       });
-      // Fallback logic
       if (mode === 'environment') {
         setFacingMode('user');
         getCameraStream('user');
@@ -110,11 +108,12 @@ const CameraView = () => {
   }, [facingMode]);
 
   const toggleFlash = () => {
-    if (!stream || !hasFlash) return;
-    const videoTrack = stream.getVideoTracks()[0];
     const newFlashState = !isFlashOn;
-    videoTrack.applyConstraints({ advanced: [{ torch: newFlashState }] });
     setIsFlashOn(newFlashState);
+    if (hasFlash && stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      videoTrack.applyConstraints({ advanced: [{ torch: newFlashState }] });
+    }
   };
   
   const switchCamera = () => {
@@ -130,7 +129,6 @@ const CameraView = () => {
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
     if (context) {
-      // Mirror the image if it's the user-facing camera
       if (facingMode === 'user') {
         context.translate(canvas.width, 0);
         context.scale(-1, 1);
@@ -143,24 +141,21 @@ const CameraView = () => {
   };
 
   const handleCapture = () => {
-    if (facingMode === 'user' && !hasFlash && isFlashOn) {
-      // Digital flash logic
+    if (facingMode === 'user' && isFlashOn) {
       let count = 3;
       setCountdown(count);
       const countdownInterval = setInterval(() => {
-        count--;
-        setCountdown(count);
-        if (count === 0) {
-          clearInterval(countdownInterval);
-        }
+        setCountdown(prev => prev - 1);
       }, 1000);
       
       setTimeout(() => {
+        clearInterval(countdownInterval);
         setIsDigitalFlashActive(true);
         setTimeout(() => {
           capturePhoto();
           setIsDigitalFlashActive(false);
-        }, 200); // Capture after short delay for screen to light up
+          setCountdown(0);
+        }, 200);
       }, 3000);
     } else {
       capturePhoto();
@@ -183,7 +178,7 @@ const CameraView = () => {
       
       {countdown > 0 && (
         <div className="absolute inset-0 flex items-center justify-center z-40">
-          <p className="text-9xl font-bold text-white text-shadow-lg">{countdown}</p>
+          <p className="text-9xl font-bold text-white" style={{textShadow: '0 0 15px rgba(0,0,0,0.5)'}}>{countdown}</p>
         </div>
       )}
 
@@ -201,23 +196,35 @@ const CameraView = () => {
 
 
       <div className="absolute bottom-5 inset-x-0 z-10 p-4 grid grid-cols-3 items-center">
-        <div />
+        <div className="flex justify-start">
+            {(hasFlash || facingMode === 'user') && (
+                <Button 
+                    onClick={toggleFlash} 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn(
+                        "w-12 h-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors",
+                        isFlashOn && "bg-yellow-400 text-black hover:bg-yellow-500"
+                    )}
+                    aria-label="Toggle flash"
+                >
+                    {isFlashOn ? <Zap className="w-6 h-6" /> : <ZapOff className="w-6 h-6" />}
+                </Button>
+            )}
+        </div>
         <div className="flex justify-center">
-          <Button onClick={handleCapture} className="w-20 h-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform" aria-label="Capture photo">
-            <Camera className="w-10 h-10 text-white" />
-          </Button>
+          <Button onClick={handleCapture} className="w-20 h-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform" aria-label="Capture photo" />
         </div>
         <div className="flex justify-end">
-            <div className="flex flex-col space-y-2">
-                <Button onClick={switchCamera} variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
-                    <SwitchCamera className="w-6 h-6" />
-                </Button>
-                {(hasFlash || facingMode === 'user') && (
-                    <Button onClick={toggleFlash} variant="ghost" size="icon" className={cn("text-white hover:bg-white/10 rounded-full", isFlashOn && "bg-accent/50")}>
-                        {isFlashOn ? <ZapOff className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
-                    </Button>
-                )}
-            </div>
+             <Button 
+                onClick={switchCamera} 
+                variant="ghost" 
+                size="icon" 
+                className="w-12 h-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+                aria-label="Switch camera"
+            >
+                <SwitchCamera className="w-6 h-6" />
+            </Button>
         </div>
       </div>
 
