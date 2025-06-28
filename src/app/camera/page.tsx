@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Zap, ZapOff, SwitchCamera, Circle, X } from 'lucide-react';
+import { Camera, Zap, ZapOff, SwitchCamera, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Carousel,
@@ -17,12 +17,35 @@ const CameraView = () => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [hasFlash, setHasFlash] = useState(false);
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [isDigitalFlashActive, setIsDigitalFlashActive] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    idleTimerRef.current = setTimeout(() => {
+      router.push('/');
+    }, 2 * 60 * 1000); // 2 minutes
+  }, [router]);
+
+  useEffect(() => {
+    resetIdleTimer();
+    const events: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'touchstart', 'keydown'];
+    events.forEach(event => window.addEventListener(event, resetIdleTimer));
+
+    return () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      events.forEach(event => window.removeEventListener(event, resetIdleTimer));
+    };
+  }, [resetIdleTimer]);
 
   const cleanupStream = useCallback(() => {
     if (stream) {
@@ -177,22 +200,24 @@ const CameraView = () => {
       </div>
 
 
-      <div className="absolute bottom-5 inset-x-0 z-10 p-4 flex items-center justify-between">
-        <Button onClick={() => router.push('/')} variant="ghost" className="text-white hover:bg-white/10">
-          <X className="w-6 h-6 mr-2" /> Cancel
-        </Button>
-        <Button onClick={handleCapture} className="w-20 h-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform" aria-label="Capture photo">
-          <Camera className="w-10 h-10 text-white" />
-        </Button>
-        <div className="flex flex-col space-y-2">
-             <Button onClick={switchCamera} variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
-                <SwitchCamera className="w-6 h-6" />
-             </Button>
-             {(hasFlash || facingMode === 'user') && (
-                <Button onClick={toggleFlash} variant="ghost" size="icon" className={cn("text-white hover:bg-white/10 rounded-full", isFlashOn && "bg-accent/50")}>
-                    {isFlashOn ? <ZapOff className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+      <div className="absolute bottom-5 inset-x-0 z-10 p-4 grid grid-cols-3 items-center">
+        <div />
+        <div className="flex justify-center">
+          <Button onClick={handleCapture} className="w-20 h-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform" aria-label="Capture photo">
+            <Camera className="w-10 h-10 text-white" />
+          </Button>
+        </div>
+        <div className="flex justify-end">
+            <div className="flex flex-col space-y-2">
+                <Button onClick={switchCamera} variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
+                    <SwitchCamera className="w-6 h-6" />
                 </Button>
-            )}
+                {(hasFlash || facingMode === 'user') && (
+                    <Button onClick={toggleFlash} variant="ghost" size="icon" className={cn("text-white hover:bg-white/10 rounded-full", isFlashOn && "bg-accent/50")}>
+                        {isFlashOn ? <ZapOff className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+                    </Button>
+                )}
+            </div>
         </div>
       </div>
 
