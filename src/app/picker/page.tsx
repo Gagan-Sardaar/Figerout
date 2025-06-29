@@ -333,9 +333,9 @@ const ColorPickerView = () => {
           >
             <div className="p-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
+                    <div className="w-6 h-6 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
                     <div className="flex-grow">
-                        <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
+                        <p className="font-bold font-code text-sm tracking-wider">{pickedColor.toUpperCase()}</p>
                         <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
                 </div>
@@ -345,7 +345,7 @@ const ColorPickerView = () => {
                     <div
                         key={index}
                         className={cn(
-                            "group flex items-center justify-between px-4 py-3 cursor-pointer transition-colors",
+                            "group flex items-center justify-between px-4 py-2 cursor-pointer transition-colors",
                             "hover:bg-white/10",
                             shade.toLowerCase() === pickedColor.toLowerCase() && "bg-primary/30"
                         )}
@@ -355,7 +355,7 @@ const ColorPickerView = () => {
                         }}
                     >
                         <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-full" style={{ backgroundColor: shade }}></div>
+                          <div className="w-5 h-5 rounded-full" style={{ backgroundColor: shade }}></div>
                           <span className="font-code text-sm font-semibold text-white">{shade.toUpperCase()}</span>
                         </div>
                         
