@@ -64,31 +64,39 @@ const ColorPickerView = () => {
     const pickerSize = 40;
     const verticalMargin = 32;
     const horizontalMargin = 16;
-
-    const newStyle: React.CSSProperties = { position: 'absolute', pointerEvents: 'auto', willChange: 'top, left' };
+    
+    let top, left;
 
     // Vertical Positioning
-    const spaceAbove = pickerPos.y;
-    if (spaceAbove > calloutHeight + pickerSize + verticalMargin) {
-      newStyle.top = pickerPos.y - calloutHeight - verticalMargin;
-    } else {
-      newStyle.top = pickerPos.y + pickerSize / 2 + 16;
-    }
+    const spaceAbove = pickerPos.y - (pickerSize / 2);
 
-    // Horizontal positioning
-    let left = pickerPos.x - calloutWidth / 2;
+    if (spaceAbove > calloutHeight + verticalMargin) {
+        // Position above the picker
+        top = pickerPos.y - calloutHeight - verticalMargin;
+    } else {
+        // Position below the picker
+        top = pickerPos.y + pickerSize / 2 + 16;
+    }
+    
+    // Horizontal Positioning
+    left = pickerPos.x - calloutWidth / 2;
     if (left < horizontalMargin) {
       left = horizontalMargin;
     } else if (left + calloutWidth > containerRect.width - horizontalMargin) {
       left = containerRect.width - calloutWidth - horizontalMargin;
     }
-    newStyle.left = left;
-
-    return newStyle;
+    
+    return { 
+      position: 'absolute', 
+      pointerEvents: 'auto', 
+      willChange: 'top, left',
+      top: `${top}px`,
+      left: `${left}px`,
+    };
   }, [pickerPos, isMounted]);
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging || !containerRef.current) return;
+  const updatePickerPosition = useCallback((e: PointerEvent) => {
+    if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
     const boundaryTop = rect.height * 0.05;
@@ -112,8 +120,8 @@ const ColorPickerView = () => {
     
     setPickerPos({ x, y });
     updateColor(x, y);
-  };
-  
+  }, [updateColor]);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (calloutRef.current?.contains(e.target as Node) || isPaletteOpen) {
         return;
@@ -122,12 +130,28 @@ const ColorPickerView = () => {
     if (showHint) {
         setShowHint(false);
     }
-    handlePointerMove(e);
+    updatePickerPosition(e.nativeEvent);
   };
 
-  const handlePointerUp = () => {
-    setIsDragging(false);
-  };
+  useEffect(() => {
+    const handleWindowPointerMove = (e: PointerEvent) => {
+      updatePickerPosition(e);
+    };
+
+    const handleWindowPointerUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('pointermove', handleWindowPointerMove);
+      window.addEventListener('pointerup', handleWindowPointerUp);
+    }
+
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove);
+      window.removeEventListener('pointerup', handleWindowPointerUp);
+    };
+  }, [isDragging, updatePickerPosition]);
 
   const onImageLoad = (img: HTMLImageElement) => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -243,9 +267,6 @@ const ColorPickerView = () => {
       ref={containerRef}
       className="relative w-full h-svh bg-black overflow-hidden cursor-crosshair"
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
       style={{ touchAction: 'none' }}
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
