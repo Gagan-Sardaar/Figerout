@@ -124,7 +124,12 @@ const ColorPickerView = () => {
   }, [updateColor]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (calloutRef.current?.contains(e.target as Node) || isPaletteOpen) {
+    if (isPaletteOpen) {
+        setIsPaletteOpen(false);
+        return;
+    }
+
+    if (calloutRef.current?.contains(e.target as Node)) {
       return;
     }
     e.preventDefault();
@@ -179,7 +184,7 @@ const ColorPickerView = () => {
     const initialPos = { x: container.clientWidth / 2, y: container.clientHeight / 2 };
     setPickerPos(initialPos);
     updateColor(initialPos.x, initialPos.y);
-    setIsPaletteOpen(true);
+    setIsPaletteOpen(false);
   };
 
   useEffect(() => {
@@ -297,9 +302,9 @@ const ColorPickerView = () => {
       )}
 
       {/* Picker UI */}
-      {!isPaletteOpen && (
-        <>
-          {/* Picker Reticle */}
+      <>
+        {/* Picker Reticle */}
+        {!isPaletteOpen && (
           <div
             className="absolute pointer-events-none"
             style={{
@@ -340,26 +345,17 @@ const ColorPickerView = () => {
               )}
             </div>
           </div>
-          {/* Color Callout or Boundary Alert */}
-          <div
-              ref={calloutRef}
-              style={calloutStyle}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              {isAtBoundary ? BoundaryAlertMessage : CalloutContent}
-          </div>
-        </>
-      )}
-
-      {/* Centered Expanded Palette */}
-      {isPaletteOpen && (
-        <div 
-            className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in"
-            onClick={() => setIsPaletteOpen(false)}
-        >
-            {CalloutContent}
+        )}
+        
+        {/* Color Callout or Boundary Alert */}
+        <div
+            ref={calloutRef}
+            style={calloutStyle}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {isAtBoundary && !isPaletteOpen ? BoundaryAlertMessage : CalloutContent}
         </div>
-      )}
+      </>
 
       {/* Retake Button */}
       <div className={cn(
