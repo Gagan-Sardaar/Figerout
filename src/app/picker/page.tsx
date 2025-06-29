@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -25,11 +25,11 @@ const ColorPickerView = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [isAtBoundary, setIsAtBoundary] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({
+    opacity: 0,
+    position: 'absolute',
+    pointerEvents: 'none',
+  });
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -40,8 +40,8 @@ const ColorPickerView = () => {
     }
   }, [router]);
 
-  const shades = useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
-  const palette = useMemo(() => [...shades.darker, pickedColor, ...shades.lighter], [shades, pickedColor]);
+  const shades = React.useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
+  const palette = React.useMemo(() => [...shades.darker, pickedColor, ...shades.lighter], [shades, pickedColor]);
 
   const updateColor = useCallback((x: number, y: number) => {
     if (!canvasRef.current) return;
@@ -54,14 +54,17 @@ const ColorPickerView = () => {
     setPickedColor(hex);
   }, []);
   
-  const calloutStyle = useMemo<React.CSSProperties>(() => {
-    if (!isMounted || !containerRef.current || !calloutRef.current) {
-      return { opacity: 0, position: 'absolute', pointerEvents: 'none' };
-    }
+  useLayoutEffect(() => {
+    if (!containerRef.current || !calloutRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const calloutWidth = calloutRef.current.offsetWidth;
     const calloutHeight = calloutRef.current.offsetHeight;
+
+    if (calloutWidth === 0 || calloutHeight === 0) {
+      setCalloutStyle((prev) => ({...prev, opacity: 0}));
+      return;
+    }
 
     const pickerSize = 40;
     const verticalMargin = 32;
@@ -69,18 +72,13 @@ const ColorPickerView = () => {
     
     let top, left;
 
-    // Vertical Positioning
     const spaceAbove = pickerPos.y - (pickerSize / 2);
-
     if (spaceAbove > calloutHeight + verticalMargin) {
-        // Position above the picker
         top = pickerPos.y - calloutHeight - verticalMargin;
     } else {
-        // Position below the picker
         top = pickerPos.y + pickerSize / 2 + 16;
     }
     
-    // Horizontal Positioning
     left = pickerPos.x - calloutWidth / 2;
     if (left < horizontalMargin) {
       left = horizontalMargin;
@@ -88,14 +86,15 @@ const ColorPickerView = () => {
       left = containerRect.width - calloutWidth - horizontalMargin;
     }
     
-    return { 
+    setCalloutStyle({ 
       position: 'absolute', 
       pointerEvents: 'auto', 
       willChange: 'top, left',
       top: `${top}px`,
       left: `${left}px`,
-    };
-  }, [pickerPos, isMounted]);
+      opacity: 1,
+    });
+  }, [pickerPos, isPaletteOpen, isAtBoundary]);
 
   const updatePickerPosition = useCallback((e: PointerEvent) => {
     if (!containerRef.current) return;
@@ -124,32 +123,32 @@ const ColorPickerView = () => {
     updateColor(x, y);
   }, [updateColor]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (calloutRef.current?.contains(e.target as Node) || isPaletteOpen) {
       return;
     }
+    e.preventDefault();
     setIsDragging(true);
+
     if (showHint) {
       setShowHint(false);
     }
-    // Capture the pointer to ensure events are received even if the cursor leaves the element.
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    updatePickerPosition(e.nativeEvent);
-  };
+    
+    const handlePointerMove = (event: PointerEvent) => {
+      updatePickerPosition(event);
+    };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
-      updatePickerPosition(e.nativeEvent);
-    }
-  };
-  
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
+    const handlePointerUp = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
       setIsDragging(false);
-      // Release the pointer capture.
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    }
-  };
+    };
+    
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+
+    updatePickerPosition(e.nativeEvent);
+  }, [isPaletteOpen, showHint, updatePickerPosition]);
 
   const onImageLoad = (img: HTMLImageElement) => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -277,9 +276,6 @@ const ColorPickerView = () => {
       ref={containerRef}
       className="relative w-full h-svh bg-black overflow-hidden cursor-crosshair"
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
       style={{ touchAction: 'none' }}
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
