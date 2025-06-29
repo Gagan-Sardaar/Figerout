@@ -225,13 +225,18 @@ const CameraView = () => {
       )}
 
       <div className={cn("absolute top-[10%] left-1/2 -translate-x-1/2 z-10", !hasCameraPermission && "hidden")}>
-        <div key={instructionIndex} className="bg-black/40 backdrop-blur-md rounded-full animate-in fade-in duration-500">
+        <div key={instructionIndex} className="relative bg-black/40 backdrop-blur-md rounded-full animate-in fade-in duration-500 overflow-hidden">
             <div className="flex w-max items-center gap-3 px-4 py-2 text-white">
                 <Icon className="h-5 w-5 flex-shrink-0" />
                 <div>
                     <p className="font-bold text-sm">{currentInstruction.title}</p>
                     <p className="text-xs text-white/70">{currentInstruction.subtitle}</p>
                 </div>
+            </div>
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-white/20">
+                <div 
+                    className="h-full bg-white animate-progress"
+                ></div>
             </div>
         </div>
       </div>
