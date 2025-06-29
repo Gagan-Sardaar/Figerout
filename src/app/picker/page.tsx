@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
@@ -13,6 +14,7 @@ type Point = { x: number; y: number };
 
 const ColorPickerView = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const calloutRef = useRef<HTMLDivElement>(null);
@@ -124,34 +126,30 @@ const ColorPickerView = () => {
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (calloutRef.current?.contains(e.target as Node) || isPaletteOpen) {
-        return;
+      return;
     }
     setIsDragging(true);
     if (showHint) {
-        setShowHint(false);
+      setShowHint(false);
     }
+    // Capture the pointer to ensure events are received even if the cursor leaves the element.
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
     updatePickerPosition(e.nativeEvent);
   };
 
-  useEffect(() => {
-    const handleWindowPointerMove = (e: PointerEvent) => {
-      updatePickerPosition(e);
-    };
-
-    const handleWindowPointerUp = () => {
-      setIsDragging(false);
-    };
-
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDragging) {
-      window.addEventListener('pointermove', handleWindowPointerMove);
-      window.addEventListener('pointerup', handleWindowPointerUp);
+      updatePickerPosition(e.nativeEvent);
     }
-
-    return () => {
-      window.removeEventListener('pointermove', handleWindowPointerMove);
-      window.removeEventListener('pointerup', handleWindowPointerUp);
-    };
-  }, [isDragging, updatePickerPosition]);
+  };
+  
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      setIsDragging(false);
+      // Release the pointer capture.
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    }
+  };
 
   const onImageLoad = (img: HTMLImageElement) => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -198,7 +196,19 @@ const ColorPickerView = () => {
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
-    navigator.clipboard.writeText(textToCopy);
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        toast({
+            title: 'Copied to Clipboard!',
+            description: 'Color details and share link are ready.',
+        });
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        toast({
+            variant: 'destructive',
+            title: 'Copy Failed',
+            description: 'Could not copy to clipboard.',
+        });
+    });
   };
 
   const CalloutContent = (
@@ -267,6 +277,9 @@ const ColorPickerView = () => {
       ref={containerRef}
       className="relative w-full h-svh bg-black overflow-hidden cursor-crosshair"
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       style={{ touchAction: 'none' }}
     >
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
