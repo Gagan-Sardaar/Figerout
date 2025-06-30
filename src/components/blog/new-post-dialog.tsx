@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { searchPexelsImage } from "@/app/actions";
+import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -149,7 +150,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
-        form.setValue("featuredImage", file);
+        form.setValue("featuredImage", reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -177,26 +178,55 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     onSave();
   }
 
-  const handleFetchRandomImage = async () => {
-    setIsSearchingImage(true);
-    toast({ title: "Searching for a random image..." });
-    try {
-      const randomKeywords = ['abstract background', 'vibrant colors', 'modern texture', 'minimalist design', 'nature pattern', 'futuristic technology', 'artistic portrait'];
-      const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
-      const newImageUrl = await searchPexelsImage(randomQuery);
-      if (newImageUrl) {
-        handleRemoveImage();
-        setImagePreview(newImageUrl);
-        form.setValue("featuredImage", newImageUrl);
-        toast({ title: "Random image selected!" });
-      } else {
-        toast({ title: "Could not fetch a random image.", description: "The stock photo library might be busy.", variant: "destructive" });
+  const handleImageButtonClick = async () => {
+    // If an image is already selected, find a similar one.
+    if (imagePreview) {
+      setIsSearchingImage(true);
+      toast({ title: "Finding a similar image..." });
+      try {
+        const keywordsResult = await extractImageKeywords({ imageDataUri: imagePreview });
+        if (!keywordsResult || keywordsResult.keywords.length === 0) {
+          throw new Error("Could not extract keywords from image.");
+        }
+        
+        toast({ description: `Searching for images related to: ${keywordsResult.keywords.join(", ")}` });
+
+        const newImageUrl = await searchPexelsImage(keywordsResult.keywords.join(" "));
+        if (newImageUrl) {
+          setImagePreview(newImageUrl);
+          form.setValue("featuredImage", newImageUrl);
+          toast({ title: "Found a similar image!" });
+        } else {
+          toast({ title: "Couldn't find a similar image.", description: "Try again or use a different image.", variant: "destructive" });
+        }
+      } catch (error) {
+        console.error("Error finding similar image:", error);
+        toast({ title: "Error finding similar image", variant: "destructive", description: "Please check the console for details." });
+      } finally {
+        setIsSearchingImage(false);
       }
-    } catch (error) {
-      console.error("Error fetching random image:", error);
-      toast({ title: "Error fetching random image", variant: "destructive", description: "Please check the console for details." });
+    } else {
+      // If no image is selected, fetch a random one.
+      setIsSearchingImage(true);
+      toast({ title: "Searching for a random image..." });
+      try {
+        const randomKeywords = ['abstract background', 'vibrant colors', 'modern texture', 'minimalist design', 'nature pattern', 'futuristic technology', 'artistic portrait'];
+        const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
+        const newImageUrl = await searchPexelsImage(randomQuery);
+        if (newImageUrl) {
+          handleRemoveImage();
+          setImagePreview(newImageUrl);
+          form.setValue("featuredImage", newImageUrl);
+          toast({ title: "Random image selected!" });
+        } else {
+          toast({ title: "Could not fetch a random image.", description: "The stock photo library might be busy.", variant: "destructive" });
+        }
+      } catch (error) {
+        console.error("Error fetching random image:", error);
+        toast({ title: "Error fetching random image", variant: "destructive", description: "Please check the console for details." });
+      }
+      setIsSearchingImage(false);
     }
-    setIsSearchingImage(false);
   };
   
   const handleSearchPexels = async () => {
@@ -347,9 +377,18 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </div>
                     </FormControl>
                     <div className="space-y-2">
-                       <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage} disabled={isSearchingImage}>
-                          <Dice5 className="mr-2"/>
-                          Get random image
+                       <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleImageButtonClick} disabled={isSearchingImage}>
+                          {imagePreview ? (
+                            <>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Find similar image
+                            </>
+                          ) : (
+                            <>
+                              <Dice5 className="mr-2 h-4 w-4"/>
+                              Get random image
+                            </>
+                          )}
                       </Button>
                       <div className="relative">
                           <div className="absolute inset-0 flex items-center">
