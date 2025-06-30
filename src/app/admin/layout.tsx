@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Newspaper, Settings } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Newspaper, 
+  Settings, 
+  FileText, 
+  ExternalLink,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -15,7 +21,35 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+function UserNav() {
+  const user = {
+    name: "Admin User",
+    email: "admin@figerout.com",
+    avatar: "" 
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <Button variant="outline" size="sm" asChild>
+        <a href="/" target="_blank" rel="noopener noreferrer">
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Visit Website
+        </a>
+      </Button>
+      <div className="text-right hidden sm:block">
+        <div className="font-semibold text-sm">{user.name}</div>
+        <div className="text-xs text-muted-foreground">{user.email}</div>
+      </div>
+      <ThemeToggle />
+    </div>
+  )
+}
 
 export default function AdminLayout({
   children,
@@ -25,16 +59,16 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   const isActive = (path: string) => {
-    return pathname === path;
+    return pathname === path || (path !== "/admin" && pathname.startsWith(path));
   };
 
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
-            <div className="font-headline text-lg font-bold">Figerout</div>
-            <SidebarTrigger />
+          <div className="flex h-14 items-center gap-2 p-2 justify-between border-b lg:h-[60px]">
+            <div className="font-headline text-lg font-bold p-2">Figerout Admin</div>
+            <SidebarTrigger className="md:hidden" />
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -42,7 +76,7 @@ export default function AdminLayout({
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={isActive("/admin")}
+                isActive={pathname === "/admin"}
                 tooltip="Dashboard"
               >
                 <Link href="/admin">
@@ -54,29 +88,64 @@ export default function AdminLayout({
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={isActive("/admin/content-assistant")}
-                tooltip="Content Assistant"
+                isActive={isActive("/admin/blog")}
+                tooltip="Blog"
               >
-                <Link href="/admin/content-assistant">
+                <Link href="/admin/blog">
                   <Newspaper />
-                  <span>Content Assistant</span>
+                  <span>Blog</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={isActive("/admin/settings")}
-                tooltip="Settings"
-                disabled
+                asChild
+                isActive={isActive("/admin/pages")}
+                tooltip="Pages"
               >
-                <Settings />
-                <span>Settings</span>
+                <Link href="/admin/pages">
+                  <FileText />
+                  <span>Pages</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/admin/settings")}
+                tooltip="App Settings"
+              >
+                <Link href="/admin/settings">
+                  <Settings />
+                  <span>App Settings</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Logout">
+                        <Link href="/">
+                            <Avatar className="h-7 w-7">
+                                <AvatarFallback>A</AvatarFallback>
+                            </Avatar>
+                            <span>Logout</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <header className="sticky top-0 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 z-10">
+           <SidebarTrigger className="hidden md:flex"/>
+           <div className="flex-1" />
+           <UserNav />
+        </header>
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }
