@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Heart, Share2, Edit, Trash2, ArrowRight, Camera, Sparkles } from 'lucide-react';
+import { Eye, Heart, Share2, Edit, Trash2, ArrowRight, User, Sparkles } from 'lucide-react';
 import type { BlogPost } from '@/lib/blog-data';
 import { generateSeoScore, GenerateSeoScoreOutput } from '@/ai/flows/generate-seo-score';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -70,7 +70,7 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
               rel="noopener noreferrer"
               className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1 pl-2 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
             >
-              <Camera className="h-4 w-4 shrink-0" />
+              <User className="h-4 w-4 shrink-0" />
               <div
                 className={cn(
                   'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',

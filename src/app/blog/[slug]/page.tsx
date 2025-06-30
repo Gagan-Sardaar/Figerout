@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Eye, Heart, Share2, Camera, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Eye, Heart, Share2, User, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -50,7 +50,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                                     rel="noopener noreferrer"
                                     className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1.5 pl-3 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
                                 >
-                                    <Camera className="h-4 w-4 shrink-0" />
+                                    <User className="h-4 w-4 shrink-0" />
                                     <div
                                         className={cn(
                                             'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
