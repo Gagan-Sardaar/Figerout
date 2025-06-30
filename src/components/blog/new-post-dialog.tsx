@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { generateImage } from "@/ai/flows/generate-image";
+import { searchPexelsImage } from "@/app/actions";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -206,13 +207,36 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       const result = await generateImage({ prompt: imagePrompt });
       setImagePreview(result.imageUrl);
       form.setValue("featuredImage", result.imageUrl);
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error generating image",
-        description: "Could not connect to the AI service.",
-        variant: "destructive",
+       toast({
+        title: "AI Image Generated",
+        description: "The image was successfully created by AI.",
       });
+    } catch (error) {
+      console.error("AI image generation failed:", error);
+      toast({
+        title: "AI Generation Failed",
+        description: "Attempting to find a stock photo instead.",
+      });
+      try {
+        const pexelsUrl = await searchPexelsImage(imagePrompt);
+        if (pexelsUrl) {
+          setImagePreview(pexelsUrl);
+          form.setValue("featuredImage", pexelsUrl);
+          toast({
+            title: "Fallback Image Found",
+            description: "Found a relevant image from Pexels.",
+          });
+        } else {
+          throw new Error("Pexels fallback failed: No image found.");
+        }
+      } catch (fallbackError) {
+         console.error("Pexels fallback failed:", fallbackError);
+         toast({
+          title: "Image Generation Failed",
+          description: "Could not generate an AI image or find a stock photo.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGeneratingImage(false);
     }
@@ -311,9 +335,14 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                         )
                       )}
                       {isGeneratingImage && (
-                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 text-white aspect-video">
-                            <Loader2 className="w-8 h-8 animate-spin" />
-                            <p className="text-sm">Generating image...</p>
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4 text-white p-4 aspect-video">
+                            <p className="text-lg font-semibold animate-pulse">Thinking...</p>
+                            <div className="w-full max-w-xs">
+                                <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden relative">
+                                    <div className="bg-white h-full w-1/3 absolute top-0 animate-indeterminate-progress"></div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-center text-white/70 mt-2">Generating with AI. We'll try a stock photo if this fails.</p>
                         </div>
                       )}
                     </div>

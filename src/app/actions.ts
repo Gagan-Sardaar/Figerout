@@ -65,3 +65,45 @@ export async function getPexelsImages(ids: number[]): Promise<Record<number, Ima
   }
   return imageData;
 }
+
+const PexelsSearchSchema = z.object({
+  photos: z.array(z.object({
+    src: z.object({
+      portrait: z.string(),
+    }),
+  })),
+});
+
+export async function searchPexelsImage(query: string): Promise<string | null> {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) {
+    console.error("PEXELS_API_KEY is not set.");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1`, {
+      headers: { Authorization: apiKey },
+    });
+
+    if (!response.ok) {
+      console.error(`Pexels API search error for query "${query}": ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const validatedData = PexelsSearchSchema.safeParse(data);
+
+    if (validatedData.success && validatedData.data.photos.length > 0) {
+      return validatedData.data.photos[0].src.portrait;
+    } else {
+      if (!validatedData.success) {
+        console.error(`Pexels API search response validation error for query "${query}":`, validatedData.error);
+      }
+      return null;
+    }
+  } catch (err) {
+    console.error(`Fetch failed for Pexels search query "${query}":`, err);
+    return null;
+  }
+}
