@@ -21,10 +21,12 @@ const ImproveSeoInputSchema = z.object({
   focusKeywords: z.array(z.string()).describe('A list of focus keywords.'),
   feedback: z.string().describe('The SEO feedback that needs to be addressed.'),
 });
-export type ImproveSeoInput = z.infer<typeof ImproveSeoInputSchema>;
+type ImproveSeoInput = z.infer<typeof ImproveSeoInputSchema>;
 
 const ImproveSeoOutputSchema = z.object({
   improvedContent: z.string().describe('The rewritten content in Markdown format, optimized for SEO.'),
+  improvedMetaTitle: z.string().optional().describe('The rewritten, SEO-optimized meta title (50-60 characters).'),
+  improvedMetaDescription: z.string().optional().describe('The rewritten, SEO-optimized meta description (150-160 characters).'),
 });
 export type ImproveSeoOutput = z.infer<typeof ImproveSeoOutputSchema>;
 
@@ -59,22 +61,23 @@ const prompt = ai.definePrompt({
   input: {schema: ImproveSeoInputSchema},
   output: {schema: ImproveSeoOutputSchema},
   tools: [findRelevantImage],
-  prompt: `You are an expert SEO content writer and content strategist. Your task is to rewrite and restructure the provided content to achieve an SEO score of 90 or higher.
-Carefully analyze the original content and the provided SEO feedback.
+  prompt: `You are an expert SEO content writer and content strategist. Your task is to rewrite and restructure the provided content and its associated metadata to achieve an SEO score of 90 or higher.
+Carefully analyze the original content, metadata, and the provided SEO feedback.
 
-**Instructions for Content Improvement:**
+**Instructions for Improvement:**
 
-1.  **Address Feedback:** Directly address all points mentioned in the SEO feedback.
-2.  **Keyword Integration:** Naturally integrate the focus keywords throughout the content. Use them in headings and paragraphs where it makes sense.
-3.  **Structure and Readability:**
-    *   Restructure the content with clear headings (H2, H3) and subheadings to improve organization.
+1.  **Address All Feedback:** Directly address all points mentioned in the SEO feedback. This includes fixing issues with the meta title and meta description.
+2.  **Rewrite Meta Tags:** If the feedback mentions issues with the meta title or description (e.g., length, keyword presence), rewrite them to be optimal and include them in the output.
+3.  **Keyword Integration:** Naturally integrate the focus keywords throughout the content, headings, and meta tags.
+4.  **Structure and Readability:**
+    *   Restructure the content with clear headings (H2, H3, H4) and subheadings to improve organization.
     *   Use bulleted or numbered lists to break up long paragraphs and present information clearly.
     *   Use **bold** and _italic_ formatting to emphasize key points.
     *   Add blockquotes for quotes or important callouts.
-4.  **Add a Relevant Image:** If the content would be improved by an image, use the \`findRelevantImage\` tool to find a suitable stock photo. Place the returned Markdown for the image at an appropriate point in the content, usually after the introduction. Only use the tool once. If the tool returns nothing, do not add an image.
-5.  **Links:** Add placeholder internal and external links where relevant to boost credibility. Use the format \`[link text](/) \` for internal links and \`[link text](https://example.com)\` for external links.
-6.  **Quality:** Ensure the final content is high-quality, engaging, informative, and significantly improved from the original. Do not change the core topic.
-7.  **Output:** Output *only* the rewritten content in well-structured Markdown format.
+5.  **Add a Relevant Image:** If the content would be improved by an image, use the \`findRelevantImage\` tool to find a suitable stock photo. Place the returned Markdown for the image at an appropriate point in the content, usually after the introduction. Only use the tool once. If the tool returns nothing, do not add an image.
+6.  **Add Links:** Add placeholder internal and external links where relevant to boost credibility. Use the format \`[link text](/) \` for internal links and \`[link text](https://example.com)\` for external links.
+7.  **Quality:** Ensure the final content is high-quality, engaging, informative, and significantly improved from the original. Do not change the core topic.
+8.  **Output:** Output the rewritten content and updated meta tags in the specified JSON format.
 
 **Content Details:**
 

@@ -353,7 +353,15 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         focusKeywords: form.getValues('focusKeywords')?.map(kw => kw.value) || [],
         feedback: seoResult.feedback,
       });
+
       form.setValue("content", result.improvedContent, { shouldDirty: true });
+      if (result.improvedMetaTitle) {
+        form.setValue("metaTitle", result.improvedMetaTitle, { shouldDirty: true });
+      }
+      if (result.improvedMetaDescription) {
+        form.setValue("metaDescription", result.improvedMetaDescription, { shouldDirty: true });
+      }
+
       toast({
         title: "SEO Content Improved!",
         description: "The post content has been updated with SEO enhancements.",

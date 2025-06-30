@@ -157,7 +157,15 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         focusKeywords: form.getValues('focusKeywords').map(kw => kw.value),
         feedback: seoResult.feedback,
       });
+      
       form.setValue("pageContent", result.improvedContent, { shouldDirty: true });
+      if (result.improvedMetaTitle) {
+        form.setValue("metaTitle", result.improvedMetaTitle, { shouldDirty: true });
+      }
+      if (result.improvedMetaDescription) {
+        form.setValue("metaDescription", result.improvedMetaDescription, { shouldDirty: true });
+      }
+
       toast({
         title: "SEO Content Improved!",
         description: "The page content has been updated with SEO enhancements.",
