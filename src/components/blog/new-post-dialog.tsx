@@ -212,19 +212,15 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         description: "The image was successfully created by AI.",
       });
     } catch (error) {
-      console.error("AI image generation failed:", error);
-      toast({
-        title: "AI Generation Failed",
-        description: "Attempting to find a stock photo instead.",
-      });
+      console.error("AI image generation failed, trying fallback:", error);
       try {
         const pexelsUrl = await searchPexelsImage(imagePrompt);
         if (pexelsUrl) {
           setImagePreview(pexelsUrl);
           form.setValue("featuredImage", pexelsUrl);
           toast({
-            title: "Fallback Image Found",
-            description: "Found a relevant image from Pexels.",
+            title: "AI Failed, Fallback Found",
+            description: "Found a relevant image from Pexels instead.",
           });
         } else {
           throw new Error("Pexels fallback failed: No image found.");
@@ -306,82 +302,82 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
               render={() => (
                 <FormItem>
                   <FormLabel>Featured Image</FormLabel>
-                  <FormControl>
-                    <div
-                      {...getRootProps()}
-                      className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isGeneratingImage && "hover:border-primary/50 cursor-pointer"}`}
-                    >
-                      <input {...getInputProps()} />
-                      {imagePreview ? (
-                        <>
-                          <div className="relative aspect-video">
-                            <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
-                          </div>
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button type="button" size="icon" variant="secondary" onClick={open} aria-label="Change image">
-                              <Replace />
-                            </Button>
-                            <Button type="button" size="icon" variant="destructive" onClick={handleRemoveImage} aria-label="Delete image">
-                              <Trash2 />
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        !isGeneratingImage && (
-                            <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
-                            <UploadCloud className="w-10 h-10" />
-                            <p>Drag & drop or click</p>
-                            </div>
-                        )
-                      )}
-                      {isGeneratingImage && (
-                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4 text-white p-4 aspect-video">
-                            <p className="text-lg font-semibold animate-pulse">Thinking...</p>
+                   <div className="relative">
+                     {isGeneratingImage && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
+                            <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Wand2 className="h-5 w-5" /> Thinking...</p>
                             <div className="w-full max-w-xs">
-                                <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden relative">
-                                    <div className="bg-white h-full w-1/3 absolute top-0 animate-indeterminate-progress"></div>
+                                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                    <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
                                 </div>
                             </div>
-                            <p className="text-xs text-center text-white/70 mt-2">Generating with AI. We'll try a stock photo if this fails.</p>
+                            <p className="mt-2 text-center text-xs text-muted-foreground">Generating with AI. We'll try a stock photo if this fails.</p>
                         </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <div className="space-y-2">
-                    <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage}>
-                        <Dice5 className="mr-2"/> Get random image
-                    </Button>
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">
-                            Or
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Input 
-                            id="image-prompt" 
-                            placeholder="Generate one with AI..." 
-                            value={imagePrompt}
-                            onChange={(e) => setImagePrompt(e.target.value)}
-                            disabled={isGeneratingImage}
-                        />
-                        <Button 
-                            type="button" 
-                            variant="secondary" 
-                            onClick={handleGenerateImage} 
-                            disabled={isGeneratingImage}
-                            className="shrink-0"
-                        >
-                            {isGeneratingImage ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Wand2 className="h-4 w-4" />
-                            )}
-                        </Button>
+                     )}
+                    <FormControl>
+                      <div
+                        {...getRootProps()}
+                        className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isGeneratingImage && "hover:border-primary/50 cursor-pointer"}`}
+                      >
+                        <input {...getInputProps()} />
+                        {imagePreview ? (
+                          <>
+                            <div className="relative aspect-video">
+                              <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
+                            </div>
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button type="button" size="icon" variant="secondary" onClick={open} aria-label="Change image">
+                                <Replace />
+                              </Button>
+                              <Button type="button" size="icon" variant="destructive" onClick={handleRemoveImage} aria-label="Delete image">
+                                <Trash2 />
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
+                          <UploadCloud className="w-10 h-10" />
+                          <p>Drag & drop or click</p>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <div className="space-y-2">
+                      <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage} disabled={isGeneratingImage}>
+                          <Dice5 className="mr-2"/> Get random image
+                      </Button>
+                      <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-background px-2 text-muted-foreground">
+                              Or
+                              </span>
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <Input 
+                              id="image-prompt" 
+                              placeholder="Generate one with AI..." 
+                              value={imagePrompt}
+                              onChange={(e) => setImagePrompt(e.target.value)}
+                              disabled={isGeneratingImage}
+                          />
+                          <Button 
+                              type="button" 
+                              variant="secondary" 
+                              onClick={handleGenerateImage} 
+                              disabled={isGeneratingImage}
+                              className="shrink-0"
+                          >
+                              {isGeneratingImage ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                  <Wand2 className="h-4 w-4" />
+                              )}
+                          </Button>
+                      </div>
                     </div>
                   </div>
                   <FormMessage />
