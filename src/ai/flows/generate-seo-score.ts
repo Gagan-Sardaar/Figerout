@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GenerateSeoScoreInputSchema = z.object({
+const GenerateSeoScoreInputSchema = z.object({
   title: z.string().describe('The main title of the blog post.'),
   content: z.string().describe('The full markdown content of the blog post.'),
   metaTitle: z.string().optional().describe('The SEO meta title for the blog post.'),
@@ -19,7 +19,7 @@ export const GenerateSeoScoreInputSchema = z.object({
 });
 export type GenerateSeoScoreInput = z.infer<typeof GenerateSeoScoreInputSchema>;
 
-export const GenerateSeoScoreOutputSchema = z.object({
+const GenerateSeoScoreOutputSchema = z.object({
   score: z.number().min(0).max(100).describe('An SEO score from 0 to 100.'),
   feedback: z.string().describe('Actionable feedback and suggestions for improving the SEO score.'),
 });
