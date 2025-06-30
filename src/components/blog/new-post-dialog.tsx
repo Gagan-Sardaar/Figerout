@@ -52,7 +52,6 @@ import {
   Heading3,
   Heading4,
   Pilcrow,
-  Loader2,
   Search,
   Sparkles,
 } from "lucide-react";
@@ -85,64 +84,76 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
     const value = form.getValues('content');
     const { selectionStart, selectionEnd } = textarea;
+
+    const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
+        form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+        
+        requestAnimationFrame(() => {
+            const currentTextarea = contentTextareaRef.current;
+            if (currentTextarea) {
+                currentTextarea.focus();
+                currentTextarea.setSelectionRange(newSelectionStart, newSelectionEnd ?? newSelectionStart);
+            }
+        });
+    };
+
     const selectedText = value.substring(selectionStart, selectionEnd);
-
-    const applyInlineMarkdown = (prefix: string, suffix: string = prefix) => {
-      const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText}${suffix}${value.substring(selectionEnd)}`;
-      form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
-      form.trigger('content');
-      setTimeout(() => {
-        textarea.focus();
-        if (selectedText) {
-          textarea.setSelectionRange(selectionStart + prefix.length, selectionEnd + prefix.length);
-        } else {
-          textarea.setSelectionRange(selectionStart + prefix.length, selectionStart + prefix.length);
-        }
-      }, 0);
-    };
-
-    const applyBlockMarkdown = (prefix: string) => {
-      const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-      const lineEnd = value.indexOf('\n', lineStart) === -1 ? value.length : value.indexOf('\n', lineStart);
-      const currentLine = value.substring(lineStart, lineEnd);
-      const trimmedLine = currentLine.replace(/^#+\s*/, '');
-      const newLine = prefix + trimmedLine;
-      const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
-      form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
-      form.trigger('content');
-      setTimeout(() => {
-        textarea.focus();
-        const newCursorPos = lineStart + newLine.length;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    };
+    let prefix = '';
+    let suffix = '';
 
     switch (type) {
-      case 'bold':
-        applyInlineMarkdown('**');
-        break;
-      case 'italic':
-        applyInlineMarkdown('_');
-        break;
-      case 'link':
-        applyInlineMarkdown('[', '](https://)');
-        break;
-      case 'h2':
-        applyBlockMarkdown('## ');
-        break;
-      case 'h3':
-        applyBlockMarkdown('### ');
-        break;
-      case 'h4':
-        applyBlockMarkdown('#### ');
-        break;
-      case 'p':
-        applyBlockMarkdown('');
-        break;
-      case 'image':
-        applyInlineMarkdown('![alt text](', 'image_url)');
-        break;
+        case 'bold':
+            prefix = '**';
+            suffix = '**';
+            break;
+        case 'italic':
+            prefix = '_';
+            suffix = '_';
+            break;
+        case 'link':
+            prefix = '[';
+            suffix = '](https://)';
+            break;
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'p':
+            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', p: '' };
+            const blockPrefix = prefixes[type];
+
+            const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+            let lineEnd = value.indexOf('\n', lineStart);
+            if (lineEnd === -1) {
+                lineEnd = value.length;
+            }
+            
+            const currentLine = value.substring(lineStart, lineEnd);
+            const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
+            const newLine = blockPrefix + trimmedLine;
+            
+            const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
+            const newCursorPos = lineStart + newLine.length;
+            
+            applyUpdate(newText, newCursorPos);
+            return;
+        
+        case 'image':
+            prefix = '![alt text](';
+            suffix = ')';
+            const placeholder = 'image_url';
+            const imageText = `${value.substring(0, selectionStart)}${prefix}${placeholder}${suffix}${value.substring(selectionEnd)}`;
+            applyUpdate(
+                imageText,
+                selectionStart + prefix.length,
+                selectionStart + prefix.length + placeholder.length
+            );
+            return;
     }
+
+    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || ''}${suffix}${value.substring(selectionEnd)}`;
+    const newCursorStart = selectionStart + prefix.length;
+    const newCursorEnd = newCursorStart + (selectedText?.length || 0);
+    applyUpdate(newText, newCursorStart, newCursorEnd);
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -451,7 +462,3 @@ export function NewPostDialog() {
     </Dialog>
   );
 }
-
-    
-
-    
