@@ -57,8 +57,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { searchPexelsImage } from "@/app/actions";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
+import { searchPexelsImage } from "@/app/actions";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -179,35 +179,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     onSave();
   }
 
-  const handleSaveDraft = () => {
-    toast({
-      title: "Draft Saved!",
-      description: "Your post has been saved as a draft.",
-    });
-    onSave();
-  };
-
-  const handlePasswordProtect = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Password protection feature is not yet available.",
-    });
-  };
-  
-  const handleSetPrivate = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Setting post to private is not yet available.",
-    });
-  };
-
-  const handleSchedule = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Scheduling posts is not yet available.",
-    });
-  };
-
   const handleImageButtonClick = async () => {
     if (imagePreview) {
       setIsSearchingImage(true);
@@ -255,6 +226,35 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       }
       setIsSearchingImage(false);
     }
+  };
+
+  const handleSaveDraft = () => {
+    toast({
+      title: "Draft Saved!",
+      description: "Your post has been saved as a draft.",
+    });
+    onSave();
+  };
+
+  const handlePasswordProtect = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Password protection feature is not yet available.",
+    });
+  };
+  
+  const handleSetPrivate = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Setting post to private is not yet available.",
+    });
+  };
+
+  const handleSchedule = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Scheduling posts is not yet available.",
+    });
   };
 
   return (
@@ -451,5 +451,7 @@ export function NewPostDialog() {
     </Dialog>
   );
 }
+
+    
 
     
