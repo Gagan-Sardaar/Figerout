@@ -6,9 +6,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Eye, Heart, Share2, User, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Eye, Heart, Share2, User } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
@@ -40,7 +41,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             />
                             {post.photographer && post.photographerUrl && (
                                 <div
-                                className="absolute bottom-2 right-2 z-10"
+                                className="absolute top-2 right-2 z-10"
                                 onMouseEnter={() => setIsCreditExpanded(true)}
                                 onMouseLeave={() => setIsCreditExpanded(false)}
                                 >
@@ -48,13 +49,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                                     href={post.photographerUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1.5 pl-3 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+                                    className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1 pl-2 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
                                 >
                                     <User className="h-4 w-4 shrink-0" />
                                     <div
                                         className={cn(
                                             'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
-                                            isCreditExpanded && 'grid-cols-[1fr] ml-1'
+                                            isCreditExpanded && 'ml-1 grid-cols-[1fr]'
                                         )}
                                     >
                                         <span className="overflow-hidden whitespace-nowrap">
@@ -65,8 +66,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                                 </div>
                             )}
                         </div>
-                        <CardTitle className="text-3xl md:text-4xl font-bold">{post.title}</CardTitle>
-                        <div className="flex items-center text-sm text-muted-foreground gap-4 pt-2">
+                        <div className="flex justify-between items-start">
+                            <CardTitle className="text-3xl md:text-4xl font-bold">{post.title}</CardTitle>
+                            {post.status !== 'published' && (
+                                <Badge variant="outline" className="capitalize shrink-0 ml-4">{post.status}</Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground gap-4 pt-2 flex-wrap">
                             <div className="flex items-center gap-1.5">
                                 <Eye className="h-4 w-4" />
                                 <span>{post.views.toLocaleString()} Views</span>
@@ -78,6 +84,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             <div className="flex items-center gap-1.5">
                                 <Share2 className="h-4 w-4" />
                                 <span>{post.shares.toLocaleString()} Shares</span>
+                            </div>
+                            <div className="ml-auto text-xs">
+                                Last updated: {new Date(post.lastUpdated).toLocaleDateString()}
                             </div>
                         </div>
                     </CardHeader>

@@ -11,6 +11,7 @@ import { generateSeoScore, GenerateSeoScoreOutput } from '@/ai/flows/generate-se
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -47,6 +48,13 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
       fetchSeoScore();
     }
   }, [isAdmin, post.title, post.summary, toast]);
+  
+  const statusVariant = {
+    published: 'default',
+    draft: 'secondary',
+    private: 'outline',
+    'password-protected': 'outline',
+  } as const;
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -106,7 +114,7 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
             <span>{post.shares.toLocaleString()}</span>
           </div>
           {isAdmin && (
-            <div className="flex items-center gap-1.5 font-medium">
+            <div className="flex items-center gap-1.5 font-medium ml-auto">
               <Sparkles className="h-4 w-4 text-primary" />
               {isLoadingSeo ? (
                 <Skeleton className="h-4 w-16" />
@@ -118,7 +126,7 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
             </div>
           )}
         </div>
-        <div className="w-full">
+        <div className="w-full flex justify-between items-center">
           {isAdmin ? (
             <div className="flex gap-2">
               <Button variant="outline" size="sm">
@@ -134,6 +142,11 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
                 READ MORE <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+          )}
+           {isAdmin && (
+            <Badge variant={statusVariant[post.status]} className="capitalize">
+              {post.status.replace('-', ' ')}
+            </Badge>
           )}
         </div>
       </CardFooter>

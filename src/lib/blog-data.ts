@@ -11,6 +11,8 @@ export interface BlogPost {
   views: number;
   likes: number;
   shares: number;
+  status: 'published' | 'draft' | 'private' | 'password-protected';
+  lastUpdated: string;
 }
 
 export const blogPosts: BlogPost[] = [
@@ -26,6 +28,8 @@ export const blogPosts: BlogPost[] = [
     views: 1200,
     likes: 345,
     shares: 89,
+    status: 'published',
+    lastUpdated: '2024-05-20T10:00:00Z',
   },
   {
     id: 2,
@@ -39,6 +43,8 @@ export const blogPosts: BlogPost[] = [
     views: 2500,
     likes: 780,
     shares: 150,
+    status: 'published',
+    lastUpdated: '2024-05-18T14:30:00Z',
   },
   {
     id: 3,
@@ -52,6 +58,8 @@ export const blogPosts: BlogPost[] = [
     views: 850,
     likes: 210,
     shares: 45,
+    status: 'draft',
+    lastUpdated: '2024-05-21T09:00:00Z',
   },
    {
     id: 4,
@@ -65,6 +73,8 @@ export const blogPosts: BlogPost[] = [
     views: 3100,
     likes: 950,
     shares: 220,
+    status: 'published',
+    lastUpdated: '2024-05-15T11:00:00Z',
   },
   {
     id: 5,
@@ -78,6 +88,8 @@ export const blogPosts: BlogPost[] = [
     views: 1800,
     likes: 560,
     shares: 110,
+    status: 'private',
+    lastUpdated: '2024-05-12T18:00:00Z',
   },
   {
     id: 6,
@@ -91,6 +103,8 @@ export const blogPosts: BlogPost[] = [
     views: 1500,
     likes: 420,
     shares: 95,
+    status: 'password-protected',
+    lastUpdated: '2024-05-10T16:45:00Z',
   },
   {
     id: 7,
@@ -104,5 +118,7 @@ export const blogPosts: BlogPost[] = [
     views: 980,
     likes: 250,
     shares: 60,
+    status: 'published',
+    lastUpdated: '2024-05-22T12:00:00Z',
   },
 ];

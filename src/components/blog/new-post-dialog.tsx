@@ -67,6 +67,7 @@ import {
 } from "@/ai/flows/generate-seo-score";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -74,7 +75,10 @@ const formSchema = z.object({
   metaDescription: z.string().optional(),
   content: z.string().min(10, { message: "Content must be at least 10 characters." }),
   featuredImage: z.any().optional(),
+  status: z.enum(["published", "draft", "private", "password-protected"]).default("draft"),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 function NewPostForm({ onSave }: { onSave: () => void }) {
   const { toast } = useToast();
@@ -83,10 +87,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "" },
+    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft" },
   });
 
   const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image') => {
@@ -98,11 +103,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
     const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
         form.setValue('content', newText, { shouldDirty: true });
-        form.trigger('content');
         
         requestAnimationFrame(() => {
             const currentTextarea = contentTextareaRef.current;
             if (currentTextarea) {
+                form.trigger('content');
                 currentTextarea.focus();
                 currentTextarea.setSelectionRange(newSelectionStart, newSelectionEnd ?? newSelectionStart);
             }
@@ -162,9 +167,9 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
             return;
     }
 
-    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || ''}${suffix}${value.substring(selectionEnd)}`;
+    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || 'text'}${suffix}${value.substring(selectionEnd)}`;
     const newCursorStart = selectionStart + prefix.length;
-    const newCursorEnd = newCursorStart + (selectedText?.length || 0);
+    const newCursorEnd = newCursorStart + (selectedText?.length || 4);
     applyUpdate(newText, newCursorStart, newCursorEnd);
   };
 
@@ -192,15 +197,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     setImagePreview(null);
     form.setValue("featuredImage", null);
   };
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Post Published!",
-      description: "Your new blog post is now live.",
-    });
-    onSave();
-  }
 
   const handleImageButtonClick = async () => {
     if (imagePreview) {
@@ -251,26 +247,37 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
   };
 
-  const handleSaveDraft = () => {
-    toast({
-      title: "Draft Saved!",
-      description: "Your post has been saved as a draft.",
-    });
-    onSave();
-  };
+  const handleSave = (status: FormValues['status']) => {
+    form.setValue('status', status);
+    // In a real app, this would submit the form to a backend.
+    // For now, we'll just log and show a toast.
+    console.log("Saving with status:", status, form.getValues());
+    
+    setLastSaved(new Date());
+    
+    let title = "Draft Saved!";
+    let description = "Your post has been saved as a draft.";
 
-  const handlePasswordProtect = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Password protection feature is not yet available.",
-    });
-  };
-  
-  const handleSetPrivate = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Setting post to private is not yet available.",
-    });
+    switch(status) {
+        case 'published':
+            title = "Post Published!";
+            description = "Your new blog post is now live.";
+            break;
+        case 'private':
+            title = "Post Saved as Private!";
+            description = "This post is now private and only visible to you.";
+            break;
+        case 'password-protected':
+             title = "Post is Password Protected!";
+             description = "This post now requires a password to view.";
+             break;
+    }
+
+    toast({ title, description });
+
+    if (status !== 'draft') {
+        onSave();
+    }
   };
 
   const handleSchedule = () => {
@@ -316,7 +323,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             <FormField
@@ -438,7 +445,47 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
               )}
             />
 
-            <Accordion type="single" collapsible defaultValue="item-1">
+            <Accordion type="single" collapsible defaultValue="item-2">
+               <AccordionItem value="item-2">
+                <AccordionTrigger>Publishing Settings</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Post Status</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl><RadioGroupItem value="published" /></FormControl>
+                              <FormLabel className="font-normal">Published</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl><RadioGroupItem value="draft" /></FormControl>
+                              <FormLabel className="font-normal">Draft</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl><RadioGroupItem value="private" /></FormControl>
+                              <FormLabel className="font-normal">Private</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl><RadioGroupItem value="password-protected" /></FormControl>
+                              <FormLabel className="font-normal">Password Protected</FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {lastSaved && <p className="text-xs text-muted-foreground">Last saved: {lastSaved.toLocaleString()}</p>}
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="item-1">
                 <AccordionTrigger>SEO Settings</AccordionTrigger>
                 <AccordionContent className="space-y-4">
@@ -495,12 +542,12 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         </div>
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
-            <Button type="button" variant="secondary" onClick={handleSaveDraft}><Save className="mr-2" />Save Draft</Button>
+            <Button type="button" variant="secondary" onClick={() => handleSave('draft')}><Save className="mr-2" />Save Draft</Button>
             <div className="flex-grow"></div>
-            <Button type="button" variant="outline" onClick={handlePasswordProtect}><BookLock className="mr-2" />Password</Button>
-            <Button type="button" variant="outline" onClick={handleSetPrivate}><Lock className="mr-2" />Private</Button>
+            <Button type="button" variant="outline" onClick={() => handleSave('password-protected')}><BookLock className="mr-2" />Password</Button>
+            <Button type="button" variant="outline" onClick={() => handleSave('private')}><Lock className="mr-2" />Private</Button>
             <Button type="button" variant="outline" onClick={handleSchedule}><Clock className="mr-2" />Schedule</Button>
-            <Button type="submit"><Send className="mr-2" />Publish</Button>
+            <Button type="button" onClick={() => handleSave('published')}><Send className="mr-2" />Publish</Button>
         </div>
       </form>
     </Form>

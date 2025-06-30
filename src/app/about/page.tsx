@@ -17,12 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutUsPage() {
   const content = await generatePageContent({ pageTopic: "About Us", appName: "Figerout" });
+  const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   
   return (
     <div className="min-h-svh bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-4xl">
         <CardHeader>
           <CardTitle className="text-3xl md:text-4xl">{content.pageTitle}</CardTitle>
+          <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
         </CardHeader>
         <CardContent>
           <div className="prose dark:prose-invert max-w-none">
