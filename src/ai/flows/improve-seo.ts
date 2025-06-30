@@ -61,6 +61,14 @@ const prompt = ai.definePrompt({
   input: {schema: ImproveSeoInputSchema},
   output: {schema: ImproveSeoOutputSchema},
   tools: [findRelevantImage],
+  config: {
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  },
   prompt: `You are an expert SEO content writer and content strategist. Your task is to rewrite and restructure the provided content and its associated metadata to achieve an SEO score of 90 or higher.
 Carefully analyze the original content, metadata, and the provided SEO feedback.
 
