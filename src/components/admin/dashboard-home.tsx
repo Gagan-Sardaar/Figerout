@@ -90,6 +90,7 @@ export default function DashboardHome() {
 
   useEffect(() => {
     fetchIdeas();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
