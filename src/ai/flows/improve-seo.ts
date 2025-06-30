@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const ImproveSeoInputSchema = z.object({
+const ImproveSeoInputSchema = z.object({
   title: z.string().describe('The title of the content.'),
   content: z.string().describe('The original content in Markdown format.'),
   metaTitle: z.string().optional().describe('The SEO meta title.'),
@@ -21,7 +22,7 @@ export const ImproveSeoInputSchema = z.object({
 });
 export type ImproveSeoInput = z.infer<typeof ImproveSeoInputSchema>;
 
-export const ImproveSeoOutputSchema = z.object({
+const ImproveSeoOutputSchema = z.object({
   improvedContent: z.string().describe('The rewritten content in Markdown format, optimized for SEO.'),
 });
 export type ImproveSeoOutput = z.infer<typeof ImproveSeoOutputSchema>;
