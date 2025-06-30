@@ -72,7 +72,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [imageSearchQuery, setImageSearchQuery] = useState("");
   const [isSearchingImage, setIsSearchingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -178,6 +177,35 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     onSave();
   }
 
+  const handleSaveDraft = () => {
+    toast({
+      title: "Draft Saved!",
+      description: "Your post has been saved as a draft.",
+    });
+    onSave();
+  };
+
+  const handlePasswordProtect = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Password protection feature is not yet available.",
+    });
+  };
+  
+  const handleSetPrivate = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Setting post to private is not yet available.",
+    });
+  };
+
+  const handleSchedule = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Scheduling posts is not yet available.",
+    });
+  };
+
   const handleImageButtonClick = async () => {
     // If an image is already selected, find a similar one.
     if (imagePreview) {
@@ -228,47 +256,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       setIsSearchingImage(false);
     }
   };
-  
-  const handleSearchPexels = async () => {
-    if (!imageSearchQuery) {
-      toast({
-        title: "Search query is empty",
-        description: "Please enter a term to search for an image.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsSearchingImage(true);
-    handleRemoveImage();
-    
-    try {
-      const newImageUrl = await searchPexelsImage(imageSearchQuery);
-      if (newImageUrl) {
-        setImagePreview(newImageUrl);
-        form.setValue("featuredImage", newImageUrl);
-        toast({
-          title: "Image Found!",
-          description: `Found an image for "${imageSearchQuery}".`,
-        });
-      } else {
-        toast({
-          title: "No Image Found",
-          description: `Couldn't find an image for "${imageSearchQuery}". Try a different search term.`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error searching Pexels:", error);
-      toast({
-        title: "Search Failed",
-        description: "There was an error connecting to the image library.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearchingImage(false);
-    }
-  };
-
 
   return (
     <Form {...form}>
@@ -340,7 +327,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                         className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isSearchingImage && "hover:border-primary/50 cursor-pointer"}`}
                       >
                         <input {...getInputProps()} />
-                        {imagePreview && !isSearchingImage ? (
+                        {imagePreview ? (
                           <>
                             <div className="relative aspect-video">
                               <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
@@ -356,22 +343,19 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                           </>
                         ) : (
                           <div className="flex aspect-video flex-col items-center justify-center gap-2 text-muted-foreground p-8">
-                            {isSearchingImage ? (
-                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
-                                    <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Search className="h-5 w-5" /> Searching...</p>
-                                    <div className="w-full max-w-xs">
-                                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                                            <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
-                                        </div>
-                                    </div>
-                                    <p className="mt-2 text-center text-xs text-muted-foreground">Finding the perfect image for you.</p>
+                            <UploadCloud className="w-10 h-10" />
+                            <p>Drag & drop or click</p>
+                          </div>
+                        )}
+                        {isSearchingImage && (
+                          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
+                            <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Search className="h-5 w-5" /> Searching...</p>
+                            <div className="w-full max-w-xs">
+                                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                    <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
                                 </div>
-                            ) : (
-                                <>
-                                    <UploadCloud className="w-10 h-10" />
-                                    <p>Drag & drop or click</p>
-                                </>
-                            )}
+                            </div>
+                            <p className="mt-2 text-center text-xs text-muted-foreground">Finding the perfect image for you.</p>
                           </div>
                         )}
                       </div>
@@ -390,44 +374,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                             </>
                           )}
                       </Button>
-                      <div className="relative">
-                          <div className="absolute inset-0 flex items-center">
-                              <span className="w-full border-t" />
-                          </div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-background px-2 text-muted-foreground">
-                              Or
-                              </span>
-                          </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                          <Input 
-                              id="image-search" 
-                              placeholder="Search Pexels..." 
-                              value={imageSearchQuery}
-                              onChange={(e) => setImageSearchQuery(e.target.value)}
-                              disabled={isSearchingImage}
-                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleSearchPexels();
-                                }
-                              }}
-                          />
-                          <Button 
-                              type="button" 
-                              variant="secondary" 
-                              onClick={handleSearchPexels} 
-                              disabled={isSearchingImage}
-                              className="shrink-0"
-                          >
-                              {isSearchingImage ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                  <Search className="h-4 w-4" />
-                              )}
-                          </Button>
-                      </div>
                     </div>
                   </div>
                   <FormMessage />
@@ -468,11 +414,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         </div>
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
-            <Button type="button" variant="secondary"><Save className="mr-2" />Save Draft</Button>
+            <Button type="button" variant="secondary" onClick={handleSaveDraft}><Save className="mr-2" />Save Draft</Button>
             <div className="flex-grow"></div>
-            <Button type="button" variant="outline"><BookLock className="mr-2" />Password</Button>
-            <Button type="button" variant="outline"><Lock className="mr-2" />Private</Button>
-            <Button type="button" variant="outline"><Clock className="mr-2" />Schedule</Button>
+            <Button type="button" variant="outline" onClick={handlePasswordProtect}><BookLock className="mr-2" />Password</Button>
+            <Button type="button" variant="outline" onClick={handleSetPrivate}><Lock className="mr-2" />Private</Button>
+            <Button type="button" variant="outline" onClick={handleSchedule}><Clock className="mr-2" />Schedule</Button>
             <Button type="submit"><Send className="mr-2" />Publish</Button>
         </div>
       </form>
