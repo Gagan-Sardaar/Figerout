@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useCallback, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
+import { format } from "date-fns";
 import {
   Accordion,
   AccordionContent,
@@ -73,6 +74,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -81,8 +84,9 @@ const formSchema = z.object({
   focusKeywords: z.array(z.object({ value: z.string() })).optional(),
   content: z.string().min(10, { message: "Content must be at least 10 characters." }),
   featuredImage: z.any().optional(),
-  status: z.enum(["published", "draft", "private", "password-protected"]).default("draft"),
+  status: z.enum(["published", "draft", "private", "password-protected", "scheduled"]).default("draft"),
   password: z.string().optional(),
+  scheduleDate: z.date().optional(),
 }).refine(
     (data) => {
         if (data.status === "password-protected") {
@@ -93,6 +97,17 @@ const formSchema = z.object({
     {
         message: "A password of at least 4 characters is required.",
         path: ["password"],
+    }
+).refine(
+    (data) => {
+        if (data.status === "scheduled" && !data.scheduleDate) {
+            return false;
+        }
+        return true;
+    },
+    {
+        message: "Please select a date and time to schedule the post.",
+        path: ["status"],
     }
 );
 
@@ -112,7 +127,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "" },
+    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "", scheduleDate: undefined },
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -124,6 +139,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const content = form.watch("content");
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
+  const scheduleDate = form.watch("scheduleDate");
+  const status = form.watch("status");
 
   useEffect(() => {
     const analyze = async () => {
@@ -350,6 +367,10 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
              title = "Post is Password Protected!";
              description = "This post now requires a password to view.";
              break;
+        case 'scheduled':
+             title = "Post Scheduled!";
+             description = `Your post will be published on ${format(data.scheduleDate!, 'PPP p')}.`;
+             break;
     }
 
     toast({ title, description });
@@ -357,14 +378,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     if (data.status === 'published') {
         onSave();
     }
-  };
-
-
-  const handleSchedule = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "Scheduling posts is not yet available.",
-    });
   };
 
   const handleAutoFixSeo = async () => {
@@ -551,8 +564,13 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                         <FormLabel>Post Status</FormLabel>
                         <FormControl>
                           <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(value) => {
+                                field.onChange(value);
+                                if (value !== 'scheduled') {
+                                    form.setValue('scheduleDate', undefined);
+                                }
+                            }}
+                            value={field.value}
                             className="flex flex-col space-y-1"
                           >
                             <FormItem className="flex items-center space-x-3 space-y-0">
@@ -570,6 +588,12 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                             <FormItem className="flex items-center space-x-3 space-y-0">
                               <FormControl><RadioGroupItem value="password-protected" /></FormControl>
                               <FormLabel className="font-normal">Password Protected</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl><RadioGroupItem value="scheduled" disabled={!scheduleDate} /></FormControl>
+                               <FormLabel className="font-normal text-muted-foreground has-[[data-state=checked]]:text-foreground">
+                                Scheduled
+                              </FormLabel>
                             </FormItem>
                           </RadioGroup>
                         </FormControl>
@@ -679,7 +703,51 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
             {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
-            <Button type="button" variant="outline" onClick={handleSchedule}><Clock className="mr-2" />Schedule</Button>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant={"outline"}
+                    >
+                        <Clock className="mr-2" />
+                        {scheduleDate ? format(scheduleDate, "PPP p") : <span>Schedule</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={scheduleDate}
+                        onSelect={(date) => {
+                            const currentScheduleDate = form.getValues("scheduleDate") || new Date();
+                            const newDate = date || new Date();
+
+                            newDate.setHours(currentScheduleDate.getHours());
+                            newDate.setMinutes(currentScheduleDate.getMinutes());
+                            
+                            form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
+                            form.setValue("status", "scheduled", { shouldDirty: true, shouldValidate: true });
+                        }}
+                        initialFocus
+                    />
+                    <div className="p-3 border-t border-border">
+                        <Label className="mb-2 block">Time</Label>
+                        <Input 
+                            type="time"
+                            defaultValue={scheduleDate ? format(scheduleDate, "HH:mm") : "09:00"}
+                            onChange={(e) => {
+                                const [hours, minutes] = e.target.value.split(':').map(Number);
+                                const newDate = form.getValues("scheduleDate") || new Date();
+                                if (!isNaN(hours) && !isNaN(minutes)) {
+                                    newDate.setHours(hours);
+                                    newDate.setMinutes(minutes);
+                                    form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
+                                    form.setValue("status", "scheduled", { shouldDirty: true, shouldValidate: true });
+                                }
+                            }}
+                        />
+                    </div>
+                </PopoverContent>
+            </Popover>
             <Button type="submit"><Save className="mr-2" />Save Changes</Button>
         </div>
       </form>
