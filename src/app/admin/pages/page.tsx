@@ -123,17 +123,13 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     }
 
     const { selectionStart, selectionEnd } = textarea;
-    const value = form.getValues('pageContent');
-    const selectedText = value.substring(selectionStart, selectionEnd);
+    const value = textarea.value;
 
-    const updateText = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+    const updateTextAndState = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+        textarea.value = newText;
+        textarea.focus();
+        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
         form.setValue('pageContent', newText, { shouldDirty: true, shouldValidate: true });
-        setTimeout(() => {
-            if (contentTextareaRef.current) {
-                contentTextareaRef.current.focus();
-                contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
-            }
-        }, 0);
     };
 
     if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
@@ -146,17 +142,28 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         
         const currentLine = value.substring(lineStart, lineEnd);
         const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
-        const newLine = blockPrefix + trimmedLine;
+        
+        const currentPrefix = currentLine.match(/^(#+\s*|>\s*)/)?.[0] || '';
+        
+        let newLine;
+        if (type === 'p') {
+            newLine = trimmedLine;
+        } else if (currentPrefix.trim() === blockPrefix.trim()) {
+            newLine = trimmedLine;
+        } else {
+            newLine = blockPrefix + trimmedLine;
+        }
         
         const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
         const newCursorPos = lineStart + newLine.length;
-        updateText(newText, newCursorPos, newCursorPos);
+        updateTextAndState(newText, newCursorPos, newCursorPos);
         return;
     }
     
     let prefix = '';
     let suffix = '';
     let placeholder = 'text';
+    const selectedText = value.substring(selectionStart, selectionEnd);
 
     switch (type) {
         case 'bold': prefix = '**'; suffix = '**'; break;
@@ -168,7 +175,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     const newText = `${value.substring(0, selectionStart)}${prefix}${textToWrap}${suffix}${value.substring(selectionEnd)}`;
     const newStart = selectionStart + prefix.length;
     const newEnd = newStart + textToWrap.length;
-    updateText(newText, newStart, newEnd);
+    updateTextAndState(newText, newStart, newEnd);
   };
 
   useEffect(() => {
@@ -397,7 +404,9 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                         <Textarea
                           ref={(e) => {
                             field.ref(e);
-                            if(e) contentTextareaRef.current = e;
+                            if(e) {
+                              contentTextareaRef.current = e;
+                            }
                           }}
                           placeholder="The main content of the page..."
                           className="min-h-[400px] font-mono text-sm rounded-t-none focus-visible:ring-0"

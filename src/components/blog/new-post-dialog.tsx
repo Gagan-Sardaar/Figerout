@@ -188,17 +188,13 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
 
     const { selectionStart, selectionEnd } = textarea;
-    const value = form.getValues('content');
-    const selectedText = value.substring(selectionStart, selectionEnd);
+    const value = textarea.value;
 
-    const updateText = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+    const updateTextAndState = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+        textarea.value = newText;
+        textarea.focus();
+        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
         form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
-        setTimeout(() => {
-            if (contentTextareaRef.current) {
-                contentTextareaRef.current.focus();
-                contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
-            }
-        }, 0);
     };
 
     if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
@@ -211,17 +207,28 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         
         const currentLine = value.substring(lineStart, lineEnd);
         const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
-        const newLine = blockPrefix + trimmedLine;
+        
+        const currentPrefix = currentLine.match(/^(#+\s*|>\s*)/)?.[0] || '';
+        
+        let newLine;
+        if (type === 'p') {
+            newLine = trimmedLine;
+        } else if (currentPrefix.trim() === blockPrefix.trim()) {
+            newLine = trimmedLine;
+        } else {
+            newLine = blockPrefix + trimmedLine;
+        }
         
         const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
         const newCursorPos = lineStart + newLine.length;
-        updateText(newText, newCursorPos, newCursorPos);
+        updateTextAndState(newText, newCursorPos, newCursorPos);
         return;
     }
     
     let prefix = '';
     let suffix = '';
     let placeholder = 'text';
+    const selectedText = value.substring(selectionStart, selectionEnd);
 
     switch (type) {
         case 'bold': prefix = '**'; suffix = '**'; break;
@@ -233,7 +240,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     const newText = `${value.substring(0, selectionStart)}${prefix}${textToWrap}${suffix}${value.substring(selectionEnd)}`;
     const newStart = selectionStart + prefix.length;
     const newEnd = newStart + textToWrap.length;
-    updateText(newText, newStart, newEnd);
+    updateTextAndState(newText, newStart, newEnd);
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -435,7 +442,9 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       <Textarea
                         ref={(e) => {
                           field.ref(e);
-                          if(e) contentTextareaRef.current = e;
+                          if(e) {
+                            contentTextareaRef.current = e;
+                          }
                         }}
                         placeholder="Write your blog post content here..."
                         className="min-h-[300px] rounded-t-none focus-visible:ring-0"
@@ -599,7 +608,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                     </div>
                     {form.formState.errors.focusKeywords && (
                         <p className="text-sm font-medium text-destructive mt-2">
-                            {form.formState.errors.focusKeywords.message}
+                            {form.formState.errors.focusKeywords.message as string}
                         </p>
                         )}
                    </div>
