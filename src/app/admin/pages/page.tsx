@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,11 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, Save, X, PlusCircle } from "lucide-react";
+import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb } from "lucide-react";
 import {
-  generatePageContent,
-  GeneratePageContentOutput,
+  generatePageContent
 } from "@/ai/flows/generate-page-content";
+import {
+  generateSeoScore,
+  GenerateSeoScoreOutput,
+} from "@/ai/flows/generate-seo-score";
 import {
   Form,
   FormControl,
@@ -36,6 +39,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 type PageTopic = "About Us" | "Contact Us" | "Privacy Policy" | "Terms of Service" | "Cookie Policy";
 
@@ -52,6 +56,8 @@ type PageContentFormValues = z.infer<typeof pageContentSchema>;
 function PageEditor({ topic }: { topic: PageTopic }) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
+  const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
   
   const form = useForm<PageContentFormValues>({
     resolver: zodResolver(pageContentSchema),
@@ -68,6 +74,43 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     control: form.control,
     name: "focusKeywords",
   });
+  
+  const pageTitle = form.watch("pageTitle");
+  const metaTitle = form.watch("metaTitle");
+  const metaDescription = form.watch("metaDescription");
+  const pageContent = form.watch("pageContent");
+
+  useEffect(() => {
+    const analyze = async () => {
+      if (!pageTitle || !pageContent) {
+        setSeoResult(null);
+        return;
+      }
+      setIsAnalyzingSeo(true);
+      try {
+        const result = await generateSeoScore({
+          title: pageTitle,
+          content: pageContent,
+          metaTitle: metaTitle,
+          metaDescription: metaDescription,
+        });
+        setSeoResult(result);
+      } catch (error) {
+        console.error("Error analyzing SEO:", error);
+      } finally {
+        setIsAnalyzingSeo(false);
+      }
+    };
+
+    const handler = setTimeout(() => {
+      analyze();
+    }, 1500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [pageTitle, metaTitle, metaDescription, pageContent]);
+
 
   const handleGenerateContent = async () => {
     setIsGenerating(true);
@@ -108,107 +151,158 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleGenerateContent} disabled={isGenerating}>
-                {isGenerating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                Generate Content
-              </Button>
-              <Button type="submit">
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="pageTitle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Page Title (H1)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="The main title displayed on the page" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={handleGenerateContent} disabled={isGenerating}>
+                    {isGenerating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generate Content
+                  </Button>
+                  <Button type="submit">
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </Button>
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="pageTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page Title (H1)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="The main title displayed on the page" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="metaTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Meta Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Title for search engine results" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="metaDescription"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Meta Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Description for search engine results" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div>
-              <Label>Focus Keywords</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {fields.map((field, index) => (
-                  <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
-                    {form.watch(`focusKeywords.${index}.value`)}
-                    <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add
-                </Button>
-              </div>
-               {form.formState.errors.focusKeywords && (
-                  <p className="text-sm font-medium text-destructive mt-2">
-                    {form.formState.errors.focusKeywords.message}
-                  </p>
-                )}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="metaTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meta Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Title for search engine results" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="metaDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meta Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Description for search engine results" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <Label>Focus Keywords</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {fields.map((field, index) => (
+                      <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
+                        {form.watch(`focusKeywords.${index}.value`)}
+                        <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add
+                    </Button>
+                  </div>
+                  {form.formState.errors.focusKeywords && (
+                      <p className="text-sm font-medium text-destructive mt-2">
+                        {form.formState.errors.focusKeywords.message}
+                      </p>
+                    )}
+                </div>
 
-            <FormField
-              control={form.control}
-              name="pageContent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Page Content (Markdown)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="The main content of the page..."
-                      className="min-h-[400px] font-mono text-sm"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
+                <FormField
+                  control={form.control}
+                  name="pageContent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page Content (Markdown)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="The main content of the page..."
+                          className="min-h-[400px] font-mono text-sm"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          </div>
+          <div className="lg:col-span-1">
+            <div className="sticky top-24">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Real-Time SEO
+                  </CardTitle>
+                  <CardDescription>Score updates as you type.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isAnalyzingSeo && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Analyzing...</span>
+                    </div>
+                  )}
+                  {!isAnalyzingSeo && !seoResult && (
+                    <p className="text-sm text-muted-foreground">
+                      Start typing to see your SEO score.
+                    </p>
+                  )}
+                  {seoResult && !isAnalyzingSeo && (
+                    <div className="space-y-2">
+                      <Label className="text-base font-bold">
+                        Score: {seoResult.score}/100
+                      </Label>
+                      <Progress value={seoResult.score} />
+                      <Card className="mt-4 bg-muted/50">
+                        <CardHeader className="flex flex-row items-center gap-2 p-3">
+                          <Lightbulb className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-sm font-semibold">
+                            Feedback
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-xs text-muted-foreground">
+                            {seoResult.feedback}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

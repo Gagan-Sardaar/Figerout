@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import {
@@ -93,6 +93,50 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     resolver: zodResolver(formSchema),
     defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft" },
   });
+  
+  const title = form.watch("title");
+  const content = form.watch("content");
+  const metaTitle = form.watch("metaTitle");
+  const metaDescription = form.watch("metaDescription");
+
+  useEffect(() => {
+    const analyze = async () => {
+        if (!title || !content) {
+            setSeoResult(null);
+            return;
+        }
+        setIsAnalyzingSeo(true);
+        try {
+            const result = await generateSeoScore({
+                title,
+                content,
+                metaTitle,
+                metaDescription,
+            });
+            setSeoResult(result);
+        } catch (error) {
+            console.error("Error analyzing SEO:", error);
+            toast({
+                title: "SEO Analysis Failed",
+                description: "Could not connect to the AI service.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsAnalyzingSeo(false);
+        }
+    };
+
+    if (!title && !content) return;
+
+    const handler = setTimeout(() => {
+        analyze();
+    }, 1500);
+
+    return () => {
+        clearTimeout(handler);
+    };
+}, [title, content, metaTitle, metaDescription, toast]);
+
 
   const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image') => {
     const textarea = contentTextareaRef.current;
@@ -249,8 +293,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
   const handleSave = (status: FormValues['status']) => {
     form.setValue('status', status);
-    // In a real app, this would submit the form to a backend.
-    // For now, we'll just log and show a toast.
     console.log("Saving with status:", status, form.getValues());
     
     setLastSaved(new Date());
@@ -286,40 +328,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       description: "Scheduling posts is not yet available.",
     });
   };
-  
-  const handleAnalyzeSeo = async () => {
-    setIsAnalyzingSeo(true);
-    setSeoResult(null);
-    try {
-      const values = form.getValues();
-      if (!values.title || !values.content) {
-        toast({
-          title: "Content Required",
-          description: "Please provide a title and content before analyzing SEO.",
-          variant: "destructive",
-        });
-        setIsAnalyzingSeo(false);
-        return;
-      }
-      const result = await generateSeoScore({
-        title: values.title,
-        content: values.content,
-        metaTitle: values.metaTitle,
-        metaDescription: values.metaDescription,
-      });
-      setSeoResult(result);
-    } catch (error) {
-      console.error("Error analyzing SEO:", error);
-      toast({
-        title: "SEO Analysis Failed",
-        description: "Could not connect to the AI service.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzingSeo(false);
-    }
-  };
-
 
   return (
     <Form {...form}>
@@ -511,16 +519,15 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </FormItem>
                     )}
                   />
-                  <Button type="button" variant="outline" size="sm" onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo}>
-                    {isAnalyzingSeo ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Analyze SEO
-                  </Button>
                   
-                  {seoResult && (
+                  {isAnalyzingSeo && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Analyzing SEO...</span>
+                    </div>
+                  )}
+
+                  {seoResult && !isAnalyzingSeo && (
                     <div className="space-y-2 pt-2">
                       <Label>SEO Score: {seoResult.score}/100</Label>
                       <Progress value={seoResult.score} className="w-full" />
