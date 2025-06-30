@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,12 +12,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const GenerateImageInputSchema = z.object({
+export const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A text description of the image to generate.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
-const GenerateImageOutputSchema = z.object({
+export const GenerateImageOutputSchema = z.object({
   imageUrl: z.string().describe("The generated image as a data URI. Expected format: 'data:image/png;base64,<encoded_data>'."),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
@@ -40,10 +41,10 @@ const generateImageFlow = ai.defineFlow(
       },
     });
 
-    if (!media || !media.url) {
+    if (!media || media.length === 0 || !media[0].url) {
       throw new Error('Image generation failed to return a valid image URL.');
     }
 
-    return { imageUrl: media.url };
+    return { imageUrl: media[0].url };
   }
 );
