@@ -38,12 +38,9 @@ import {
   UploadCloud,
   ImagePlus,
   Save,
-  Lock,
   Clock,
-  Send,
   Dice5,
   PlusCircle,
-  BookLock,
   Trash2,
   Replace,
   Bold,
@@ -85,7 +82,19 @@ const formSchema = z.object({
   content: z.string().min(10, { message: "Content must be at least 10 characters." }),
   featuredImage: z.any().optional(),
   status: z.enum(["published", "draft", "private", "password-protected"]).default("draft"),
-});
+  password: z.string().optional(),
+}).refine(
+    (data) => {
+        if (data.status === "password-protected") {
+            return data.password && data.password.length >= 4;
+        }
+        return true;
+    },
+    {
+        message: "A password of at least 4 characters is required.",
+        path: ["password"],
+    }
+);
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -103,7 +112,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [] },
+    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "" },
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -317,18 +326,21 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
   };
 
-  const handleSave = (status: FormValues['status']) => {
-    console.log("Saving with status:", status, form.getValues());
-    
+  const onSubmit = (data: FormValues) => {
+    console.log("Saving post with data:", data);
     setLastSaved(new Date());
-    
-    let title = "Draft Saved!";
-    let description = "Your post has been saved as a draft.";
 
-    switch(status) {
+    let title = "Changes Saved!";
+    let description = "Your post has been updated.";
+
+    switch(data.status) {
         case 'published':
             title = "Post Published!";
             description = "Your new blog post is now live.";
+            break;
+        case 'draft':
+            title = "Draft Saved!";
+            description = "Your post has been saved as a draft.";
             break;
         case 'private':
             title = "Post Saved as Private!";
@@ -342,10 +354,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
     toast({ title, description });
 
-    if (status !== 'draft') {
+    if (data.status === 'published') {
         onSave();
     }
   };
+
 
   const handleSchedule = () => {
     toast({
@@ -399,7 +412,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         onOpenChange={setIsImageDialogOpen}
         onInsertImage={handleImageInsert}
       />
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             <FormField
@@ -564,6 +577,21 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </FormItem>
                     )}
                   />
+                  {form.watch("status") === "password-protected" && (
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Post Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Enter post password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-1">
@@ -651,11 +679,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
             {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
-            <Button type="button" variant="secondary" onClick={() => handleSave('draft')}><Save className="mr-2" />Save Draft</Button>
-            <Button type="button" variant="outline" onClick={() => handleSave('password-protected')}><BookLock className="mr-2" />Password</Button>
-            <Button type="button" variant="outline" onClick={() => handleSave('private')}><Lock className="mr-2" />Private</Button>
             <Button type="button" variant="outline" onClick={handleSchedule}><Clock className="mr-2" />Schedule</Button>
-            <Button type="button" onClick={() => handleSave('published')}><Send className="mr-2" />Publish</Button>
+            <Button type="submit"><Save className="mr-2" />Save Changes</Button>
         </div>
       </form>
     </Form>
@@ -677,7 +702,7 @@ export function NewPostDialog() {
         <DialogHeader>
           <DialogTitle>Create New Blog Post</DialogTitle>
           <DialogDescription>
-            Fill out the details below. Click publish when you're done.
+            Fill out the details below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto -mr-6 pr-6">
