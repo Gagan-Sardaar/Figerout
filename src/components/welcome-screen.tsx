@@ -263,6 +263,7 @@ const WelcomeScreen = () => {
                   <div className="overflow-hidden">
                     <div className="flex flex-col items-start gap-1 border-t border-white/20 pt-1">
                       <Link href="/about" className="hover:text-white">About Us</Link>
+                      <Link href="/blog" className="hover:text-white">Blog</Link>
                       <Link href="/contact" className="hover:text-white">Contact Us</Link>
                       <Link href="/admin" className="hover:text-white">Dashboard</Link>
                       <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
