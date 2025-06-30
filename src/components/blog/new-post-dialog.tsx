@@ -36,7 +36,6 @@ import { useToast } from "@/hooks/use-toast";
 import {
   UploadCloud,
   ImagePlus,
-  Sparkles,
   Save,
   Lock,
   Clock,
@@ -55,6 +54,7 @@ import {
   Pilcrow,
   Loader2,
   Search,
+  Sparkles,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { searchPexelsImage } from "@/app/actions";
@@ -79,11 +79,12 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "" },
   });
 
-  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image' | 'regenerate') => {
+  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image') => {
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
 
-    const { selectionStart, selectionEnd, value } = textarea;
+    const value = form.getValues('content');
+    const { selectionStart, selectionEnd } = textarea;
     const selectedText = value.substring(selectionStart, selectionEnd);
 
     const applyInlineMarkdown = (prefix: string, suffix: string = prefix) => {
@@ -138,9 +139,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         break;
       case 'image':
         applyInlineMarkdown('![alt text](', 'image_url)');
-        break;
-      case 'regenerate':
-        toast({ title: "AI Regeneration", description: "This feature is coming soon!" });
         break;
     }
   };
@@ -274,7 +272,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
                  <Separator orientation="vertical" className="h-6 mx-1" />
                  <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
-                 <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('regenerate')}><Sparkles className="mr-2"/> Regenerate</Button>
               </div>
               <FormField
                 control={form.control}
