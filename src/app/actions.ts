@@ -95,7 +95,19 @@ export async function searchPexelsImage(query: string): Promise<string | null> {
     const validatedData = PexelsSearchSchema.safeParse(data);
 
     if (validatedData.success && validatedData.data.photos.length > 0) {
-      return validatedData.data.photos[0].src.portrait;
+      const imageUrl = validatedData.data.photos[0].src.portrait;
+      
+      // Fetch the image and convert to data URI
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        console.error(`Failed to fetch Pexels image from URL: ${imageUrl}`);
+        return null;
+      }
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+      const base64 = Buffer.from(imageBuffer).toString('base64');
+      return `data:${contentType};base64,${base64}`;
+
     } else {
       if (!validatedData.success) {
         console.error(`Pexels API search response validation error for query "${query}":`, validatedData.error);
