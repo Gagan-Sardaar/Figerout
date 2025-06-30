@@ -551,7 +551,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </FormItem>
                     )}
                   />
-                  {lastSaved && <p className="text-xs text-muted-foreground">Last saved: {lastSaved.toLocaleString()}</p>}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-1">
@@ -638,8 +637,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         </div>
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
+            {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
             <Button type="button" variant="secondary" onClick={() => handleSave('draft')}><Save className="mr-2" />Save Draft</Button>
-            <div className="flex-grow"></div>
             <Button type="button" variant="outline" onClick={() => handleSave('password-protected')}><BookLock className="mr-2" />Password</Button>
             <Button type="button" variant="outline" onClick={() => handleSave('private')}><Lock className="mr-2" />Private</Button>
             <Button type="button" variant="outline" onClick={handleSchedule}><Clock className="mr-2" />Schedule</Button>

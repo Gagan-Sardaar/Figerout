@@ -66,6 +66,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   const form = useForm<PageContentFormValues>({
     resolver: zodResolver(pageContentSchema),
@@ -201,6 +202,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const handleGenerateContent = async () => {
     setIsGenerating(true);
     form.reset();
+    setLastSaved(null);
     try {
       const result = await generatePageContent({ pageTopic: topic, appName: "Figerout" });
       form.setValue("pageTitle", result.pageTitle);
@@ -225,7 +227,8 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     toast({
         title: "Changes Saved!",
         description: `Content for ${topic} has been updated.`,
-    })
+    });
+    setLastSaved(new Date());
   }
 
   const handleAutoFixSeo = async () => {
@@ -284,7 +287,8 @@ function PageEditor({ topic }: { topic: PageTopic }) {
           <div className="lg:col-span-2">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 items-center">
+                  {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
                   <Button type="button" variant="outline" onClick={handleGenerateContent} disabled={isGenerating}>
                     {isGenerating ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
