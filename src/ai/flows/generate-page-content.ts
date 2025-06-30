@@ -11,13 +11,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GeneratePageContentInputSchema = z.object({
+const GeneratePageContentInputSchema = z.object({
   pageTopic: z.string().describe('The topic of the page to generate, e.g., "About Us", "Privacy Policy".'),
   appName: z.string().describe('The name of the application.'),
 });
 export type GeneratePageContentInput = z.infer<typeof GeneratePageContentInputSchema>;
 
-export const GeneratePageContentOutputSchema = z.object({
+const GeneratePageContentOutputSchema = z.object({
   pageTitle: z.string().describe('The main H1 title for the page.'),
   metaTitle: z.string().describe('The SEO-optimized title for the <title> tag (50-60 characters).'),
   metaDescription: z.string().describe('A compelling meta description for search engines (150-160 characters).'),
