@@ -54,10 +54,18 @@ import {
   Pilcrow,
   Search,
   Sparkles,
+  Loader2,
+  Lightbulb,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
 import { searchPexelsImage } from "@/app/actions";
+import {
+  generateSeoScore,
+  GenerateSeoScoreOutput,
+} from "@/ai/flows/generate-seo-score";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -72,6 +80,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
+  const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -268,6 +278,40 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       description: "Scheduling posts is not yet available.",
     });
   };
+  
+  const handleAnalyzeSeo = async () => {
+    setIsAnalyzingSeo(true);
+    setSeoResult(null);
+    try {
+      const values = form.getValues();
+      if (!values.title || !values.content) {
+        toast({
+          title: "Content Required",
+          description: "Please provide a title and content before analyzing SEO.",
+          variant: "destructive",
+        });
+        setIsAnalyzingSeo(false);
+        return;
+      }
+      const result = await generateSeoScore({
+        title: values.title,
+        content: values.content,
+        metaTitle: values.metaTitle,
+        metaDescription: values.metaDescription,
+      });
+      setSeoResult(result);
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+      toast({
+        title: "SEO Analysis Failed",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzingSeo(false);
+    }
+  };
+
 
   return (
     <Form {...form}>
@@ -419,6 +463,30 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </FormItem>
                     )}
                   />
+                  <Button type="button" variant="outline" size="sm" onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo}>
+                    {isAnalyzingSeo ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Analyze SEO
+                  </Button>
+                  
+                  {seoResult && (
+                    <div className="space-y-2 pt-2">
+                      <Label>SEO Score: {seoResult.score}/100</Label>
+                      <Progress value={seoResult.score} className="w-full" />
+                      <Card className="mt-2 bg-muted/50">
+                        <CardHeader className="flex flex-row items-center gap-2 p-3">
+                           <Lightbulb className="h-5 w-5 text-primary" />
+                           <CardTitle className="text-sm font-semibold">Feedback & Suggestions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                           <p className="text-xs text-muted-foreground">{seoResult.feedback}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

@@ -1,12 +1,17 @@
+"use client";
+
 import { blogPosts } from '@/lib/blog-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Eye, Heart, Share2 } from 'lucide-react';
+import { ArrowLeft, Eye, Heart, Share2, Camera, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const [isCreditExpanded, setIsCreditExpanded] = useState(false);
   const post = blogPosts.find((p) => p.slug === params.slug);
 
   if (!post) {
@@ -33,6 +38,32 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             className="object-cover rounded-md"
                             data-ai-hint={post.imageHint}
                             />
+                            {post.photographer && post.photographerUrl && (
+                                <div
+                                className="absolute bottom-2 right-2 z-10"
+                                onMouseEnter={() => setIsCreditExpanded(true)}
+                                onMouseLeave={() => setIsCreditExpanded(false)}
+                                >
+                                <a
+                                    href={post.photographerUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1.5 pl-3 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+                                >
+                                    <Camera className="h-4 w-4 shrink-0" />
+                                    <div
+                                        className={cn(
+                                            'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
+                                            isCreditExpanded && 'grid-cols-[1fr] ml-1'
+                                        )}
+                                    >
+                                        <span className="overflow-hidden whitespace-nowrap">
+                                            Photo by {post.photographer}
+                                        </span>
+                                    </div>
+                                </a>
+                                </div>
+                            )}
                         </div>
                         <CardTitle className="text-3xl md:text-4xl font-bold">{post.title}</CardTitle>
                         <div className="flex items-center text-sm text-muted-foreground gap-4 pt-2">
