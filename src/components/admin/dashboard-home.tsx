@@ -33,6 +33,7 @@ import {
   GenerateSeoContentOutput,
 } from "@/ai/flows/generate-seo-content";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const chartData = [
   { name: "Jan", engagement: 400 },
