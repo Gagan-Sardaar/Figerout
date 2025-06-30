@@ -332,14 +332,14 @@ const ColorPickerView = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
+                <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full border-2 border-white/20 shrink-0 mt-px" style={{ backgroundColor: pickedColor }} />
                     <div className="flex-grow">
                         <p className="font-bold font-code text-sm tracking-wider">{pickedColor.toUpperCase()}</p>
                         <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
+                        <p className="text-xs text-white/70 pt-1">Choose your perfect color shade</p>
                     </div>
                 </div>
-                <p className="text-xs text-white/70 pt-2">Choose your perfect color shade</p>
             </div>
             <div className="flex flex-col max-h-[50vh] overflow-y-auto">
                 {palette.map((shade, index) => (
