@@ -71,7 +71,7 @@ import {
 } from "@/ai/flows/generate-seo-score";
 import { improveSeo } from "@/ai/flows/improve-seo";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDescriptionUi } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
@@ -180,8 +180,6 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
         }
     };
 
-    if (!title && !content) return;
-
     const handler = setTimeout(() => {
         analyze();
     }, 1500);
@@ -229,14 +227,10 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     const value = textarea.value;
 
     const updateTextAndState = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+        textarea.value = newText;
+        textarea.focus();
+        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
         form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
-
-        setTimeout(() => {
-          if (contentTextareaRef.current) {
-              contentTextareaRef.current.focus();
-              contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
-          }
-        }, 0);
     };
 
     if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
@@ -589,8 +583,8 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
               )}
             />
 
-            <Accordion type="single" collapsible defaultValue="item-2">
-               <AccordionItem value="item-2">
+            <Accordion type="single" collapsible defaultValue="item-1">
+              <AccordionItem value="item-1">
                 <AccordionTrigger>Publishing Settings</AccordionTrigger>
                 <AccordionContent className="space-y-4">
                   <FormField
@@ -644,9 +638,17 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                   )}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>SEO Settings</AccordionTrigger>
-                <AccordionContent className="space-y-4">
+            </Accordion>
+
+            <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Real-Time SEO
+                  </CardTitle>
+                  <CardDescriptionUi>Score updates as you type.</CardDescriptionUi>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
                     name="metaTitle"
@@ -698,15 +700,21 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                     </div>
                   )}
 
+                  {!isAnalyzingSeo && !seoResult && (
+                    <p className="text-sm text-muted-foreground pt-2">
+                        Start typing to see your SEO score.
+                    </p>
+                  )}
+
                   {seoResult && !isAnalyzingSeo && (
                     <div className="space-y-2 pt-2">
-                      <Label>SEO Score: {seoResult.score}/100</Label>
-                      <Progress value={seoResult.score} className="w-full" />
-                      <Card className="mt-2 bg-muted/50">
+                      <Label className="text-base font-bold">Score: {seoResult.score}/100</Label>
+                      <Progress value={seoResult.score} />
+                      <Card className="mt-4 bg-muted/50">
                         <CardHeader className="flex flex-row items-center justify-between gap-2 p-3">
                            <div className="flex items-center gap-2">
                                 <Lightbulb className="h-5 w-5 text-primary" />
-                                <CardTitle className="text-sm font-semibold">Feedback & Suggestions</CardTitle>
+                                <CardTitle className="text-sm font-semibold">Feedback</CardTitle>
                            </div>
                            {seoResult && seoResult.score < 90 && (
                                 <Button size="sm" variant="default" onClick={handleAutoFixSeo} disabled={isAutoFixing}>
@@ -721,9 +729,9 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                       </Card>
                     </div>
                   )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </CardContent>
+              </Card>
+
           </div>
         </div>
         
