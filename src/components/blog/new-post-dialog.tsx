@@ -90,6 +90,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     const applyInlineMarkdown = (prefix: string, suffix: string = prefix) => {
       const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText}${suffix}${value.substring(selectionEnd)}`;
       form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+      form.trigger('content');
       setTimeout(() => {
         textarea.focus();
         if (selectedText) {
@@ -108,6 +109,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       const newLine = prefix + trimmedLine;
       const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
       form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+      form.trigger('content');
       setTimeout(() => {
         textarea.focus();
         const newCursorPos = lineStart + newLine.length;
@@ -207,7 +209,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   };
 
   const handleImageButtonClick = async () => {
-    // If an image is already selected, find a similar one.
     if (imagePreview) {
       setIsSearchingImage(true);
       toast({ title: "Finding a similar image..." });
@@ -234,7 +235,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         setIsSearchingImage(false);
       }
     } else {
-      // If no image is selected, fetch a random one.
       setIsSearchingImage(true);
       toast({ title: "Searching for a random image..." });
       try {
@@ -451,3 +451,5 @@ export function NewPostDialog() {
     </Dialog>
   );
 }
+
+    
