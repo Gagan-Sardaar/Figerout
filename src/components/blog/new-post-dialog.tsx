@@ -237,10 +237,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     setIsGeneratingImage(true);
     handleRemoveImage();
     let pexelsUrl: string | null = null;
+    const detailedPrompt = `A high-quality, photorealistic image of ${imagePrompt}. Style: professional, vivid, cinematic.`;
 
     try {
       // First attempt: generate from prompt only
-      const result = await generateImage({ prompt: imagePrompt });
+      const result = await generateImage({ prompt: detailedPrompt });
       setImagePreview(result.imageUrl);
       form.setValue("featuredImage", result.imageUrl);
       toast({
@@ -264,7 +265,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
         // Fallback step 2: Generate new image using the pexels image as reference
         const resultWithFallback = await generateImage({
-          prompt: imagePrompt,
+          prompt: detailedPrompt,
           referenceImageUrl: pexelsUrl,
         });
 
@@ -362,24 +363,13 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                 <FormItem>
                   <FormLabel>Featured Image</FormLabel>
                    <div className="relative">
-                     {isGeneratingImage && (
-                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
-                            <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Wand2 className="h-5 w-5" /> Thinking...</p>
-                            <div className="w-full max-w-xs">
-                                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                                    <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
-                                </div>
-                            </div>
-                            <p className="mt-2 text-center text-xs text-muted-foreground">Generating with AI. We'll try a stock photo if this fails.</p>
-                        </div>
-                     )}
                     <FormControl>
                       <div
                         {...getRootProps()}
                         className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isGeneratingImage && "hover:border-primary/50 cursor-pointer"}`}
                       >
                         <input {...getInputProps()} />
-                        {imagePreview ? (
+                        {imagePreview && !isGeneratingImage ? (
                           <>
                             <div className="relative aspect-video">
                               <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
@@ -394,9 +384,23 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                             </div>
                           </>
                         ) : (
-                          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
-                          <UploadCloud className="w-10 h-10" />
-                          <p>Drag & drop or click</p>
+                          <div className="flex aspect-video flex-col items-center justify-center gap-2 text-muted-foreground p-8">
+                            {isGeneratingImage ? (
+                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
+                                    <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Wand2 className="h-5 w-5" /> Thinking...</p>
+                                    <div className="w-full max-w-xs">
+                                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                            <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
+                                        </div>
+                                    </div>
+                                    <p className="mt-2 text-center text-xs text-muted-foreground">Generating with AI. We'll try a stock photo if this fails.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <UploadCloud className="w-10 h-10" />
+                                    <p>Drag & drop or click</p>
+                                </>
+                            )}
                           </div>
                         )}
                       </div>
