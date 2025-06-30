@@ -114,15 +114,20 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
             <span>{post.shares.toLocaleString()}</span>
           </div>
           {isAdmin && (
-            <div className="flex items-center gap-1.5 font-medium ml-auto">
-              <Sparkles className="h-4 w-4 text-primary" />
-              {isLoadingSeo ? (
-                <Skeleton className="h-4 w-16" />
-              ) : seoResult ? (
-                <span className="text-foreground">SEO: {seoResult.score}</span>
-              ) : (
-                <span>SEO: N/A</span>
-              )}
+            <div className="flex items-center gap-4 ml-auto">
+                <Badge variant={statusVariant[post.status]} className="capitalize">
+                    {post.status.replace('-', ' ')}
+                </Badge>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  {isLoadingSeo ? (
+                    <Skeleton className="h-4 w-16" />
+                  ) : seoResult ? (
+                    <span className="text-foreground">SEO: {seoResult.score}</span>
+                  ) : (
+                    <span>SEO: N/A</span>
+                  )}
+                </div>
             </div>
           )}
         </div>
@@ -142,11 +147,6 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
                 READ MORE <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-          )}
-           {isAdmin && (
-            <Badge variant={statusVariant[post.status]} className="capitalize">
-              {post.status.replace('-', ' ')}
-            </Badge>
           )}
         </div>
       </CardFooter>
