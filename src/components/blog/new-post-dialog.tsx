@@ -60,6 +60,7 @@ import {
   Lightbulb,
   Wand2,
   X,
+  Send,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
@@ -76,6 +77,7 @@ import { Badge } from "@/components/ui/badge";
 import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import type { BlogPost } from "@/lib/blog-data";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -113,7 +115,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function NewPostForm({ onSave }: { onSave: () => void }) {
+function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -124,10 +126,23 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
+  const isEditing = !!post;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "", scheduleDate: undefined },
+    defaultValues: isEditing && post
+      ? {
+          title: post.title,
+          content: post.summary,
+          status: post.status,
+          featuredImage: post.imageUrl,
+          metaTitle: "",
+          metaDescription: "",
+          focusKeywords: [],
+          password: "",
+          scheduleDate: post.status === 'scheduled' && post.lastUpdated ? new Date(post.lastUpdated) : undefined,
+        }
+      : { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "", scheduleDate: undefined },
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -141,6 +156,12 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const metaDescription = form.watch("metaDescription");
   const scheduleDate = form.watch("scheduleDate");
   const status = form.watch("status");
+
+  useEffect(() => {
+    if (post?.imageUrl) {
+      setImagePreview(post.imageUrl);
+    }
+  }, [post]);
 
   useEffect(() => {
     const analyze = async () => {
@@ -188,6 +209,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     const startPos = imageCursorPos;
     
     const newText = value.substring(0, startPos) + markdown + value.substring(startPos);
+    
     form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
 
     setTimeout(() => {
@@ -213,14 +235,17 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         return;
     }
 
-    const { selectionStart, selectionEnd } = textarea;
-    const value = textarea.value;
+    const { selectionStart, selectionEnd, value } = textarea;
 
     const updateTextAndState = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
-        textarea.value = newText;
-        textarea.focus();
-        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
         form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+
+        setTimeout(() => {
+          if (contentTextareaRef.current) {
+              contentTextareaRef.current.focus();
+              contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
+          }
+        }, 0);
     };
 
     if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
@@ -347,6 +372,15 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     console.log("Saving post with data:", data);
     setLastSaved(new Date());
 
+    if (isEditing) {
+      toast({
+        title: "Post Updated!",
+        description: "Your changes have been saved successfully.",
+      });
+      onSave();
+      return;
+    }
+
     let title = "Changes Saved!";
     let description = "Your post has been updated.";
 
@@ -417,6 +451,27 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       setIsAutoFixing(false);
     }
   };
+  
+  const getSubmitButtonConfig = () => {
+    const iconClass = "mr-2 h-4 w-4";
+    if (isEditing) {
+      return { text: 'Update', icon: <Save className={iconClass} /> };
+    }
+
+    switch (status) {
+      case 'published':
+      case 'password-protected':
+        return { text: 'Publish', icon: <Send className={iconClass} /> };
+      case 'scheduled':
+        return { text: 'Schedule Post', icon: <Clock className={iconClass} /> };
+      case 'draft':
+      case 'private':
+      default:
+        return { text: 'Save Changes', icon: <Save className={iconClass} /> };
+    }
+  };
+
+  const submitButtonConfig = getSubmitButtonConfig();
 
   return (
     <Form {...form}>
@@ -709,7 +764,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                         type="button"
                         variant={"outline"}
                     >
-                        <Clock className="mr-2" />
+                        <Clock className="mr-2 h-4 w-4" />
                         {scheduleDate ? format(scheduleDate, "PPP p") : <span>Schedule</span>}
                     </Button>
                 </PopoverTrigger>
@@ -748,33 +803,40 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                     </div>
                 </PopoverContent>
             </Popover>
-            <Button type="submit"><Save className="mr-2" />Save Changes</Button>
+            <Button type="submit">
+                {submitButtonConfig.icon}
+                {submitButtonConfig.text}
+            </Button>
         </div>
       </form>
     </Form>
   );
 }
 
-export function NewPostDialog() {
+export function NewPostDialog({ post, children }: { post?: BlogPost; children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const trigger = children ?? (
+    <Button>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      New Post
+    </Button>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Post
-        </Button>
+        {trigger}
       </DialogTrigger>
       <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Create New Blog Post</DialogTitle>
+          <DialogTitle>{post ? 'Edit Post' : 'Create New Blog Post'}</DialogTitle>
           <DialogDescription>
-            Fill out the details below. Click save when you're done.
+            {post ? "Make changes to your post here. Click update when you're done." : "Fill out the details below. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto -mr-6 pr-6">
-          <NewPostForm onSave={() => setIsOpen(false)} />
+          <NewPostForm post={post} onSave={() => setIsOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { NewPostDialog } from '@/components/blog/new-post-dialog';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -131,12 +133,14 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
             </div>
           )}
         </div>
-        <div className={cn("w-full flex items-center", isAdmin ? "justify-end" : "justify-start")}>
+        <div className={cn("w-full flex items-center justify-end")}>
           {isAdmin ? (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </Button>
+              <NewPostDialog post={post}>
+                <Button variant="outline" size="sm">
+                  <Edit className="mr-2 h-4 w-4" /> Edit
+                </Button>
+              </NewPostDialog>
               <Button variant="destructive" size="sm">
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </Button>
