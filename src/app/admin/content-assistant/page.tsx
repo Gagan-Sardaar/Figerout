@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -14,31 +15,35 @@ import {
 } from "@/ai/flows/generate-seo-content";
 import { generateBlogPost } from "@/ai/flows/generate-blog-post";
 
+type Idea = { title: string; summary: string };
+
 export default function ContentAssistantPage() {
   const { toast } = useToast();
   const [topic, setTopic] = useState("The Psychology of Colors in Fashion");
-  const [ideas, setIdeas] = useState<GenerateSeoContentOutput["suggestions"]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [generatedPost, setGeneratedPost] = useState("");
-  const [isLoadingIdeas, setIsLoadingIdeas] = useState(false);
+  const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
   const [isLoadingPost, setIsLoadingPost] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("");
 
-  const handleGenerateIdeas = async () => {
-    setIsLoadingIdeas(true);
-    setIdeas([]);
+  const handleGenerateIdea = async (clearPrevious = false) => {
+    setIsGeneratingIdeas(true);
+    if (clearPrevious) {
+      setIdeas([]);
+    }
     setGeneratedPost("");
     try {
-      const result = await generateSeoContent({ topic });
-      setIdeas(result.suggestions);
+      const newIdea = await generateSeoContent({ topic });
+      setIdeas(prevIdeas => clearPrevious ? [newIdea] : [...prevIdeas, newIdea]);
     } catch (error) {
       console.error(error);
       toast({
-        title: "Error generating ideas",
+        title: "Error generating idea",
         description: "Could not connect to the AI service.",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingIdeas(false);
+      setIsGeneratingIdeas(false);
     }
   };
 
@@ -84,14 +89,26 @@ export default function ContentAssistantPage() {
                 placeholder="e.g., Summer color trends"
               />
             </div>
-            <Button onClick={handleGenerateIdeas} disabled={isLoadingIdeas}>
-              {isLoadingIdeas ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Generate Ideas
-            </Button>
+            <div className="flex flex-wrap gap-2">
+                <Button onClick={() => handleGenerateIdea(true)} disabled={isGeneratingIdeas}>
+                {isGeneratingIdeas && ideas.length === 0 ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Generate Ideas
+                </Button>
+                {ideas.length > 0 && (
+                <Button variant="secondary" onClick={() => handleGenerateIdea(false)} disabled={isGeneratingIdeas}>
+                    {isGeneratingIdeas && ideas.length > 0 ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generate Another
+                </Button>
+                )}
+            </div>
             {ideas.length > 0 && (
               <div className="space-y-4 pt-4">
                 <h3 className="font-semibold">Generated Ideas:</h3>
