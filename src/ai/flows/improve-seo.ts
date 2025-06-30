@@ -66,18 +66,39 @@ Carefully analyze the original content, metadata, and the provided SEO feedback.
 
 **Instructions for Improvement:**
 
-1.  **Address All Feedback:** Directly address all points mentioned in the SEO feedback. This includes fixing issues with the meta title and meta description.
-2.  **Rewrite Meta Tags:** If the feedback mentions issues with the meta title or description (e.g., length, keyword presence), rewrite them to be optimal and include them in the output.
-3.  **Keyword Integration:** Naturally integrate the focus keywords throughout the content, headings, and meta tags.
+1.  **Address All Feedback:** Directly address all points mentioned in the SEO feedback. This is the most important instruction.
+
+2.  **Rewrite Meta Tags:**
+    *   If the feedback mentions issues with the meta title or description (e.g., length, keyword presence, consistency), rewrite them to be optimal.
+    *   Meta titles should be 50-60 characters.
+    *   Meta descriptions should be 150-160 characters and compelling.
+
+3.  **Keyword Integration:**
+    *   Naturally integrate the focus keywords throughout the content, headings, and meta tags.
+    *   Adjust keyword density as needed: increase it if it's too low, or reduce it if the content feels repetitive or "stuffed". The goal is natural language.
+
 4.  **Structure and Readability:**
-    *   Restructure the content with clear headings (H2, H3, H4) and subheadings to improve organization.
+    *   Restructure the content with clear, keyword-targeted headings (H2, H3, H4) and subheadings to improve organization.
     *   Use bulleted or numbered lists to break up long paragraphs and present information clearly.
     *   Use **bold** and _italic_ formatting to emphasize key points.
     *   Add blockquotes for quotes or important callouts.
-5.  **Add a Relevant Image:** If the content would be improved by an image, use the \`findRelevantImage\` tool to find a suitable stock photo. Place the returned Markdown for the image at an appropriate point in the content, usually after the introduction. Only use the tool once. If the tool returns nothing, do not add an image.
-6.  **Add Links:** Add placeholder internal and external links where relevant to boost credibility. Use the format \`[link text](/) \` for internal links and \`[link text](https://example.com)\` for external links.
-7.  **Quality:** Ensure the final content is high-quality, engaging, informative, and significantly improved from the original. Do not change the core topic.
-8.  **Output:** Output the rewritten content and updated meta tags in the specified JSON format.
+
+5.  **Content Expansion:**
+    *   If the content is too brief, expand upon it to build topical authority and provide more value to the reader.
+    *   For legal pages like a Privacy Policy, if you encounter placeholder text, replace it with realistic and professional content suitable for a creative tech app.
+
+6.  **Add a Relevant Image:**
+    *   If the content would be improved by a visual, use the \`findRelevantImage\` tool to find a suitable stock photo.
+    *   Place the returned Markdown for the image at an appropriate point in the content, usually after the introduction.
+    *   Only use the tool once. If the tool returns nothing, do not add an image.
+
+7.  **Add Links:**
+    *   Add a mix of placeholder internal and external links where relevant to boost credibility and user engagement.
+    *   Use the format \`[link text](/) \` for internal links and \`[link text](https://example.com)\` for external links.
+
+8.  **Quality and Output:**
+    *   Ensure the final content is high-quality, engaging, informative, and significantly improved from the original. Do not change the core topic.
+    *   Output the rewritten content and updated meta tags in the specified JSON format.
 
 **Content Details:**
 
