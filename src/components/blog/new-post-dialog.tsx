@@ -124,7 +124,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
       ? {
           title: post.title,
           content: post.summary,
-          status: post.status === 'scheduled' ? 'draft' : post.status,
+          status: post.status,
           featuredImage: post.imageUrl,
           metaTitle: "",
           metaDescription: "",
@@ -225,7 +225,8 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
         return;
     }
 
-    const { selectionStart, selectionEnd, value } = textarea;
+    const { selectionStart, selectionEnd } = textarea;
+    const value = textarea.value;
 
     const updateTextAndState = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
         form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
@@ -374,7 +375,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     let title = "Changes Saved!";
     let description = "Your post has been updated.";
 
-    if (data.scheduleDate && data.status === 'draft') {
+    if (data.scheduleDate) {
         title = "Post Scheduled!";
         description = `Your draft is scheduled for ${format(data.scheduleDate!, 'PPP p')}.`;
     } else {
@@ -448,11 +449,11 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     if (isEditing) {
       return { text: 'Update', icon: <Save className={iconClass} /> };
     }
-
+    
     if (scheduleDate) {
         return { text: 'Schedule Post', icon: <Clock className={iconClass} /> };
     }
-
+    
     switch (status) {
       case 'published':
       case 'password-protected':
@@ -755,11 +756,16 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                         mode="single"
                         selected={scheduleDate}
                         onSelect={(date) => {
-                            const currentScheduleDate = form.getValues("scheduleDate") || new Date();
+                            const currentScheduleDate = form.getValues("scheduleDate");
                             const newDate = date || new Date();
 
-                            newDate.setHours(currentScheduleDate.getHours());
-                            newDate.setMinutes(currentScheduleDate.getMinutes());
+                            if (currentScheduleDate) {
+                                newDate.setHours(currentScheduleDate.getHours());
+                                newDate.setMinutes(currentScheduleDate.getMinutes());
+                            } else {
+                                newDate.setHours(9);
+                                newDate.setMinutes(0);
+                            }
                             
                             form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
                         }}
@@ -769,16 +775,20 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                         <Label className="mb-2 block">Time</Label>
                         <Input 
                             type="time"
-                            defaultValue={scheduleDate ? format(scheduleDate, "HH:mm") : "09:00"}
+                            value={scheduleDate ? format(scheduleDate, "HH:mm") : ""}
                             onChange={(e) => {
+                                if (!e.target.value) return;
                                 const [hours, minutes] = e.target.value.split(':').map(Number);
-                                const newDate = form.getValues("scheduleDate") || new Date();
+                                const baseDate = form.getValues("scheduleDate") || new Date(); 
+                                
                                 if (!isNaN(hours) && !isNaN(minutes)) {
+                                    const newDate = new Date(baseDate);
                                     newDate.setHours(hours);
                                     newDate.setMinutes(minutes);
                                     form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
                                 }
                             }}
+                            placeholder="Select a time"
                         />
                     </div>
                     <div className="p-3 border-t border-border flex justify-end">
@@ -825,3 +835,5 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
     </Dialog>
   );
 }
+
+    
