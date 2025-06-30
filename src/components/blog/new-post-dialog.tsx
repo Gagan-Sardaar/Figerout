@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import {
@@ -67,11 +67,78 @@ const formSchema = z.object({
 function NewPostForm({ onSave }: { onSave: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "" },
   });
+
+  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image' | 'regenerate') => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    const { selectionStart, selectionEnd, value } = textarea;
+    const selectedText = value.substring(selectionStart, selectionEnd);
+
+    const applyInlineMarkdown = (prefix: string, suffix: string = prefix) => {
+      const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText}${suffix}${value.substring(selectionEnd)}`;
+      form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+      setTimeout(() => {
+        textarea.focus();
+        if (selectedText) {
+          textarea.setSelectionRange(selectionStart + prefix.length, selectionEnd + prefix.length);
+        } else {
+          textarea.setSelectionRange(selectionStart + prefix.length, selectionStart + prefix.length);
+        }
+      }, 0);
+    };
+
+    const applyBlockMarkdown = (prefix: string) => {
+      const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+      const lineEnd = value.indexOf('\n', lineStart) === -1 ? value.length : value.indexOf('\n', lineStart);
+      const currentLine = value.substring(lineStart, lineEnd);
+      const trimmedLine = currentLine.replace(/^#+\s*/, '');
+      const newLine = prefix + trimmedLine;
+      const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
+      form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+      setTimeout(() => {
+        textarea.focus();
+        const newCursorPos = lineStart + newLine.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    };
+
+    switch (type) {
+      case 'bold':
+        applyInlineMarkdown('**');
+        break;
+      case 'italic':
+        applyInlineMarkdown('_');
+        break;
+      case 'link':
+        applyInlineMarkdown('[', '](https://)');
+        break;
+      case 'h2':
+        applyBlockMarkdown('## ');
+        break;
+      case 'h3':
+        applyBlockMarkdown('### ');
+        break;
+      case 'h4':
+        applyBlockMarkdown('#### ');
+        break;
+      case 'p':
+        applyBlockMarkdown('');
+        break;
+      case 'image':
+        applyInlineMarkdown('![alt text](', 'image_url)');
+        break;
+      case 'regenerate':
+        toast({ title: "AI Regeneration", description: "This feature is coming soon!" });
+        break;
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -141,17 +208,17 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
             <div>
               <FormLabel>Post Content</FormLabel>
               <div className="mt-2 flex items-center gap-1 border border-input rounded-t-md p-1 bg-background flex-wrap">
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Bold/></Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Italic/></Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><LinkIcon/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('bold')}><Bold/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('italic')}><Italic/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('link')}><LinkIcon/></Button>
                  <Separator orientation="vertical" className="h-6 mx-1" />
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading2/></Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading3/></Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading4/></Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Pilcrow/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h2')}><Heading2/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h3')}><Heading3/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h4')}><Heading4/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
                  <Separator orientation="vertical" className="h-6 mx-1" />
-                 <Button type="button" variant="ghost" size="sm"><ImagePlus className="mr-2"/> Add Image</Button>
-                 <Button type="button" variant="ghost" size="sm"><Sparkles className="mr-2"/> Regenerate</Button>
+                 <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
+                 <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('regenerate')}><Sparkles className="mr-2"/> Regenerate</Button>
               </div>
               <FormField
                 control={form.control}
@@ -160,6 +227,10 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                   <FormItem>
                     <FormControl>
                       <Textarea
+                        ref={(e) => {
+                          field.ref(e);
+                          if(e) contentTextareaRef.current = e;
+                        }}
                         placeholder="Write your blog post content here..."
                         className="min-h-[300px] rounded-t-none focus-visible:ring-0"
                         {...field}
