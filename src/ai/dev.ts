@@ -7,3 +7,4 @@ import '@/ai/flows/analyze-color-palette.ts';
 import '@/ai/flows/extract-dominant-colors.ts';
 import '@/ai/flows/extract-image-keywords.ts';
 import '@/ai/flows/generate-seo-score.ts';
+import '@/ai/flows/generate-page-content.ts';
