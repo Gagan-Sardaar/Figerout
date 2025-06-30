@@ -203,33 +203,48 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
     setIsGeneratingImage(true);
     handleRemoveImage();
+
     try {
+      // First attempt: generate from prompt only
       const result = await generateImage({ prompt: imagePrompt });
       setImagePreview(result.imageUrl);
       form.setValue("featuredImage", result.imageUrl);
-       toast({
+      toast({
         title: "AI Image Generated",
         description: "The image was successfully created by AI.",
       });
-    } catch (error) {
-      console.error("AI image generation failed, trying fallback:", error);
+    } catch (initialError) {
+      console.error("Initial AI generation failed, trying fallback:", initialError);
+      toast({
+        title: "Initial Generation Failed",
+        description: "Attempting to create a stylized image from a stock photo...",
+      });
+
       try {
+        // Fallback step 1: Get a reference image from Pexels
         const pexelsUrl = await searchPexelsImage(imagePrompt);
-        if (pexelsUrl) {
-          setImagePreview(pexelsUrl);
-          form.setValue("featuredImage", pexelsUrl);
-          toast({
-            title: "AI Failed, Fallback Found",
-            description: "Found a relevant image from Pexels instead.",
-          });
-        } else {
-          throw new Error("Pexels fallback failed: No image found.");
+        
+        if (!pexelsUrl) {
+          throw new Error("Pexels fallback failed: No image found for the prompt.");
         }
+
+        // Fallback step 2: Generate new image using the pexels image as reference
+        const resultWithFallback = await generateImage({
+          prompt: imagePrompt,
+          referenceImageUrl: pexelsUrl,
+        });
+
+        setImagePreview(resultWithFallback.imageUrl);
+        form.setValue("featuredImage", resultWithFallback.imageUrl);
+        toast({
+          title: "Stylized Image Generated!",
+          description: "Created a unique image based on a stock photo reference.",
+        });
       } catch (fallbackError) {
-         console.error("Pexels fallback failed:", fallbackError);
-         toast({
+        console.error("Full fallback process failed:", fallbackError);
+        toast({
           title: "Image Generation Failed",
-          description: "Could not generate an AI image or find a stock photo.",
+          description: "Could not generate an AI image, even with a fallback.",
           variant: "destructive",
         });
       }
