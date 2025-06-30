@@ -53,8 +53,11 @@ import {
   Heading3,
   Heading4,
   Pilcrow,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { generateImage } from "@/ai/flows/generate-image";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -68,6 +71,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -186,6 +191,33 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     });
   }
 
+  const handleGenerateImage = async () => {
+    if (!imagePrompt) {
+      toast({
+        title: "Prompt is empty",
+        description: "Please enter a prompt to generate an image.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsGeneratingImage(true);
+    handleRemoveImage();
+    try {
+      const result = await generateImage({ prompt: imagePrompt });
+      setImagePreview(result.imageUrl);
+      form.setValue("featuredImage", result.imageUrl);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error generating image",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -253,7 +285,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                   <FormControl>
                     <div
                       {...getRootProps()}
-                      className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && "hover:border-primary/50 cursor-pointer"}`}
+                      className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isGeneratingImage && "hover:border-primary/50 cursor-pointer"}`}
                     >
                       <input {...getInputProps()} />
                       {imagePreview ? (
@@ -271,16 +303,58 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
-                          <UploadCloud className="w-10 h-10" />
-                          <p>Drag & drop or click</p>
+                        !isGeneratingImage && (
+                            <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
+                            <UploadCloud className="w-10 h-10" />
+                            <p>Drag & drop or click</p>
+                            </div>
+                        )
+                      )}
+                      {isGeneratingImage && (
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 text-white aspect-video">
+                            <Loader2 className="w-8 h-8 animate-spin" />
+                            <p className="text-sm">Generating image...</p>
                         </div>
                       )}
                     </div>
                   </FormControl>
-                  <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage}>
-                    <Dice5 className="mr-2"/> Get random image
-                  </Button>
+                  <div className="space-y-2">
+                    <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage}>
+                        <Dice5 className="mr-2"/> Get random image
+                    </Button>
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-background px-2 text-muted-foreground">
+                            Or
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Input 
+                            id="image-prompt" 
+                            placeholder="Generate one with AI..." 
+                            value={imagePrompt}
+                            onChange={(e) => setImagePrompt(e.target.value)}
+                            disabled={isGeneratingImage}
+                        />
+                        <Button 
+                            type="button" 
+                            variant="secondary" 
+                            onClick={handleGenerateImage} 
+                            disabled={isGeneratingImage}
+                            className="shrink-0"
+                        >
+                            {isGeneratingImage ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Wand2 className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
