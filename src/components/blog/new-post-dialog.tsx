@@ -2,7 +2,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { useCallback, useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -57,6 +57,8 @@ import {
   Sparkles,
   Loader2,
   Lightbulb,
+  Wand2,
+  X,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
@@ -65,14 +67,17 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
+import { improveSeo } from "@/ai/flows/improve-seo";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
+  focusKeywords: z.array(z.object({ value: z.string() })).optional(),
   content: z.string().min(10, { message: "Content must be at least 10 characters." }),
   featuredImage: z.any().optional(),
   status: z.enum(["published", "draft", "private", "password-protected"]).default("draft"),
@@ -87,13 +92,19 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft" },
+    defaultValues: { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [] },
   });
   
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "focusKeywords",
+  });
+
   const title = form.watch("title");
   const content = form.watch("content");
   const metaTitle = form.watch("metaTitle");
@@ -329,6 +340,36 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     });
   };
 
+  const handleAutoFixSeo = async () => {
+    if (!seoResult || !content) return;
+
+    setIsAutoFixing(true);
+    try {
+      const result = await improveSeo({
+        title: title,
+        content: content,
+        metaTitle: metaTitle,
+        metaDescription: metaDescription,
+        focusKeywords: form.getValues('focusKeywords')?.map(kw => kw.value) || [],
+        feedback: seoResult.feedback,
+      });
+      form.setValue("content", result.improvedContent, { shouldDirty: true });
+      toast({
+        title: "SEO Content Improved!",
+        description: "The post content has been updated with SEO enhancements.",
+      });
+    } catch (error) {
+      console.error("Error auto-fixing SEO:", error);
+      toast({
+        title: "Auto-fix Failed",
+        description: "Could not improve the content automatically.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutoFixing(false);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
@@ -519,6 +560,27 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </FormItem>
                     )}
                   />
+                  <div>
+                    <Label>Focus Keywords</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {fields.map((field, index) => (
+                        <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
+                            {form.watch(`focusKeywords.${index}.value`)}
+                            <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
+                            <X className="h-3 w-3" />
+                            </button>
+                        </Badge>
+                        ))}
+                        <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add
+                        </Button>
+                    </div>
+                    {form.formState.errors.focusKeywords && (
+                        <p className="text-sm font-medium text-destructive mt-2">
+                            {form.formState.errors.focusKeywords.message}
+                        </p>
+                        )}
+                   </div>
                   
                   {isAnalyzingSeo && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
@@ -532,9 +594,17 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       <Label>SEO Score: {seoResult.score}/100</Label>
                       <Progress value={seoResult.score} className="w-full" />
                       <Card className="mt-2 bg-muted/50">
-                        <CardHeader className="flex flex-row items-center gap-2 p-3">
-                           <Lightbulb className="h-5 w-5 text-primary" />
-                           <CardTitle className="text-sm font-semibold">Feedback & Suggestions</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between gap-2 p-3">
+                           <div className="flex items-center gap-2">
+                                <Lightbulb className="h-5 w-5 text-primary" />
+                                <CardTitle className="text-sm font-semibold">Feedback & Suggestions</CardTitle>
+                           </div>
+                           {seoResult && seoResult.score < 90 && (
+                                <Button size="sm" variant="ghost" onClick={handleAutoFixSeo} disabled={isAutoFixing} className="text-primary hover:text-primary">
+                                    {isAutoFixing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                    Auto-fix
+                                </Button>
+                           )}
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                            <p className="text-xs text-muted-foreground">{seoResult.feedback}</p>

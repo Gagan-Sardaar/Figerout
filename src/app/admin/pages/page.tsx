@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb } from "lucide-react";
+import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb, Wand2 } from "lucide-react";
 import {
   generatePageContent
 } from "@/ai/flows/generate-page-content";
@@ -30,6 +30,7 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
+import { improveSeo } from "@/ai/flows/improve-seo";
 import {
   Form,
   FormControl,
@@ -58,6 +59,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
   
   const form = useForm<PageContentFormValues>({
     resolver: zodResolver(pageContentSchema),
@@ -141,6 +143,36 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         description: `Content for ${topic} has been updated.`,
     })
   }
+
+  const handleAutoFixSeo = async () => {
+    if (!seoResult || !pageContent) return;
+
+    setIsAutoFixing(true);
+    try {
+      const result = await improveSeo({
+        title: pageTitle,
+        content: pageContent,
+        metaTitle: metaTitle,
+        metaDescription: metaDescription,
+        focusKeywords: form.getValues('focusKeywords').map(kw => kw.value),
+        feedback: seoResult.feedback,
+      });
+      form.setValue("pageContent", result.improvedContent, { shouldDirty: true });
+      toast({
+        title: "SEO Content Improved!",
+        description: "The page content has been updated with SEO enhancements.",
+      });
+    } catch (error) {
+      console.error("Error auto-fixing SEO:", error);
+      toast({
+        title: "Auto-fix Failed",
+        description: "Could not improve the content automatically.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutoFixing(false);
+    }
+  };
 
   return (
     <Card>
@@ -284,11 +316,29 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                       </Label>
                       <Progress value={seoResult.score} />
                       <Card className="mt-4 bg-muted/50">
-                        <CardHeader className="flex flex-row items-center gap-2 p-3">
-                          <Lightbulb className="h-5 w-5 text-primary" />
-                          <CardTitle className="text-sm font-semibold">
-                            Feedback
-                          </CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between p-3">
+                           <div className="flex items-center gap-2">
+                                <Lightbulb className="h-5 w-5 text-primary" />
+                                <CardTitle className="text-sm font-semibold">
+                                    Feedback
+                                </CardTitle>
+                            </div>
+                           {seoResult && seoResult.score < 90 && (
+                               <Button
+                                   size="sm"
+                                   variant="ghost"
+                                   onClick={handleAutoFixSeo}
+                                   disabled={isAutoFixing}
+                                   className="text-primary hover:text-primary"
+                               >
+                                   {isAutoFixing ? (
+                                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                   ) : (
+                                       <Wand2 className="mr-2 h-4 w-4" />
+                                   )}
+                                   Auto-fix
+                               </Button>
+                           )}
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <p className="text-xs text-muted-foreground">
