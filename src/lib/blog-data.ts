@@ -1,3 +1,4 @@
+
 export interface BlogPost {
   id: number;
   slug: string;
@@ -90,5 +91,18 @@ export const blogPosts: BlogPost[] = [
     views: 1500,
     likes: 420,
     shares: 95,
+  },
+  {
+    id: 7,
+    slug: 'figerout-in-daily-life',
+    title: 'Beyond Design: Fun and Practical Ways to Use Figerout Every Day',
+    summary: 'Discover how Figerout can brighten your daily tasks and bring a new level of fun to your routines. From matching your outfit to planning a party, learn how capturing colors can make the mundane magical.',
+    imageUrl: 'https://images.pexels.com/photos/7973302/pexels-photo-7973302.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
+    imageHint: 'colorful daily life',
+    photographer: 'Liza Summer',
+    photographerUrl: 'https://www.pexels.com/@liza-summer/',
+    views: 980,
+    likes: 250,
+    shares: 60,
   },
 ];

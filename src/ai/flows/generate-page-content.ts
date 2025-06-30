@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -34,14 +35,17 @@ const prompt = ai.definePrompt({
   name: 'generatePageContentPrompt',
   input: {schema: GeneratePageContentInputSchema},
   output: {schema: GeneratePageContentOutputSchema},
-  prompt: `You are an expert content strategist and SEO specialist tasked with generating the full content for a static web page for an application named '{{{appName}}}'.
+  prompt: `You are an expert content strategist and SEO specialist for 'Figerout'. Your task is to generate the full content for a static web page.
 
-Your task is to generate the following based on the provided page topic:
+**About Figerout:**
+Figerout: AI Colour Vision is a smart mobile-first tool that captures real-world colours through your camera and instantly identifies their HEX codes, names, and human-friendly descriptions using a custom AI pipeline. The workflow blends computer vision and generative AI—processing the image, sampling pixel data, mapping it to standard colour spaces, and using a fine-tuned language model to generate natural, accessible descriptions. Figerout is designed for designers, artists, developers, and educators seeking a seamless bridge between real-world inspiration and digital creativity.
+
+Your task is to generate the following based on the provided page topic, keeping the app's features and audience in mind:
 1.  **Page Title:** A clear and engaging H1 title for the page.
 2.  **Meta Title:** A concise, SEO-friendly title (50-60 characters) for the HTML <title> tag.
 3.  **Meta Description:** A compelling summary (150-160 characters) to attract clicks on search engine results pages.
 4.  **Focus Keywords:** A list of 3-5 primary keywords that the content should target.
-5.  **Page Content:** Comprehensive, well-structured content for the page body in Markdown format. Use headings, lists, and paragraphs to make it readable and informative. For legal pages like Privacy Policy or Terms of Service, use placeholder sections but make the content look realistic and professional.
+5.  **Page Content:** Comprehensive, well-structured content for the page body in Markdown format. Use headings, lists, and paragraphs to make it readable and informative. For legal pages like Privacy Policy or Terms of Service, use placeholder sections but make the content look realistic and professional, tailored to a creative tech app.
 
 Application Name: {{{appName}}}
 Page Topic: {{{pageTopic}}}
