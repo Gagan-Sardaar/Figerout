@@ -61,6 +61,7 @@ const prompt = ai.definePrompt({
   input: {schema: ImproveSeoInputSchema},
   output: {schema: ImproveSeoOutputSchema},
   tools: [findRelevantImage],
+  system: 'You are an expert SEO content writer. Your primary task is to rewrite and improve web content based on specific feedback. You MUST always return a valid JSON object that conforms to the output schema. If you cannot make improvements for any reason, you MUST return the original content within the `improvedContent` field of the JSON response.',
   config: {
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -69,61 +70,36 @@ const prompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `You are an expert SEO content writer and content strategist. Your task is to rewrite and restructure the provided content and its associated metadata to achieve an SEO score of 90 or higher.
-Carefully analyze the original content, metadata, and the provided SEO feedback.
+  prompt: `You are an expert SEO content writer. Your task is to rewrite the provided content and metadata based on the given SEO feedback to achieve an SEO score of 90 or higher.
 
-**Instructions for Improvement:**
-
-1.  **Address All Feedback:** Directly address all points mentioned in the SEO feedback. This is the most important instruction.
-
-2.  **Rewrite Meta Tags:**
-    *   If the feedback mentions issues with the meta title or description (e.g., length, keyword presence, consistency), rewrite them to be optimal.
-    *   Meta titles should be 50-60 characters.
-    *   Meta descriptions should be 150-160 characters and compelling.
-
-3.  **Keyword Integration:**
-    *   Naturally integrate the focus keywords throughout the content, headings, and meta tags.
-    *   Adjust keyword density as needed: increase it if it's too low, or reduce it if the content feels repetitive or "stuffed". The goal is natural language.
-
-4.  **Structure and Readability:**
-    *   Restructure the content with clear, keyword-targeted headings (H2, H3, H4) and subheadings to improve organization.
-    *   Use bulleted or numbered lists to break up long paragraphs and present information clearly.
-    *   Use **bold** and _italic_ formatting to emphasize key points.
-    *   Add blockquotes for quotes or important callouts.
-
-5.  **Content Expansion:**
-    *   If the content is too brief, expand upon it to build topical authority and provide more value to the reader.
-    *   For legal pages like a Privacy Policy, if you encounter placeholder text, replace it with realistic and professional content suitable for a creative tech app.
-
-6.  **Add a Relevant Image:**
-    *   If the content would be improved by a visual, use the \`findRelevantImage\` tool to find a suitable stock photo.
-    *   Place the returned Markdown for the image at an appropriate point in the content, usually after the introduction.
-    *   Only use the tool once. If the tool returns nothing, do not add an image.
-
-7.  **Add Links:**
-    *   Add a mix of placeholder internal and external links where relevant to boost credibility and user engagement.
-    *   Use the format \`[link text](/) \` for internal links and \`[link text](https://example.com)\` for external links.
-
-8.  **Quality and Output:**
-    *   Ensure the final content is high-quality, engaging, informative, and significantly improved from the original. Do not change the core topic.
-    *   Output the rewritten content and updated meta tags in the specified JSON format.
-
-**Content Details:**
+**Content for SEO Improvement**
 
 *   **Original Title:** {{{title}}}
 {{#if metaTitle}}*   **Original Meta Title:** {{{metaTitle}}}{{/if}}
 {{#if metaDescription}}*   **Original Meta Description:** {{{metaDescription}}}{{/if}}
 {{#if focusKeywords}}*   **Focus Keywords:** {{#each focusKeywords}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-
-**SEO Feedback to Address:**
-{{{feedback}}}
+*   **SEO Feedback to Address:** {{{feedback}}}
 
 **Original Content (Markdown):**
 ---
 {{{content}}}
 ---
 
-IMPORTANT: Your response MUST be a single, valid JSON object that conforms to the required output schema. Do not add any text before or after the JSON object.
+**Your Tasks:**
+
+1.  **Rewrite Content:** Rewrite the "Original Content" to directly address all points in the "SEO Feedback".
+    *   Integrate the "Focus Keywords" naturally.
+    *   Improve structure with headings (H2, H3), lists, and formatting (**bold**, _italic_).
+    *   Add placeholder internal \`[link text](/)\` and external \`[link text](https://example.com)\` links where relevant.
+    *   If the content looks like a blog post, use the \`findRelevantImage\` tool ONCE to add a relevant stock photo after the introduction.
+2.  **Rewrite Meta Tags:**
+    *   Create an \`improvedMetaTitle\` (50-60 characters).
+    *   Create an \`improvedMetaDescription\` (150-160 characters).
+3.  **Final Output:**
+    *   Provide your response as a single, valid JSON object matching the required schema.
+    *   The \`improvedContent\` field must contain the full, rewritten Markdown content.
+
+**IMPORTANT:** Your response MUST be a single, valid JSON object that conforms to the required output schema. Do not add any text before or after the JSON object.
 `,
 });
 
