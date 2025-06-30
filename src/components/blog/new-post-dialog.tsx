@@ -86,7 +86,7 @@ const formSchema = z.object({
   focusKeywords: z.array(z.object({ value: z.string() })).optional(),
   content: z.string().min(10, { message: "Content must be at least 10 characters." }),
   featuredImage: z.any().optional(),
-  status: z.enum(["published", "draft", "private", "password-protected", "scheduled"]).default("draft"),
+  status: z.enum(["published", "draft", "private", "password-protected"]).default("draft"),
   password: z.string().optional(),
   scheduleDate: z.date().optional(),
 }).refine(
@@ -99,17 +99,6 @@ const formSchema = z.object({
     {
         message: "A password of at least 4 characters is required.",
         path: ["password"],
-    }
-).refine(
-    (data) => {
-        if (data.status === "scheduled" && !data.scheduleDate) {
-            return false;
-        }
-        return true;
-    },
-    {
-        message: "Please select a date and time to schedule the post.",
-        path: ["status"],
     }
 );
 
@@ -126,6 +115,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
+  const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
   const isEditing = !!post;
 
   const form = useForm<FormValues>({
@@ -134,13 +124,13 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
       ? {
           title: post.title,
           content: post.summary,
-          status: post.status,
+          status: post.status === 'scheduled' ? 'draft' : post.status,
           featuredImage: post.imageUrl,
           metaTitle: "",
           metaDescription: "",
           focusKeywords: [],
           password: "",
-          scheduleDate: post.status === 'scheduled' && post.lastUpdated ? new Date(post.lastUpdated) : undefined,
+          scheduleDate: post.lastUpdated ? new Date(post.lastUpdated) : undefined,
         }
       : { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "", scheduleDate: undefined },
   });
@@ -384,27 +374,28 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     let title = "Changes Saved!";
     let description = "Your post has been updated.";
 
-    switch(data.status) {
-        case 'published':
-            title = "Post Published!";
-            description = "Your new blog post is now live.";
-            break;
-        case 'draft':
-            title = "Draft Saved!";
-            description = "Your post has been saved as a draft.";
-            break;
-        case 'private':
-            title = "Post Saved as Private!";
-            description = "This post is now private and only visible to you.";
-            break;
-        case 'password-protected':
-             title = "Post is Password Protected!";
-             description = "This post now requires a password to view.";
-             break;
-        case 'scheduled':
-             title = "Post Scheduled!";
-             description = `Your post will be published on ${format(data.scheduleDate!, 'PPP p')}.`;
-             break;
+    if (data.scheduleDate && data.status === 'draft') {
+        title = "Post Scheduled!";
+        description = `Your draft is scheduled for ${format(data.scheduleDate!, 'PPP p')}.`;
+    } else {
+        switch(data.status) {
+            case 'published':
+                title = "Post Published!";
+                description = "Your new blog post is now live.";
+                break;
+            case 'draft':
+                title = "Draft Saved!";
+                description = "Your post has been saved as a draft.";
+                break;
+            case 'private':
+                title = "Post Saved as Private!";
+                description = "This post is now private and only visible to you.";
+                break;
+            case 'password-protected':
+                 title = "Post is Password Protected!";
+                 description = "This post now requires a password to view.";
+                 break;
+        }
     }
 
     toast({ title, description });
@@ -458,12 +449,14 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
       return { text: 'Update', icon: <Save className={iconClass} /> };
     }
 
+    if (scheduleDate) {
+        return { text: 'Schedule Post', icon: <Clock className={iconClass} /> };
+    }
+
     switch (status) {
       case 'published':
       case 'password-protected':
         return { text: 'Publish', icon: <Send className={iconClass} /> };
-      case 'scheduled':
-        return { text: 'Schedule Post', icon: <Clock className={iconClass} /> };
       case 'draft':
       case 'private':
       default:
@@ -619,12 +612,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                         <FormLabel>Post Status</FormLabel>
                         <FormControl>
                           <RadioGroup
-                            onValueChange={(value) => {
-                                field.onChange(value);
-                                if (value !== 'scheduled') {
-                                    form.setValue('scheduleDate', undefined);
-                                }
-                            }}
+                            onValueChange={field.onChange}
                             value={field.value}
                             className="flex flex-col space-y-1"
                           >
@@ -643,12 +631,6 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                             <FormItem className="flex items-center space-x-3 space-y-0">
                               <FormControl><RadioGroupItem value="password-protected" /></FormControl>
                               <FormLabel className="font-normal">Password Protected</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl><RadioGroupItem value="scheduled" disabled={!scheduleDate} /></FormControl>
-                               <FormLabel className="font-normal text-muted-foreground has-[[data-state=checked]]:text-foreground">
-                                Scheduled
-                              </FormLabel>
                             </FormItem>
                           </RadioGroup>
                         </FormControl>
@@ -758,7 +740,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
             {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
-             <Popover>
+             <Popover open={isSchedulePopoverOpen} onOpenChange={setIsSchedulePopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         type="button"
@@ -780,7 +762,6 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                             newDate.setMinutes(currentScheduleDate.getMinutes());
                             
                             form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
-                            form.setValue("status", "scheduled", { shouldDirty: true, shouldValidate: true });
                         }}
                         initialFocus
                     />
@@ -796,10 +777,12 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                                     newDate.setHours(hours);
                                     newDate.setMinutes(minutes);
                                     form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
-                                    form.setValue("status", "scheduled", { shouldDirty: true, shouldValidate: true });
                                 }
                             }}
                         />
+                    </div>
+                    <div className="p-3 border-t border-border flex justify-end">
+                       <Button size="sm" onClick={() => setIsSchedulePopoverOpen(false)}>Done</Button>
                     </div>
                 </PopoverContent>
             </Popover>
