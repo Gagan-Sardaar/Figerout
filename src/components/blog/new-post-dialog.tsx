@@ -363,21 +363,11 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     console.log("Saving post with data:", data);
     setLastSaved(new Date());
 
+    let title, description;
+
     if (isEditing) {
-      toast({
-        title: "Post Updated!",
-        description: "Your changes have been saved successfully.",
-      });
-      onSave();
-      return;
-    }
-
-    let title = "Changes Saved!";
-    let description = "Your post has been updated.";
-
-    if (data.scheduleDate) {
-        title = "Post Scheduled!";
-        description = `Your draft is scheduled for ${format(data.scheduleDate!, 'PPP p')}.`;
+        title = "Post Updated!";
+        description = "Your changes have been saved successfully.";
     } else {
         switch(data.status) {
             case 'published':
@@ -398,12 +388,14 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                  break;
         }
     }
+    
+    if (data.scheduleDate && data.status !== 'published') {
+        title = "Post Scheduled!";
+        description = `Your post is scheduled for ${format(data.scheduleDate, 'PPP p')}. It will be published automatically.`;
+    }
 
     toast({ title, description });
-
-    if (data.status === 'published') {
-        onSave();
-    }
+    onSave();
   };
 
   const handleAutoFixSeo = async () => {
@@ -448,10 +440,6 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
     const iconClass = "mr-2 h-4 w-4";
     if (isEditing) {
       return { text: 'Update', icon: <Save className={iconClass} /> };
-    }
-    
-    if (scheduleDate) {
-        return { text: 'Schedule Post', icon: <Clock className={iconClass} /> };
     }
     
     switch (status) {
@@ -741,7 +729,15 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
         
         <div className="flex justify-end items-center gap-2 pt-4 border-t flex-wrap">
             {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
-             <Popover open={isSchedulePopoverOpen} onOpenChange={setIsSchedulePopoverOpen}>
+             <Popover
+                open={isSchedulePopoverOpen}
+                onOpenChange={(open) => {
+                    if (open && !form.getValues("scheduleDate")) {
+                        form.setValue("scheduleDate", new Date(), { shouldDirty: true, shouldValidate: true });
+                    }
+                    setIsSchedulePopoverOpen(open);
+                }}
+            >
                 <PopoverTrigger asChild>
                     <Button
                         type="button"
@@ -756,17 +752,11 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                         mode="single"
                         selected={scheduleDate}
                         onSelect={(date) => {
-                            const currentScheduleDate = form.getValues("scheduleDate");
-                            const newDate = date || new Date();
-
-                            if (currentScheduleDate) {
-                                newDate.setHours(currentScheduleDate.getHours());
-                                newDate.setMinutes(currentScheduleDate.getMinutes());
-                            } else {
-                                newDate.setHours(9);
-                                newDate.setMinutes(0);
-                            }
-                            
+                            if (!date) return;
+                            const currentScheduleDate = form.getValues("scheduleDate") || new Date();
+                            const newDate = new Date(date);
+                            newDate.setHours(currentScheduleDate.getHours());
+                            newDate.setMinutes(currentScheduleDate.getMinutes());
                             form.setValue("scheduleDate", newDate, { shouldDirty: true, shouldValidate: true });
                         }}
                         initialFocus
@@ -835,5 +825,3 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
     </Dialog>
   );
 }
-
-    
