@@ -41,10 +41,13 @@ const generateImageFlow = ai.defineFlow(
       },
     });
 
-    if (!media || media.length === 0 || !media[0].url) {
+    // The 'media' property is an array of parts. We need to find the part that contains the image.
+    const imagePart = media?.find(p => p.media && p.media.url);
+
+    if (!imagePart || !imagePart.media?.url) {
       throw new Error('Image generation failed to return a valid image URL.');
     }
 
-    return { imageUrl: media[0].url };
+    return { imageUrl: imagePart.media.url };
   }
 );
