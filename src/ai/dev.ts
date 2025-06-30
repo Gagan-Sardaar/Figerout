@@ -6,3 +6,4 @@ import '@/ai/flows/generate-seo-content.ts';
 import '@/ai/flows/analyze-color-palette.ts';
 import '@/ai/flows/extract-dominant-colors.ts';
 import '@/ai/flows/generate-image.ts';
+import '@/ai/flows/extract-image-keywords.ts';

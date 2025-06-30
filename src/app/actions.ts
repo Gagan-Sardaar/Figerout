@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { extractImageKeywords } from '@/ai/flows/extract-image-keywords';
 
 const ImageSchema = z.object({
   id: z.number(),
@@ -118,4 +119,40 @@ export async function searchPexelsImage(query: string): Promise<string | null> {
     console.error(`Fetch failed for Pexels search query "${query}":`, err);
     return null;
   }
+}
+
+export async function findSimilarPexelsImage(imageSource: string): Promise<string | null> {
+  let imageDataUri = imageSource;
+
+  // If it's a URL, fetch and convert it to a data URI
+  if (!imageSource.startsWith('data:')) {
+    try {
+      const imageResponse = await fetch(imageSource);
+      if (!imageResponse.ok) {
+        console.error(`Failed to fetch image for analysis: ${imageSource}`);
+        return null;
+      }
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+      imageDataUri = `data:${contentType};base64,${Buffer.from(imageBuffer).toString('base64')}`;
+    } catch (err) {
+      console.error(`Fetch failed for image URL "${imageSource}":`, err);
+      return null;
+    }
+  }
+
+  // Now we have a data URI, analyze it
+  try {
+    const keywordsResult = await extractImageKeywords({ imageDataUri });
+    if (keywordsResult && keywordsResult.keywords.length > 0) {
+      const query = keywordsResult.keywords.join(' ');
+      // searchPexelsImage returns a data URI, which is what we want.
+      return searchPexelsImage(query); 
+    }
+  } catch(err) {
+    console.error(`AI keyword extraction failed:`, err);
+    return null;
+  }
+  
+  return null;
 }
