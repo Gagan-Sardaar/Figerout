@@ -339,7 +339,7 @@ const ColorPickerView = () => {
                         <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                     </div>
                 </div>
-                <p className="text-xs text-white/70 text-center pt-2">Choose your perfect color shade</p>
+                <p className="text-xs text-white/70 pt-2">Choose your perfect color shade</p>
             </div>
             <div className="flex flex-col max-h-[50vh] overflow-y-auto">
                 {palette.map((shade, index) => (
