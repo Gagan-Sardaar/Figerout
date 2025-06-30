@@ -71,10 +71,20 @@ const PexelsSearchSchema = z.object({
     src: z.object({
       portrait: z.string(),
     }),
+    photographer: z.string(),
+    photographer_url: z.string(),
+    alt: z.string(),
   })),
 });
 
-export async function searchPexelsImage(query: string): Promise<string | null> {
+export type PexelsSearchImage = {
+    dataUri: string;
+    photographer: string;
+    photographerUrl: string;
+    alt: string;
+}
+
+export async function searchPexelsImage(query: string): Promise<PexelsSearchImage | null> {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) {
     console.error("PEXELS_API_KEY is not set.");
@@ -95,9 +105,9 @@ export async function searchPexelsImage(query: string): Promise<string | null> {
     const validatedData = PexelsSearchSchema.safeParse(data);
 
     if (validatedData.success && validatedData.data.photos.length > 0) {
-      const imageUrl = validatedData.data.photos[0].src.portrait;
+      const photo = validatedData.data.photos[0];
+      const imageUrl = photo.src.portrait;
       
-      // Fetch the image and convert to data URI
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
         console.error(`Failed to fetch Pexels image from URL: ${imageUrl}`);
@@ -106,7 +116,14 @@ export async function searchPexelsImage(query: string): Promise<string | null> {
       const imageBuffer = await imageResponse.arrayBuffer();
       const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
       const base64 = Buffer.from(imageBuffer).toString('base64');
-      return `data:${contentType};base64,${base64}`;
+      const dataUri = `data:${contentType};base64,${base64}`;
+
+      return {
+          dataUri,
+          photographer: photo.photographer,
+          photographerUrl: photo.photographer_url,
+          alt: photo.alt,
+      }
 
     } else {
       if (!validatedData.success) {

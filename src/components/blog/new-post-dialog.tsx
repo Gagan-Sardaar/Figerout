@@ -265,10 +265,10 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
         
         toast({ description: `Searching for images related to: ${keywordsResult.keywords.join(", ")}` });
 
-        const newImageUrl = await searchPexelsImage(keywordsResult.keywords.join(" "));
-        if (newImageUrl) {
-          setImagePreview(newImageUrl);
-          form.setValue("featuredImage", newImageUrl);
+        const newImage = await searchPexelsImage(keywordsResult.keywords.join(" "));
+        if (newImage) {
+          setImagePreview(newImage.dataUri);
+          form.setValue("featuredImage", newImage.dataUri);
           toast({ title: "Found a similar image!" });
         } else {
           toast({ title: "Couldn't find a similar image.", description: "Try again or use a different image.", variant: "destructive" });
@@ -285,11 +285,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
       try {
         const randomKeywords = ['abstract background', 'vibrant colors', 'modern texture', 'minimalist design', 'nature pattern', 'futuristic technology', 'artistic portrait'];
         const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
-        const newImageUrl = await searchPexelsImage(randomQuery);
-        if (newImageUrl) {
+        const newImage = await searchPexelsImage(randomQuery);
+        if (newImage) {
           handleRemoveImage();
-          setImagePreview(newImageUrl);
-          form.setValue("featuredImage", newImageUrl);
+          setImagePreview(newImage.dataUri);
+          form.setValue("featuredImage", newImage.dataUri);
           toast({ title: "Random image selected!" });
         } else {
           toast({ title: "Could not fetch a random image.", description: "The stock photo library might be busy.", variant: "destructive" });
