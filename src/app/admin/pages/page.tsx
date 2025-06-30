@@ -326,10 +326,9 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                            {seoResult && seoResult.score < 90 && (
                                <Button
                                    size="sm"
-                                   variant="ghost"
+                                   variant="default"
                                    onClick={handleAutoFixSeo}
                                    disabled={isAutoFixing}
-                                   className="text-primary hover:text-primary"
                                >
                                    {isAutoFixing ? (
                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />

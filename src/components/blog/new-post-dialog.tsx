@@ -600,7 +600,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                                 <CardTitle className="text-sm font-semibold">Feedback & Suggestions</CardTitle>
                            </div>
                            {seoResult && seoResult.score < 90 && (
-                                <Button size="sm" variant="ghost" onClick={handleAutoFixSeo} disabled={isAutoFixing} className="text-primary hover:text-primary">
+                                <Button size="sm" variant="default" onClick={handleAutoFixSeo} disabled={isAutoFixing}>
                                     {isAutoFixing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                                     Auto-fix
                                 </Button>
