@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -178,42 +178,43 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     updateTextAndState(newText, newStart, newEnd);
   };
 
-  useEffect(() => {
-    const analyze = async () => {
-      if (!pageTitle || !pageContent) {
-        setSeoResult(null);
-        return;
-      }
-      setIsAnalyzingSeo(true);
-      try {
-        const result = await generateSeoScore({
-          title: pageTitle,
-          content: pageContent,
-          metaTitle: metaTitle,
-          metaDescription: metaDescription,
-        });
-        setSeoResult(result);
-      } catch (error) {
-        console.error("Error analyzing SEO:", error);
-      } finally {
-        setIsAnalyzingSeo(false);
-      }
-    };
-
-    const handler = setTimeout(() => {
-      analyze();
-    }, 1500);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [pageTitle, metaTitle, metaDescription, pageContent]);
+  const handleAnalyzeSeo = async () => {
+    if (!pageTitle || !pageContent) {
+      toast({
+        title: "Cannot Analyze SEO",
+        description: "Please provide a title and content before analyzing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAnalyzingSeo(true);
+    setSeoResult(null);
+    try {
+      const result = await generateSeoScore({
+        title: pageTitle,
+        content: pageContent,
+        metaTitle: metaTitle,
+        metaDescription: metaDescription,
+      });
+      setSeoResult(result);
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+      toast({
+        title: "SEO Analysis Failed",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzingSeo(false);
+    }
+  };
 
 
   const handleGenerateContent = async () => {
     setIsGenerating(true);
     form.reset();
     setLastSaved(null);
+    setSeoResult(null);
     try {
       const result = await generatePageContent({ pageTopic: topic, appName: "Figerout" });
       form.setValue("pageTitle", result.pageTitle);
@@ -268,6 +269,9 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         title: "SEO Content Improved!",
         description: "The page content has been updated with SEO enhancements.",
       });
+      // Re-analyze after fixing
+      setTimeout(() => handleAnalyzeSeo(), 500);
+
     } catch (error) {
       console.error("Error auto-fixing SEO:", error);
       toast({
@@ -426,24 +430,22 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-primary" />
-                    Real-Time SEO
+                    SEO Analysis
                   </CardTitle>
-                  <CardDescription>Score updates as you type.</CardDescription>
+                  <CardDescription>Click to analyze your content's SEO performance.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isAnalyzingSeo && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Analyzing...</span>
-                    </div>
-                  )}
-                  {!isAnalyzingSeo && !seoResult && (
-                    <p className="text-sm text-muted-foreground">
-                      Start typing to see your SEO score.
-                    </p>
-                  )}
-                  {seoResult && !isAnalyzingSeo && (
-                    <div className="space-y-2">
+                  <Button onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !pageTitle || !pageContent} className="w-full">
+                    {isAnalyzingSeo ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Analyze SEO
+                  </Button>
+                  
+                  {seoResult && (
+                    <div className="space-y-2 mt-4 pt-4 border-t">
                       <Label className="text-base font-bold">
                         Score: {seoResult.score}/100
                       </Label>
@@ -522,3 +524,5 @@ export default function PagesPage() {
     </main>
   );
 }
+
+    

@@ -9,12 +9,8 @@ import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { format } from "date-fns";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+  Button
+} from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +57,7 @@ import {
   Wand2,
   X,
   Send,
+  Edit,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
@@ -104,7 +101,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) {
+function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => void, onExit: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -120,20 +117,34 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: isEditing && post
-      ? {
-          title: post.title,
-          content: post.summary,
-          status: post.status,
-          featuredImage: post.imageUrl,
-          metaTitle: "",
-          metaDescription: "",
-          focusKeywords: [],
-          password: "",
-          scheduleDate: post.lastUpdated ? new Date(post.lastUpdated) : undefined,
-        }
-      : { title: "", metaTitle: "", metaDescription: "", content: "", status: "draft", focusKeywords: [], password: "", scheduleDate: undefined },
+    defaultValues: {
+      title: "",
+      metaTitle: "",
+      metaDescription: "",
+      content: "",
+      status: "draft",
+      focusKeywords: [],
+      password: "",
+      scheduleDate: undefined,
+    },
   });
+  
+  useEffect(() => {
+    if (post) {
+      form.reset({
+        title: post.title,
+        content: post.summary, // Assuming content is stored in summary for cards
+        status: post.status,
+        featuredImage: post.imageUrl,
+        metaTitle: "", // These would typically come from your data source
+        metaDescription: "",
+        focusKeywords: [],
+        password: "",
+        scheduleDate: post.lastUpdated ? new Date(post.lastUpdated) : undefined,
+      });
+      setImagePreview(post.imageUrl);
+    }
+  }, [post, form]);
   
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -147,47 +158,37 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
   const scheduleDate = form.watch("scheduleDate");
   const status = form.watch("status");
 
-  useEffect(() => {
-    if (post?.imageUrl) {
-      setImagePreview(post.imageUrl);
+
+  const handleAnalyzeSeo = async () => {
+    if (!title || !content) {
+      toast({
+        title: "Cannot Analyze SEO",
+        description: "Please provide a title and content before analyzing.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, [post]);
-
-  useEffect(() => {
-    const analyze = async () => {
-        if (!title || !content) {
-            setSeoResult(null);
-            return;
-        }
-        setIsAnalyzingSeo(true);
-        try {
-            const result = await generateSeoScore({
-                title,
-                content,
-                metaTitle,
-                metaDescription,
-            });
-            setSeoResult(result);
-        } catch (error) {
-            console.error("Error analyzing SEO:", error);
-            toast({
-                title: "SEO Analysis Failed",
-                description: "Could not connect to the AI service.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsAnalyzingSeo(false);
-        }
-    };
-
-    const handler = setTimeout(() => {
-        analyze();
-    }, 1500);
-
-    return () => {
-        clearTimeout(handler);
-    };
-}, [title, content, metaTitle, metaDescription, toast]);
+    setIsAnalyzingSeo(true);
+    setSeoResult(null);
+    try {
+      const result = await generateSeoScore({
+        title,
+        content,
+        metaTitle,
+        metaDescription,
+      });
+      setSeoResult(result);
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+      toast({
+        title: "SEO Analysis Failed",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzingSeo(false);
+    }
+  };
 
   const handleImageInsert = (markdown: string) => {
     const textarea = contentTextareaRef.current;
@@ -390,6 +391,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
 
     toast({ title, description });
     onSave();
+    onExit();
   };
 
   const handleAutoFixSeo = async () => {
@@ -418,6 +420,8 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
         title: "SEO Content Improved!",
         description: "The post content has been updated with SEO enhancements.",
       });
+      // Re-analyze after fixing
+      setTimeout(() => handleAnalyzeSeo(), 500);
     } catch (error) {
       console.error("Error auto-fixing SEO:", error);
       toast({
@@ -433,18 +437,17 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
   const getSubmitButtonConfig = () => {
     const iconClass = "mr-2 h-4 w-4";
     if (isEditing) {
+      if(status === 'draft' || status === 'private') {
+        return { text: 'Save Changes', icon: <Save className={iconClass} /> };
+      }
       return { text: 'Update', icon: <Save className={iconClass} /> };
     }
     
-    switch (status) {
-      case 'published':
-      case 'password-protected':
-        return { text: 'Publish', icon: <Send className={iconClass} /> };
-      case 'draft':
-      case 'private':
-      default:
-        return { text: 'Save Changes', icon: <Save className={iconClass} /> };
+    if (status === 'published' || status === 'password-protected') {
+      return { text: 'Publish', icon: <Send className={iconClass} /> };
     }
+    
+    return { text: 'Save Changes', icon: <Save className={iconClass} /> };
   };
 
   const submitButtonConfig = getSubmitButtonConfig();
@@ -583,10 +586,11 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
               )}
             />
 
-            <Accordion type="single" collapsible defaultValue="item-1">
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Publishing Settings</AccordionTrigger>
-                <AccordionContent className="space-y-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">Publishing</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
                     name="status"
@@ -636,101 +640,62 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                       )}
                     />
                   )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </CardContent>
+            </Card>
 
             <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Real-Time SEO
-                  </CardTitle>
-                  <CardDescriptionUi>Score updates as you type.</CardDescriptionUi>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="metaTitle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Title</FormLabel>
-                        <FormControl><Input placeholder="SEO-friendly title" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="metaDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Description</FormLabel>
-                        <FormControl><Textarea placeholder="Brief summary for search engines" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div>
-                    <Label>Focus Keywords</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {fields.map((field, index) => (
-                        <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
-                            {form.watch(`focusKeywords.${index}.value`)}
-                            <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
-                            <X className="h-3 w-3" />
-                            </button>
-                        </Badge>
-                        ))}
-                        <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add
-                        </Button>
-                    </div>
-                    {form.formState.errors.focusKeywords && (
-                        <p className="text-sm font-medium text-destructive mt-2">
-                            {form.formState.errors.focusKeywords.message as string}
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  SEO Analysis
+                </CardTitle>
+                <CardDescriptionUi>Click to analyze your content's SEO performance.</CardDescriptionUi>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !title || !content} className="w-full">
+                  {isAnalyzingSeo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Analyze SEO
+                </Button>
+                
+                {seoResult && (
+                  <div className="space-y-2 mt-4 pt-4 border-t">
+                    <Label className="text-base font-bold">Score: {seoResult.score}/100</Label>
+                    <Progress value={seoResult.score} />
+                    <Card className="mt-4 bg-muted/50">
+                      <CardHeader className="flex flex-row items-center justify-between p-3">
+                          <div className="flex items-center gap-2">
+                              <Lightbulb className="h-5 w-5 text-primary" />
+                              <CardTitle className="text-sm font-semibold">
+                                  Feedback
+                              </CardTitle>
+                          </div>
+                          {seoResult && seoResult.score < 90 && (
+                              <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={handleAutoFixSeo}
+                                  disabled={isAutoFixing}
+                                  type="button"
+                              >
+                                  {isAutoFixing ? (
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  ) : (
+                                      <Wand2 className="mr-2 h-4 w-4" />
+                                  )}
+                                  Auto-fix
+                              </Button>
+                          )}
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                        <p className="text-xs text-muted-foreground">
+                          {seoResult.feedback}
                         </p>
-                        )}
-                   </div>
-                  
-                  {isAnalyzingSeo && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Analyzing SEO...</span>
-                    </div>
-                  )}
-
-                  {!isAnalyzingSeo && !seoResult && (
-                    <p className="text-sm text-muted-foreground pt-2">
-                        Start typing to see your SEO score.
-                    </p>
-                  )}
-
-                  {seoResult && !isAnalyzingSeo && (
-                    <div className="space-y-2 pt-2">
-                      <Label className="text-base font-bold">Score: {seoResult.score}/100</Label>
-                      <Progress value={seoResult.score} />
-                      <Card className="mt-4 bg-muted/50">
-                        <CardHeader className="flex flex-row items-center justify-between gap-2 p-3">
-                           <div className="flex items-center gap-2">
-                                <Lightbulb className="h-5 w-5 text-primary" />
-                                <CardTitle className="text-sm font-semibold">Feedback</CardTitle>
-                           </div>
-                           {seoResult && seoResult.score < 90 && (
-                                <Button size="sm" variant="default" onClick={handleAutoFixSeo} disabled={isAutoFixing}>
-                                    {isAutoFixing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                    Auto-fix
-                                </Button>
-                           )}
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                           <p className="text-xs text-muted-foreground">{seoResult.feedback}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
           </div>
         </div>
@@ -790,7 +755,7 @@ function NewPostForm({ post, onSave }: { post?: BlogPost, onSave: () => void }) 
                         />
                     </div>
                     <div className="p-3 border-t border-border flex justify-end">
-                       <Button size="sm" onClick={() => setIsSchedulePopoverOpen(false)}>Done</Button>
+                       <Button size="sm" onClick={() => setIsSchedulePopoverOpen(false)} type="button">Done</Button>
                     </div>
                 </PopoverContent>
             </Popover>
@@ -817,7 +782,12 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {trigger}
+        {children || (
+          <Button>
+            {post ? <Edit className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+            {post ? 'Edit' : 'New Post'}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col">
         <DialogHeader>
@@ -827,9 +797,11 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto -mr-6 pr-6">
-          <NewPostForm post={post} onSave={() => setIsOpen(false)} />
+          <NewPostForm post={post} onSave={() => {}} onExit={() => setIsOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+    
