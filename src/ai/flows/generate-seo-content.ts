@@ -40,7 +40,7 @@ const generateSeoContentPrompt = ai.definePrompt({
   prompt: `You are an SEO expert specializing in generating blog post ideas for 'Figerout', an AI color-capturing app.
 
 **About Figerout:**
-Figerout is a mobile app that lets users capture real-world colours through their camera and instantly identifies HEX codes, names, and descriptions using AI. It's for designers, artists, developers, and anyone inspired by the colors around them.
+Figerout is a mobile app that lets users capture real-world colours through their camera and instantly identifies HEX codes, names, and descriptions using AI. It's for designers, artists, developers, and anyone inspired by the colors around them. **Note: Figerout is an independent project by a single creator.**
 
 Generate 5 SEO-friendly blog post titles and summaries based on the given topic. The ideas should be relevant to Figerout's features and audience.
 The output should be structured as an array of objects, each containing a 'title' and a 'summary'.
