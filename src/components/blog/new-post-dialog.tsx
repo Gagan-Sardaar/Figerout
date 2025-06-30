@@ -53,12 +53,11 @@ import {
   Heading3,
   Heading4,
   Pilcrow,
-  Wand2,
   Loader2,
+  Search,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { generateImage } from "@/ai/flows/generate-image";
-import { searchPexelsImage, findSimilarPexelsImage } from "@/app/actions";
+import { searchPexelsImage } from "@/app/actions";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -72,8 +71,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [imagePrompt, setImagePrompt] = useState("");
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [imageSearchQuery, setImageSearchQuery] = useState("");
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -181,122 +180,67 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   }
 
   const handleFetchRandomImage = async () => {
-    const currentImage = imagePreview;
-    
-    setIsGeneratingImage(true);
-    
-    if (currentImage) {
-      // Find similar
-      toast({ title: "Thinking...", description: "Analyzing your image to find a similar one." });
-      try {
-        const newImageUrl = await findSimilarPexelsImage(currentImage);
-        if (newImageUrl) {
-          handleRemoveImage(); // clear old image
-          setImagePreview(newImageUrl);
-          form.setValue("featuredImage", newImageUrl);
-          toast({ title: "Found a similar image!", description: "The new image has been set as your featured image." });
-        } else {
-          toast({ title: "Couldn't find a similar image", description: "Try a different source image or prompt.", variant: "destructive" });
-        }
-      } catch (error) {
-        console.error("Error finding similar image:", error);
-        toast({ title: "Error finding similar image", variant: "destructive", description: "Please check the console for details." });
+    setIsSearchingImage(true);
+    toast({ title: "Searching for a random image..." });
+    try {
+      const randomKeywords = ['abstract background', 'vibrant colors', 'modern texture', 'minimalist design', 'nature pattern', 'futuristic technology', 'artistic portrait'];
+      const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
+      const newImageUrl = await searchPexelsImage(randomQuery);
+      if (newImageUrl) {
+        handleRemoveImage();
+        setImagePreview(newImageUrl);
+        form.setValue("featuredImage", newImageUrl);
+        toast({ title: "Random image selected!" });
+      } else {
+        toast({ title: "Could not fetch a random image.", description: "The stock photo library might be busy.", variant: "destructive" });
       }
-    } else {
-      // Find random
-      toast({ title: "Searching for a random image..." });
-      try {
-        const randomKeywords = ['abstract background', 'vibrant colors', 'modern texture', 'minimalist design', 'nature pattern', 'futuristic technology', 'artistic portrait'];
-        const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
-        const newImageUrl = await searchPexelsImage(randomQuery);
-        if (newImageUrl) {
-          handleRemoveImage();
-          setImagePreview(newImageUrl);
-          form.setValue("featuredImage", newImageUrl);
-          toast({ title: "Random image selected!" });
-        } else {
-          toast({ title: "Could not fetch a random image.", description: "The stock photo library might be busy.", variant: "destructive" });
-        }
-      } catch (error) {
-        console.error("Error fetching random image:", error);
-        toast({ title: "Error fetching random image", variant: "destructive", description: "Please check the console for details." });
-      }
+    } catch (error) {
+      console.error("Error fetching random image:", error);
+      toast({ title: "Error fetching random image", variant: "destructive", description: "Please check the console for details." });
     }
-    setIsGeneratingImage(false);
+    setIsSearchingImage(false);
   };
-
-  const handleGenerateImage = async () => {
-    if (!imagePrompt) {
+  
+  const handleSearchPexels = async () => {
+    if (!imageSearchQuery) {
       toast({
-        title: "Prompt is empty",
-        description: "Please enter a prompt to generate an image.",
+        title: "Search query is empty",
+        description: "Please enter a term to search for an image.",
         variant: "destructive",
       });
       return;
     }
-    setIsGeneratingImage(true);
+    setIsSearchingImage(true);
     handleRemoveImage();
-    let pexelsUrl: string | null = null;
-    const detailedPrompt = `A high-quality, photorealistic image of ${imagePrompt}. Style: professional, vivid, cinematic.`;
-
+    
     try {
-      // First attempt: generate from prompt only
-      const result = await generateImage({ prompt: detailedPrompt });
-      setImagePreview(result.imageUrl);
-      form.setValue("featuredImage", result.imageUrl);
-      toast({
-        title: "AI Image Generated",
-        description: "The image was successfully created by AI.",
-      });
-    } catch (initialError) {
-      console.error("Initial AI generation failed, trying fallback:", initialError);
-      toast({
-        title: "Initial Generation Failed",
-        description: "Attempting to create a stylized image from a stock photo...",
-      });
-
-      try {
-        // Fallback step 1: Get a reference image from Pexels
-        pexelsUrl = await searchPexelsImage(imagePrompt);
-        
-        if (!pexelsUrl) {
-          throw new Error("Pexels fallback failed: No image found for the prompt.");
-        }
-
-        // Fallback step 2: Generate new image using the pexels image as reference
-        const resultWithFallback = await generateImage({
-          prompt: detailedPrompt,
-          referenceImageUrl: pexelsUrl,
-        });
-
-        setImagePreview(resultWithFallback.imageUrl);
-        form.setValue("featuredImage", resultWithFallback.imageUrl);
+      const newImageUrl = await searchPexelsImage(imageSearchQuery);
+      if (newImageUrl) {
+        setImagePreview(newImageUrl);
+        form.setValue("featuredImage", newImageUrl);
         toast({
-          title: "Stylized Image Generated!",
-          description: "Created a unique image based on a stock photo reference.",
+          title: "Image Found!",
+          description: `Found an image for "${imageSearchQuery}".`,
         });
-      } catch (fallbackError) {
-        console.error("Stylized generation failed, using Pexels image directly:", fallbackError);
-        if (pexelsUrl) {
-          setImagePreview(pexelsUrl);
-          form.setValue("featuredImage", pexelsUrl);
-          toast({
-            title: "Using Fallback Image",
-            description: "AI generation failed, but a relevant stock photo was found.",
-          });
-        } else {
-          console.error("Full fallback process failed:", fallbackError);
-          toast({
-            title: "Image Generation Failed",
-            description: "Could not generate an AI image or find a stock photo.",
-            variant: "destructive",
-          });
-        }
+      } else {
+        toast({
+          title: "No Image Found",
+          description: `Couldn't find an image for "${imageSearchQuery}". Try a different search term.`,
+          variant: "destructive",
+        });
       }
+    } catch (error) {
+      console.error("Error searching Pexels:", error);
+      toast({
+        title: "Search Failed",
+        description: "There was an error connecting to the image library.",
+        variant: "destructive",
+      });
     } finally {
-      setIsGeneratingImage(false);
+      setIsSearchingImage(false);
     }
   };
+
 
   return (
     <Form {...form}>
@@ -366,10 +310,10 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                     <FormControl>
                       <div
                         {...getRootProps()}
-                        className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isGeneratingImage && "hover:border-primary/50 cursor-pointer"}`}
+                        className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && !isSearchingImage && "hover:border-primary/50 cursor-pointer"}`}
                       >
                         <input {...getInputProps()} />
-                        {imagePreview && !isGeneratingImage ? (
+                        {imagePreview && !isSearchingImage ? (
                           <>
                             <div className="relative aspect-video">
                               <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
@@ -385,15 +329,15 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                           </>
                         ) : (
                           <div className="flex aspect-video flex-col items-center justify-center gap-2 text-muted-foreground p-8">
-                            {isGeneratingImage ? (
+                            {isSearchingImage ? (
                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 p-4 text-foreground backdrop-blur-sm">
-                                    <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Wand2 className="h-5 w-5" /> Thinking...</p>
+                                    <p className="flex items-center gap-2 text-lg font-semibold animate-pulse"><Search className="h-5 w-5" /> Searching...</p>
                                     <div className="w-full max-w-xs">
                                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
                                             <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
                                         </div>
                                     </div>
-                                    <p className="mt-2 text-center text-xs text-muted-foreground">Generating with AI. We'll try a stock photo if this fails.</p>
+                                    <p className="mt-2 text-center text-xs text-muted-foreground">Finding the perfect image for you.</p>
                                 </div>
                             ) : (
                                 <>
@@ -406,9 +350,9 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </div>
                     </FormControl>
                     <div className="space-y-2">
-                      <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage} disabled={isGeneratingImage}>
-                          {imagePreview ? <Sparkles className="mr-2" /> : <Dice5 className="mr-2"/>}
-                          {imagePreview ? 'Find similar image' : 'Get random image'}
+                       <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={handleFetchRandomImage} disabled={isSearchingImage}>
+                          <Dice5 className="mr-2"/>
+                          Get random image
                       </Button>
                       <div className="relative">
                           <div className="absolute inset-0 flex items-center">
@@ -422,23 +366,29 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                       </div>
                       <div className="flex items-center gap-2">
                           <Input 
-                              id="image-prompt" 
-                              placeholder="Generate one with AI..." 
-                              value={imagePrompt}
-                              onChange={(e) => setImagePrompt(e.target.value)}
-                              disabled={isGeneratingImage}
+                              id="image-search" 
+                              placeholder="Search Pexels..." 
+                              value={imageSearchQuery}
+                              onChange={(e) => setImageSearchQuery(e.target.value)}
+                              disabled={isSearchingImage}
+                               onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSearchPexels();
+                                }
+                              }}
                           />
                           <Button 
                               type="button" 
                               variant="secondary" 
-                              onClick={handleGenerateImage} 
-                              disabled={isGeneratingImage}
+                              onClick={handleSearchPexels} 
+                              disabled={isSearchingImage}
                               className="shrink-0"
                           >
-                              {isGeneratingImage ? (
+                              {isSearchingImage ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                  <Wand2 className="h-4 w-4" />
+                                  <Search className="h-4 w-4" />
                               )}
                           </Button>
                       </div>
