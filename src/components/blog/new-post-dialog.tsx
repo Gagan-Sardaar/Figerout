@@ -203,6 +203,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
     setIsGeneratingImage(true);
     handleRemoveImage();
+    let pexelsUrl: string | null = null;
 
     try {
       // First attempt: generate from prompt only
@@ -222,7 +223,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
       try {
         // Fallback step 1: Get a reference image from Pexels
-        const pexelsUrl = await searchPexelsImage(imagePrompt);
+        pexelsUrl = await searchPexelsImage(imagePrompt);
         
         if (!pexelsUrl) {
           throw new Error("Pexels fallback failed: No image found for the prompt.");
@@ -241,12 +242,22 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
           description: "Created a unique image based on a stock photo reference.",
         });
       } catch (fallbackError) {
-        console.error("Full fallback process failed:", fallbackError);
-        toast({
-          title: "Image Generation Failed",
-          description: "Could not generate an AI image, even with a fallback.",
-          variant: "destructive",
-        });
+        console.error("Stylized generation failed, using Pexels image directly:", fallbackError);
+        if (pexelsUrl) {
+          setImagePreview(pexelsUrl);
+          form.setValue("featuredImage", pexelsUrl);
+          toast({
+            title: "Using Fallback Image",
+            description: "AI generation failed, but a relevant stock photo was found.",
+          });
+        } else {
+          console.error("Full fallback process failed:", fallbackError);
+          toast({
+            title: "Image Generation Failed",
+            description: "Could not generate an AI image or find a stock photo.",
+            variant: "destructive",
+          });
+        }
       }
     } finally {
       setIsGeneratingImage(false);
