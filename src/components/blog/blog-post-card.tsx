@@ -115,9 +115,6 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
           </div>
           {isAdmin && (
             <div className="flex items-center gap-4 ml-auto">
-                <Badge variant={statusVariant[post.status]} className="capitalize">
-                    {post.status.replace('-', ' ')}
-                </Badge>
                 <div className="flex items-center gap-1.5 font-medium">
                   <Sparkles className="h-4 w-4 text-primary" />
                   {isLoadingSeo ? (
@@ -128,10 +125,13 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
                     <span>SEO: N/A</span>
                   )}
                 </div>
+                 <Badge variant={statusVariant[post.status]} className="capitalize">
+                    {post.status.replace('-', ' ')}
+                </Badge>
             </div>
           )}
         </div>
-        <div className="w-full flex justify-between items-center">
+        <div className={cn("w-full flex items-center", isAdmin ? "justify-end" : "justify-start")}>
           {isAdmin ? (
             <div className="flex gap-2">
               <Button variant="outline" size="sm">
