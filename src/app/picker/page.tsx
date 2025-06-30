@@ -200,8 +200,8 @@ const ColorPickerView = () => {
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
     navigator.clipboard.writeText(textToCopy).then(() => {
         toast({
-            title: 'Copied to Clipboard!',
-            description: 'Color details and share link are ready.',
+            title: 'Color copied!',
+            description: `${colorName} (${pickedColor.toUpperCase()}) is ready to share.`,
         });
     }).catch(err => {
         console.error('Failed to copy text: ', err);
