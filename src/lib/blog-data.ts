@@ -15,6 +15,12 @@ export interface BlogPost {
   lastUpdated: string;
 }
 
+const getDateAgo = (days: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
+
 export const blogPosts: BlogPost[] = [
   {
     id: 1,
@@ -29,7 +35,7 @@ export const blogPosts: BlogPost[] = [
     likes: 345,
     shares: 89,
     status: 'published',
-    lastUpdated: '2024-05-20T10:00:00Z',
+    lastUpdated: getDateAgo(1),
   },
   {
     id: 2,
@@ -44,7 +50,7 @@ export const blogPosts: BlogPost[] = [
     likes: 780,
     shares: 150,
     status: 'published',
-    lastUpdated: '2024-05-18T14:30:00Z',
+    lastUpdated: getDateAgo(3),
   },
   {
     id: 3,
@@ -59,7 +65,7 @@ export const blogPosts: BlogPost[] = [
     likes: 210,
     shares: 45,
     status: 'draft',
-    lastUpdated: '2024-05-21T09:00:00Z',
+    lastUpdated: getDateAgo(0),
   },
    {
     id: 4,
@@ -74,7 +80,7 @@ export const blogPosts: BlogPost[] = [
     likes: 950,
     shares: 220,
     status: 'published',
-    lastUpdated: '2024-05-15T11:00:00Z',
+    lastUpdated: getDateAgo(5),
   },
   {
     id: 5,
@@ -89,7 +95,7 @@ export const blogPosts: BlogPost[] = [
     likes: 560,
     shares: 110,
     status: 'private',
-    lastUpdated: '2024-05-12T18:00:00Z',
+    lastUpdated: getDateAgo(8),
   },
   {
     id: 6,
@@ -104,7 +110,7 @@ export const blogPosts: BlogPost[] = [
     likes: 420,
     shares: 95,
     status: 'password-protected',
-    lastUpdated: '2024-05-10T16:45:00Z',
+    lastUpdated: getDateAgo(10),
   },
   {
     id: 7,
@@ -119,6 +125,6 @@ export const blogPosts: BlogPost[] = [
     likes: 250,
     shares: 60,
     status: 'published',
-    lastUpdated: '2024-05-22T12:00:00Z',
+    lastUpdated: getDateAgo(0),
   },
 ];
