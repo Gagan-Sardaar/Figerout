@@ -52,7 +52,10 @@ import {
   Heading2,
   Heading3,
   Heading4,
+  Heading5,
+  Heading6,
   Pilcrow,
+  Quote,
   Search,
   Sparkles,
   Loader2,
@@ -149,7 +152,7 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 }, [title, content, metaTitle, metaDescription, toast]);
 
 
-  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'p' | 'image') => {
+  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'quote' | 'image') => {
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
 
@@ -174,30 +177,17 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     let suffix = '';
 
     switch (type) {
-        case 'bold':
-            prefix = '**';
-            suffix = '**';
-            break;
-        case 'italic':
-            prefix = '_';
-            suffix = '_';
-            break;
-        case 'link':
-            prefix = '[';
-            suffix = '](https://)';
-            break;
-        case 'h2':
-        case 'h3':
-        case 'h4':
-        case 'p':
-            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', p: '' };
+        case 'bold': prefix = '**'; suffix = '**'; break;
+        case 'italic': prefix = '_'; suffix = '_'; break;
+        case 'link': prefix = '['; suffix = '](https://)'; break;
+        
+        case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': case 'p': case 'quote':
+            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
             const blockPrefix = prefixes[type];
 
             const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
             let lineEnd = value.indexOf('\n', lineStart);
-            if (lineEnd === -1) {
-                lineEnd = value.length;
-            }
+            if (lineEnd === -1) lineEnd = value.length;
             
             const currentLine = value.substring(lineStart, lineEnd);
             const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
@@ -303,7 +293,6 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   };
 
   const handleSave = (status: FormValues['status']) => {
-    form.setValue('status', status);
     console.log("Saving with status:", status, form.getValues());
     
     setLastSaved(new Date());
@@ -407,7 +396,10 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h2')}><Heading2/></Button>
                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h3')}><Heading3/></Button>
                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h4')}><Heading4/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h5')}><Heading5/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h6')}><Heading6/></Button>
                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('quote')}><Quote/></Button>
                  <Separator orientation="vertical" className="h-6 mx-1" />
                  <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
               </div>

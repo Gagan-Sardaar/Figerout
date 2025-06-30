@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb, Wand2 } from "lucide-react";
+import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb, Wand2, Bold, Italic, Link as LinkIcon, Heading2, Heading3, Heading4, Heading5, Heading6, Pilcrow, Quote, ImagePlus } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import {
   generatePageContent
 } from "@/ai/flows/generate-page-content";
@@ -60,6 +61,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   
   const form = useForm<PageContentFormValues>({
     resolver: zodResolver(pageContentSchema),
@@ -81,6 +83,72 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
   const pageContent = form.watch("pageContent");
+
+  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'quote' | 'image') => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    const value = form.getValues('pageContent');
+    const { selectionStart, selectionEnd } = textarea;
+
+    const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
+        form.setValue('pageContent', newText, { shouldDirty: true });
+        
+        requestAnimationFrame(() => {
+            const currentTextarea = contentTextareaRef.current;
+            if (currentTextarea) {
+                form.trigger('pageContent');
+                currentTextarea.focus();
+                currentTextarea.setSelectionRange(newSelectionStart, newSelectionEnd ?? newSelectionStart);
+            }
+        });
+    };
+
+    const selectedText = value.substring(selectionStart, selectionEnd);
+    let prefix = '';
+    let suffix = '';
+
+    switch (type) {
+        case 'bold': prefix = '**'; suffix = '**'; break;
+        case 'italic': prefix = '_'; suffix = '_'; break;
+        case 'link': prefix = '['; suffix = '](https://)'; break;
+        
+        case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': case 'p': case 'quote':
+            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
+            const blockPrefix = prefixes[type];
+
+            const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+            let lineEnd = value.indexOf('\n', lineStart);
+            if (lineEnd === -1) lineEnd = value.length;
+            
+            const currentLine = value.substring(lineStart, lineEnd);
+            const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
+            const newLine = blockPrefix + trimmedLine;
+            
+            const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
+            const newCursorPos = lineStart + newLine.length;
+            
+            applyUpdate(newText, newCursorPos);
+            return;
+        
+        case 'image':
+            prefix = '![alt text](';
+            suffix = ')';
+            const placeholder = 'image_url';
+            const imageText = `${value.substring(0, selectionStart)}${prefix}${placeholder}${suffix}${value.substring(selectionEnd)}`;
+            applyUpdate(
+                imageText,
+                selectionStart + prefix.length,
+                selectionStart + prefix.length + placeholder.length
+            );
+            return;
+    }
+
+    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || 'text'}${suffix}${value.substring(selectionEnd)}`;
+    const newCursorStart = selectionStart + prefix.length;
+    const newCursorEnd = newCursorStart + (selectedText?.length || 4);
+    applyUpdate(newText, newCursorStart, newCursorEnd);
+  };
 
   useEffect(() => {
     const analyze = async () => {
@@ -281,10 +349,29 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Page Content (Markdown)</FormLabel>
+                      <div className="flex items-center gap-1 border border-input rounded-t-md p-1 bg-background flex-wrap">
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('bold')}><Bold/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('italic')}><Italic/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('link')}><LinkIcon/></Button>
+                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h2')}><Heading2/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h3')}><Heading3/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h4')}><Heading4/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h5')}><Heading5/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('h6')}><Heading6/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleMarkdownAction('quote')}><Quote/></Button>
+                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
+                      </div>
                       <FormControl>
                         <Textarea
+                          ref={(e) => {
+                            field.ref(e);
+                            if(e) contentTextareaRef.current = e;
+                          }}
                           placeholder="The main content of the page..."
-                          className="min-h-[400px] font-mono text-sm"
+                          className="min-h-[400px] font-mono text-sm rounded-t-none focus-visible:ring-0"
                           {...field}
                         />
                       </FormControl>
