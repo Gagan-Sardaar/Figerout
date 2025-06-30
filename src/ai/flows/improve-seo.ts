@@ -111,9 +111,9 @@ Carefully analyze the original content, metadata, and the provided SEO feedback.
 **Content Details:**
 
 *   **Original Title:** {{{title}}}
-*   **Original Meta Title:** {{{metaTitle}}}
-*   **Original Meta Description:** {{{metaDescription}}}
-*   **Focus Keywords:** {{#each focusKeywords}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+{{#if metaTitle}}*   **Original Meta Title:** {{{metaTitle}}}{{/if}}
+{{#if metaDescription}}*   **Original Meta Description:** {{{metaDescription}}}{{/if}}
+{{#if focusKeywords}}*   **Focus Keywords:** {{#each focusKeywords}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
 
 **SEO Feedback to Address:**
 {{{feedback}}}
@@ -122,6 +122,8 @@ Carefully analyze the original content, metadata, and the provided SEO feedback.
 ---
 {{{content}}}
 ---
+
+IMPORTANT: Your response MUST be a single, valid JSON object that conforms to the required output schema. Do not add any text before or after the JSON object.
 `,
 });
 
