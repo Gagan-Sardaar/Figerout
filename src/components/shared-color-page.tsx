@@ -42,12 +42,12 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
           
           <h1 className="text-4xl font-bold tracking-tight">{colorName}</h1>
 
-          <button 
-            onClick={handleCopy} 
-            className="mt-2 inline-flex items-center justify-center rounded-full bg-zinc-900 px-4 py-2 text-lg font-mono text-white/80 hover:bg-zinc-700 transition-colors"
+          <div
+            onClick={handleCopy}
+            className="cursor-pointer mt-2 inline-flex items-center justify-center rounded-full bg-zinc-700 px-4 py-2 text-sm font-mono text-white/80"
           >
             {color.toUpperCase()}
-          </button>
+          </div>
           
           <div className="w-full h-px bg-white/20 my-8" />
           
