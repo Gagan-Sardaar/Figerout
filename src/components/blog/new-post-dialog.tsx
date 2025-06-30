@@ -44,7 +44,17 @@ import {
   Dice5,
   PlusCircle,
   BookLock,
+  Trash2,
+  Replace,
+  Bold,
+  Italic,
+  Link as LinkIcon,
+  Heading2,
+  Heading3,
+  Heading4,
+  Pilcrow,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -75,11 +85,18 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     }
   }, [form]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: { "image/*": [] },
     multiple: false,
+    noClick: !!imagePreview,
+    noKeyboard: !!imagePreview,
   });
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    form.setValue("featuredImage", null);
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
@@ -91,14 +108,12 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   }
 
   const handleFetchRandomImage = async () => {
-    // In a real app, this would use the Pexels API server-side to get a truly random, valid image.
-    // For this prototype, we'll generate a random-ish URL.
     const randomPhotoId = Math.floor(Math.random() * 1000000) + 1000000;
     const imageUrl = `https://images.pexels.com/photos/${randomPhotoId}/pexels-photo-${randomPhotoId}.jpeg?auto=compress&cs=tinysrgb&w=1280&h=720`;
     
     setImagePreview(imageUrl);
-    form.setValue("featuredImage", imageUrl); // Store URL for simplicity
-     toast({
+    form.setValue("featuredImage", imageUrl);
+    toast({
       title: "Random Image Selected",
       description: "A random image from Pexels has been set.",
     });
@@ -125,7 +140,16 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
             <div>
               <FormLabel>Post Content</FormLabel>
-              <div className="mt-2 flex items-center gap-2 border border-input rounded-t-md p-2 bg-background">
+              <div className="mt-2 flex items-center gap-1 border border-input rounded-t-md p-1 bg-background flex-wrap">
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Bold/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Italic/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><LinkIcon/></Button>
+                 <Separator orientation="vertical" className="h-6 mx-1" />
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading2/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading3/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Heading4/></Button>
+                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Pilcrow/></Button>
+                 <Separator orientation="vertical" className="h-6 mx-1" />
                  <Button type="button" variant="ghost" size="sm"><ImagePlus className="mr-2"/> Add Image</Button>
                  <Button type="button" variant="ghost" size="sm"><Sparkles className="mr-2"/> Regenerate</Button>
               </div>
@@ -158,15 +182,25 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
                   <FormControl>
                     <div
                       {...getRootProps()}
-                      className={`border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input hover:border-primary/50"} ${imagePreview ? 'p-0' : 'p-8'}`}
+                      className={`relative group border-2 border-dashed rounded-lg text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-input"} ${!imagePreview && "hover:border-primary/50 cursor-pointer"}`}
                     >
                       <input {...getInputProps()} />
                       {imagePreview ? (
-                        <div className="relative aspect-video">
-                          <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
-                        </div>
+                        <>
+                          <div className="relative aspect-video">
+                            <Image src={imagePreview} alt="Preview" fill className="object-cover rounded-md" />
+                          </div>
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button type="button" size="icon" variant="secondary" onClick={open} aria-label="Change image">
+                              <Replace />
+                            </Button>
+                            <Button type="button" size="icon" variant="destructive" onClick={handleRemoveImage} aria-label="Delete image">
+                              <Trash2 />
+                            </Button>
+                          </div>
+                        </>
                       ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground p-8">
                           <UploadCloud className="w-10 h-10" />
                           <p>Drag & drop or click</p>
                         </div>
