@@ -75,6 +75,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -97,6 +98,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [imageCursorPos, setImageCursorPos] = useState(0);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -151,71 +154,82 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     };
 }, [title, content, metaTitle, metaDescription, toast]);
 
+  const handleImageInsert = (markdown: string) => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    const value = form.getValues('content');
+    const startPos = imageCursorPos;
+    
+    const newText = value.substring(0, startPos) + markdown + value.substring(startPos);
+    form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+
+    setTimeout(() => {
+        if (contentTextareaRef.current) {
+            const newCursorPos = startPos + markdown.length;
+            contentTextareaRef.current.focus();
+            contentTextareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+    }, 0);
+  };
 
   const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'quote' | 'image') => {
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
 
-    const value = form.getValues('content');
-    const { selectionStart, selectionEnd } = textarea;
+    if (type === 'image') {
+        setImageCursorPos(textarea.selectionStart);
+        setIsImageDialogOpen(true);
+        return;
+    }
 
-    const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
-        form.setValue('content', newText, { shouldDirty: true });
-        
-        requestAnimationFrame(() => {
-            const currentTextarea = contentTextareaRef.current;
-            if (currentTextarea) {
-                form.trigger('content');
-                currentTextarea.focus();
-                currentTextarea.setSelectionRange(newSelectionStart, newSelectionEnd ?? newSelectionStart);
+    const { selectionStart, selectionEnd } = textarea;
+    const value = form.getValues('content');
+    const selectedText = value.substring(selectionStart, selectionEnd);
+
+    const updateText = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+        form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+        setTimeout(() => {
+            if (contentTextareaRef.current) {
+                contentTextareaRef.current.focus();
+                contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
             }
-        });
+        }, 0);
     };
 
-    const selectedText = value.substring(selectionStart, selectionEnd);
+    if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
+        const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
+        const blockPrefix = prefixes[type];
+
+        const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+        let lineEnd = value.indexOf('\n', lineStart);
+        if (lineEnd === -1) lineEnd = value.length;
+        
+        const currentLine = value.substring(lineStart, lineEnd);
+        const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
+        const newLine = blockPrefix + trimmedLine;
+        
+        const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
+        const newCursorPos = lineStart + newLine.length;
+        updateText(newText, newCursorPos, newCursorPos);
+        return;
+    }
+    
     let prefix = '';
     let suffix = '';
+    let placeholder = 'text';
 
     switch (type) {
         case 'bold': prefix = '**'; suffix = '**'; break;
         case 'italic': prefix = '_'; suffix = '_'; break;
-        case 'link': prefix = '['; suffix = '](https://)'; break;
-        
-        case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': case 'p': case 'quote':
-            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
-            const blockPrefix = prefixes[type];
-
-            const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-            let lineEnd = value.indexOf('\n', lineStart);
-            if (lineEnd === -1) lineEnd = value.length;
-            
-            const currentLine = value.substring(lineStart, lineEnd);
-            const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
-            const newLine = blockPrefix + trimmedLine;
-            
-            const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
-            const newCursorPos = lineStart + newLine.length;
-            
-            applyUpdate(newText, newCursorPos);
-            return;
-        
-        case 'image':
-            prefix = '![alt text](';
-            suffix = ')';
-            const placeholder = 'image_url';
-            const imageText = `${value.substring(0, selectionStart)}${prefix}${placeholder}${suffix}${value.substring(selectionEnd)}`;
-            applyUpdate(
-                imageText,
-                selectionStart + prefix.length,
-                selectionStart + prefix.length + placeholder.length
-            );
-            return;
+        case 'link': prefix = '['; suffix = '](https://)'; placeholder = selectedText || 'link'; break;
     }
 
-    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || 'text'}${suffix}${value.substring(selectionEnd)}`;
-    const newCursorStart = selectionStart + prefix.length;
-    const newCursorEnd = newCursorStart + (selectedText?.length || 4);
-    applyUpdate(newText, newCursorStart, newCursorEnd);
+    const textToWrap = selectedText || placeholder;
+    const newText = `${value.substring(0, selectionStart)}${prefix}${textToWrap}${suffix}${value.substring(selectionEnd)}`;
+    const newStart = selectionStart + prefix.length;
+    const newEnd = newStart + textToWrap.length;
+    updateText(newText, newStart, newEnd);
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -369,6 +383,11 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
 
   return (
     <Form {...form}>
+      <ImageToolbarDialog 
+        isOpen={isImageDialogOpen}
+        onOpenChange={setIsImageDialogOpen}
+        onInsertImage={handleImageInsert}
+      />
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">

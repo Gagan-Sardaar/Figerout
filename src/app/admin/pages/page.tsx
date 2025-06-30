@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
 
 type PageTopic = "About Us" | "Contact Us" | "Privacy Policy" | "Terms of Service" | "Cookie Policy";
 
@@ -62,6 +64,8 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [imageCursorPos, setImageCursorPos] = useState(0);
   
   const form = useForm<PageContentFormValues>({
     resolver: zodResolver(pageContentSchema),
@@ -84,70 +88,82 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const metaDescription = form.watch("metaDescription");
   const pageContent = form.watch("pageContent");
 
-  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'quote' | 'image') => {
+  const handleImageInsert = (markdown: string) => {
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
 
     const value = form.getValues('pageContent');
-    const { selectionStart, selectionEnd } = textarea;
+    const startPos = imageCursorPos;
+    
+    const newText = value.substring(0, startPos) + markdown + value.substring(startPos);
+    form.setValue('pageContent', newText, { shouldDirty: true, shouldValidate: true });
 
-    const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
-        form.setValue('pageContent', newText, { shouldDirty: true });
-        
-        requestAnimationFrame(() => {
-            const currentTextarea = contentTextareaRef.current;
-            if (currentTextarea) {
-                form.trigger('pageContent');
-                currentTextarea.focus();
-                currentTextarea.setSelectionRange(newSelectionStart, newSelectionEnd ?? newSelectionStart);
+    setTimeout(() => {
+        if (contentTextareaRef.current) {
+            const newCursorPos = startPos + markdown.length;
+            contentTextareaRef.current.focus();
+            contentTextareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+    }, 0);
+  };
+
+  const handleMarkdownAction = (type: 'bold' | 'italic' | 'link' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'quote' | 'image') => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    if (type === 'image') {
+        setImageCursorPos(textarea.selectionStart);
+        setIsImageDialogOpen(true);
+        return;
+    }
+
+    const { selectionStart, selectionEnd } = textarea;
+    const value = form.getValues('pageContent');
+    const selectedText = value.substring(selectionStart, selectionEnd);
+
+    const updateText = (newText: string, newSelectionStart: number, newSelectionEnd: number) => {
+        form.setValue('pageContent', newText, { shouldDirty: true, shouldValidate: true });
+        setTimeout(() => {
+            if (contentTextareaRef.current) {
+                contentTextareaRef.current.focus();
+                contentTextareaRef.current.setSelectionRange(newSelectionStart, newSelectionEnd);
             }
-        });
+        }, 0);
     };
 
-    const selectedText = value.substring(selectionStart, selectionEnd);
+    if (['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote'].includes(type)) {
+        const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
+        const blockPrefix = prefixes[type];
+
+        const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+        let lineEnd = value.indexOf('\n', lineStart);
+        if (lineEnd === -1) lineEnd = value.length;
+        
+        const currentLine = value.substring(lineStart, lineEnd);
+        const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
+        const newLine = blockPrefix + trimmedLine;
+        
+        const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
+        const newCursorPos = lineStart + newLine.length;
+        updateText(newText, newCursorPos, newCursorPos);
+        return;
+    }
+    
     let prefix = '';
     let suffix = '';
+    let placeholder = 'text';
 
     switch (type) {
         case 'bold': prefix = '**'; suffix = '**'; break;
         case 'italic': prefix = '_'; suffix = '_'; break;
-        case 'link': prefix = '['; suffix = '](https://)'; break;
-        
-        case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': case 'p': case 'quote':
-            const prefixes: Record<string, string> = { h2: '## ', h3: '### ', h4: '#### ', h5: '##### ', h6: '###### ', p: '', quote: '> ' };
-            const blockPrefix = prefixes[type];
-
-            const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-            let lineEnd = value.indexOf('\n', lineStart);
-            if (lineEnd === -1) lineEnd = value.length;
-            
-            const currentLine = value.substring(lineStart, lineEnd);
-            const trimmedLine = currentLine.replace(/^(#+\s*|>\s*)/, '');
-            const newLine = blockPrefix + trimmedLine;
-            
-            const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd);
-            const newCursorPos = lineStart + newLine.length;
-            
-            applyUpdate(newText, newCursorPos);
-            return;
-        
-        case 'image':
-            prefix = '![alt text](';
-            suffix = ')';
-            const placeholder = 'image_url';
-            const imageText = `${value.substring(0, selectionStart)}${prefix}${placeholder}${suffix}${value.substring(selectionEnd)}`;
-            applyUpdate(
-                imageText,
-                selectionStart + prefix.length,
-                selectionStart + prefix.length + placeholder.length
-            );
-            return;
+        case 'link': prefix = '['; suffix = '](https://)'; placeholder = selectedText || 'link'; break;
     }
 
-    const newText = `${value.substring(0, selectionStart)}${prefix}${selectedText || 'text'}${suffix}${value.substring(selectionEnd)}`;
-    const newCursorStart = selectionStart + prefix.length;
-    const newCursorEnd = newCursorStart + (selectedText?.length || 4);
-    applyUpdate(newText, newCursorStart, newCursorEnd);
+    const textToWrap = selectedText || placeholder;
+    const newText = `${value.substring(0, selectionStart)}${prefix}${textToWrap}${suffix}${value.substring(selectionEnd)}`;
+    const newStart = selectionStart + prefix.length;
+    const newEnd = newStart + textToWrap.length;
+    updateText(newText, newStart, newEnd);
   };
 
   useEffect(() => {
@@ -252,6 +268,11 @@ function PageEditor({ topic }: { topic: PageTopic }) {
 
   return (
     <Card>
+      <ImageToolbarDialog 
+        isOpen={isImageDialogOpen}
+        onOpenChange={setIsImageDialogOpen}
+        onInsertImage={handleImageInsert}
+      />
       <CardHeader>
         <CardTitle>Editing: {topic}</CardTitle>
         <CardDescription>
