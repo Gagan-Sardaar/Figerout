@@ -86,7 +86,8 @@ function NewPostForm({ onSave }: { onSave: () => void }) {
     const { selectionStart, selectionEnd } = textarea;
 
     const applyUpdate = (newText: string, newSelectionStart: number, newSelectionEnd?: number) => {
-        form.setValue('content', newText, { shouldDirty: true, shouldValidate: true });
+        form.setValue('content', newText, { shouldDirty: true });
+        form.trigger('content');
         
         requestAnimationFrame(() => {
             const currentTextarea = contentTextareaRef.current;
