@@ -14,13 +14,26 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { NewPostDialog } from '@/components/blog/new-post-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface BlogPostCardProps {
   post: BlogPost;
   isAdmin?: boolean;
+  onSave?: (postData: any) => void;
+  onDelete?: (postId: number) => void;
 }
 
-export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
+export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPostCardProps) {
   const { toast } = useToast();
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
@@ -133,17 +146,36 @@ export function BlogPostCard({ post, isAdmin = false }: BlogPostCardProps) {
             </div>
           )}
         </div>
-        <div className={cn("w-full flex items-center justify-end")}>
+        <div className={cn("w-full flex items-center", isAdmin ? "justify-end" : "justify-end")}>
           {isAdmin ? (
             <div className="flex gap-2">
-              <NewPostDialog post={post}>
+              <NewPostDialog post={post} onSave={onSave}>
                 <Button variant="outline" size="sm">
                   <Edit className="mr-2 h-4 w-4" /> Edit
                 </Button>
               </NewPostDialog>
-              <Button variant="destructive" size="sm">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the post
+                      "{post.title}".
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete?.(post.id)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ) : (
             <Button asChild variant="link" className="p-0 h-auto text-primary font-semibold">

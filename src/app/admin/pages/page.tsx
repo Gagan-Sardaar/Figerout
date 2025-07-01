@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -88,6 +88,53 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
   const pageContent = form.watch("pageContent");
+
+  const handleGenerateContent = useCallback(async () => {
+    setIsGenerating(true);
+    sessionStorage.removeItem(`page-content-${topic}`);
+    form.reset();
+    setLastSaved(null);
+    setSeoResult(null);
+    try {
+      const result = await generatePageContent({ pageTopic: topic, appName: "Figerout" });
+      form.setValue("pageTitle", result.pageTitle);
+      form.setValue("metaTitle", result.metaTitle);
+      form.setValue("metaDescription", result.metaDescription);
+      form.setValue("pageContent", result.pageContent);
+      form.setValue("focusKeywords", result.focusKeywords.map(kw => ({ value: kw })));
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error generating content",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [form, topic, toast]);
+
+  useEffect(() => {
+    const savedData = sessionStorage.getItem(`page-content-${topic}`);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        form.reset(parsedData);
+        setLastSaved(new Date()); 
+        toast({
+          title: "Loaded Saved Content",
+          description: `Your previously saved content for "${topic}" has been loaded.`
+        })
+      } catch (error) {
+        console.error("Failed to parse saved content", error);
+        sessionStorage.removeItem(`page-content-${topic}`);
+        handleGenerateContent();
+      }
+    } else {
+      handleGenerateContent();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic]);
 
   const handleImageInsert = (markdown: string) => {
     const textarea = contentTextareaRef.current;
@@ -209,38 +256,22 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     }
   };
 
-
-  const handleGenerateContent = async () => {
-    setIsGenerating(true);
-    form.reset();
-    setLastSaved(null);
-    setSeoResult(null);
-    try {
-      const result = await generatePageContent({ pageTopic: topic, appName: "Figerout" });
-      form.setValue("pageTitle", result.pageTitle);
-      form.setValue("metaTitle", result.metaTitle);
-      form.setValue("metaDescription", result.metaDescription);
-      form.setValue("pageContent", result.pageContent);
-      form.setValue("focusKeywords", result.focusKeywords.map(kw => ({ value: kw })));
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error generating content",
-        description: "Could not connect to the AI service.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-  
   const onSubmit = (data: PageContentFormValues) => {
-    console.log(data);
-    toast({
+    try {
+      sessionStorage.setItem(`page-content-${topic}`, JSON.stringify(data));
+      toast({
         title: "Changes Saved!",
-        description: `Content for ${topic} has been updated.`,
-    });
-    setLastSaved(new Date());
+        description: `Content for "${topic}" has been updated for this session.`,
+      });
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error("Failed to save to session storage:", error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save your changes.",
+        variant: "destructive"
+      });
+    }
   }
 
   const handleAutoFixSeo = async () => {
@@ -525,5 +556,3 @@ export default function PagesPage() {
     </main>
   );
 }
-
-    

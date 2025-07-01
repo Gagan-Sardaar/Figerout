@@ -101,7 +101,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => void, onExit: () => void }) {
+function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data: any) => void, onExit: () => void }) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -355,42 +355,11 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
   };
 
   const onSubmit = (data: FormValues) => {
-    console.log("Saving post with data:", data);
-    setLastSaved(new Date());
-
-    let title, description;
-
-    if (isEditing) {
-        title = "Post Updated!";
-        description = "Your changes have been saved successfully.";
-    } else {
-        switch(data.status) {
-            case 'published':
-                title = "Post Published!";
-                description = "Your new blog post is now live.";
-                break;
-            case 'draft':
-                title = "Draft Saved!";
-                description = "Your post has been saved as a draft.";
-                break;
-            case 'private':
-                title = "Post Saved as Private!";
-                description = "This post is now private and only visible to you.";
-                break;
-            case 'password-protected':
-                 title = "Post is Password Protected!";
-                 description = "This post now requires a password to view.";
-                 break;
-        }
-    }
-    
-    if (data.scheduleDate && data.status !== 'published') {
-        title = "Post Scheduled!";
-        description = `Your post is scheduled for ${format(data.scheduleDate, 'PPP p')}. It will be published automatically.`;
-    }
-
-    toast({ title, description });
-    onSave();
+    const saveData = {
+      ...data,
+      id: post?.id,
+    };
+    onSave?.(saveData);
     onExit();
   };
 
@@ -448,7 +417,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
       return { text: 'Publish', icon: <Send className={iconClass} /> };
     }
     
-    return { text: 'Save Changes', icon: <Save className={iconClass} /> };
+    return { text: 'Save Draft', icon: <Save className={iconClass} /> };
   };
 
   const submitButtonConfig = getSubmitButtonConfig();
@@ -643,14 +612,13 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
                   )}
                 </CardContent>
             </Card>
-
+            
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
                   SEO Analysis
                 </CardTitle>
-                <CardDescriptionUi>Click to analyze your content's SEO performance.</CardDescriptionUi>
               </CardHeader>
               <CardContent>
                 <Button type="button" onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !title || !content} className="w-full">
@@ -716,9 +684,10 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
                     <Button
                         type="button"
                         variant={"outline"}
+                        className="w-[280px] justify-start text-left font-normal"
                     >
                         <Clock className="mr-2 h-4 w-4" />
-                        {scheduleDate ? format(scheduleDate, "PPP p") : <span>Schedule</span>}
+                        {scheduleDate ? format(scheduleDate, "PPP p") : <span>Schedule post</span>}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -770,7 +739,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
   );
 }
 
-export function NewPostDialog({ post, children }: { post?: BlogPost; children?: React.ReactNode }) {
+export function NewPostDialog({ post, children, onSave }: { post?: BlogPost; children?: React.ReactNode, onSave?: (data: any) => void }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const trigger = children ?? (
@@ -786,7 +755,7 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
         {children || (
           <Button>
             {post ? <Edit className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-            {post ? 'Edit' : 'New Post'}
+            {post ? 'Edit Post' : 'New Post'}
           </Button>
         )}
       </DialogTrigger>
@@ -798,11 +767,9 @@ export function NewPostDialog({ post, children }: { post?: BlogPost; children?: 
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto -mr-6 pr-6">
-          <NewPostForm post={post} onSave={() => {}} onExit={() => setIsOpen(false)} />
+          <NewPostForm post={post} onSave={onSave} onExit={() => setIsOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-
-    
