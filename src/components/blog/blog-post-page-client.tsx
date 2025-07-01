@@ -24,34 +24,37 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
 
   useEffect(() => {
     // Load persisted data from localStorage
-    const storedInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
-    const postInteraction = storedInteractions[post.id];
-    
-    let currentViews = post.views;
-    if (postInteraction) {
-      setLikes(postInteraction.likes ?? post.likes);
-      setShares(postInteraction.shares ?? post.shares);
-      setIsLiked(postInteraction.isLiked ?? false);
-      setIsShared(postInteraction.isShared ?? false);
-      currentViews = postInteraction.views ?? post.views;
-    }
-    setViews(currentViews);
+    const allInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
+    const postInteraction = allInteractions[post.id] || {};
 
-    // Handle view count increment only on the first "real" view per session
-    const viewedInSession = JSON.parse(sessionStorage.getItem('viewedPosts') || '[]');
-    if (!viewedInSession.includes(post.id)) {
-        const newViewCount = currentViews + 1;
-        setViews(newViewCount);
-        
-        // Persist the new view count
-        const allInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
-        const updatedInteraction = { ...(allInteractions[post.id] || {}), views: newViewCount };
-        const updatedAllInteractions = { ...allInteractions, [post.id]: updatedInteraction };
-        localStorage.setItem('postInteractions', JSON.stringify(updatedAllInteractions));
-        
-        // Mark as viewed for this session
-        sessionStorage.setItem('viewedPosts', JSON.stringify([...viewedInSession, post.id]));
-    }
+    // Get initial values from storage or props
+    const initialViews = postInteraction.views ?? post.views;
+    const initialLikes = postInteraction.likes ?? post.likes;
+    const initialShares = postInteraction.shares ?? post.shares;
+    const initialIsLiked = postInteraction.isLiked ?? false;
+    const initialIsShared = postInteraction.isShared ?? false;
+    
+    // Increment view count on every load
+    const newViewCount = initialViews + 1;
+
+    // Update state
+    setViews(newViewCount);
+    setLikes(initialLikes);
+    setShares(initialShares);
+    setIsLiked(initialIsLiked);
+    setIsShared(initialIsShared);
+
+    // Persist the new view count and other interaction data
+    const updatedInteraction = { 
+      views: newViewCount,
+      likes: initialLikes,
+      shares: initialShares,
+      isLiked: initialIsLiked,
+      isShared: initialIsShared,
+    };
+    const updatedAllInteractions = { ...allInteractions, [post.id]: updatedInteraction };
+    localStorage.setItem('postInteractions', JSON.stringify(updatedAllInteractions));
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post.id]);
 
