@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -26,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AppFooter } from "@/components/footer";
 
 function UserNav() {
   const user = {
@@ -145,6 +147,7 @@ export default function AdminLayout({
            <UserNav />
         </header>
         {children}
+        <AppFooter />
       </SidebarInset>
     </SidebarProvider>
   );
