@@ -115,25 +115,34 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   }, [form, topic, toast]);
 
   useEffect(() => {
+    // Reset form to a blank state when the topic changes.
+    form.reset({
+      pageTitle: "",
+      metaTitle: "",
+      metaDescription: "",
+      focusKeywords: [],
+      pageContent: "",
+    });
+    setSeoResult(null);
+    setLastSaved(null);
+
+    // Then, try to load any saved data for the new topic.
     const savedData = sessionStorage.getItem(`page-content-${topic}`);
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
         form.reset(parsedData);
-        setLastSaved(new Date()); 
+        setLastSaved(new Date());
         toast({
           title: "Loaded Saved Content",
-          description: `Your previously saved content for "${topic}" has been loaded.`
-        })
+          description: `Your previously saved content for "${topic}" has been loaded.`,
+        });
       } catch (error) {
         console.error("Failed to parse saved content", error);
         sessionStorage.removeItem(`page-content-${topic}`);
-        handleGenerateContent();
       }
-    } else {
-      handleGenerateContent();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic]);
 
   const handleImageInsert = (markdown: string) => {
