@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -80,7 +81,7 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
                                 <span>{post.shares.toLocaleString()} Shares</span>
                             </div>
                             <div className="ml-auto text-xs">
-                                Last updated: {new Date(post.lastUpdated).toLocaleDateString()}
+                                Last updated: {new Date(post.lastUpdated).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                             </div>
                         </div>
                     </CardHeader>
