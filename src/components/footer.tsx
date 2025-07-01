@@ -27,33 +27,32 @@ export function AppFooter() {
                 onMouseEnter={() => setIsFooterExpanded(true)}
                 onMouseLeave={() => setIsFooterExpanded(false)}
             >
-                <div className="rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground transition-all">
-                    <div className="flex cursor-default items-center gap-1.5">
-                        <ChevronUp
-                            className={cn(
-                            'h-4 w-4 shrink-0 transition-transform duration-300',
-                            isFooterExpanded && 'rotate-180'
-                            )}
-                        />
-                        <span>
-                            &copy; {new Date().getFullYear()} Figerout
-                        </span>
-                    </div>
-                    <div
+                {/* Trigger */}
+                <div className="flex cursor-default items-center gap-1.5 rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground transition-all">
+                    <ChevronUp
                         className={cn(
-                            'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
-                            isFooterExpanded && 'grid-rows-[1fr] pt-1.5 mt-1.5'
+                        'h-4 w-4 shrink-0 transition-transform duration-300',
+                        isFooterExpanded && 'rotate-180'
                         )}
-                    >
-                        <div className="overflow-hidden">
-                            <div className="flex flex-col items-start gap-1 border-t border-border pt-1.5">
-                                {footerLinks.map(link => (
-                                    <Link key={link.href} href={link.href} className="text-muted-foreground transition-colors hover:text-foreground">
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                    />
+                    <span>
+                        &copy; {new Date().getFullYear()} Figerout
+                    </span>
+                </div>
+
+                {/* Content - positioned to open upwards */}
+                <div
+                    className={cn(
+                        'absolute bottom-full mb-2 w-full min-w-max rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground shadow-lg transition-all duration-300 ease-in-out',
+                        isFooterExpanded ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'
+                    )}
+                >
+                    <div className="flex flex-col items-start gap-1">
+                        {footerLinks.map(link => (
+                            <Link key={link.href} href={link.href} className="block w-full rounded-sm px-2 py-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted">
+                                {link.label}
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>
