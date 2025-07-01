@@ -406,6 +406,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
         metaDescription: metaDescription,
         focusKeywords: form.getValues('focusKeywords')?.map(kw => kw.value) || [],
         feedback: seoResult.feedback,
+        isBlogPost: true,
       });
 
       form.setValue("content", result.improvedContent, { shouldDirty: true });
@@ -652,7 +653,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave: () => 
                 <CardDescriptionUi>Click to analyze your content's SEO performance.</CardDescriptionUi>
               </CardHeader>
               <CardContent>
-                <Button onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !title || !content} className="w-full">
+                <Button type="button" onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !title || !content} className="w-full">
                   {isAnalyzingSeo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Analyze SEO
                 </Button>

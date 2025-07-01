@@ -20,6 +20,7 @@ const ImproveSeoInputSchema = z.object({
   metaDescription: z.string().optional().describe('The SEO meta description.'),
   focusKeywords: z.array(z.string()).describe('A list of focus keywords.'),
   feedback: z.string().describe('The SEO feedback that needs to be addressed.'),
+  isBlogPost: z.boolean().optional().describe('Whether the content is a blog post.'),
 });
 type ImproveSeoInput = z.infer<typeof ImproveSeoInputSchema>;
 
@@ -68,16 +69,16 @@ const prompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `You are an expert SEO content writer. Your task is to rewrite the provided content and metadata based on the given SEO feedback to achieve an SEO score of 90 or higher.
+  prompt: `You are an expert SEO content writer. Your task is to rewrite the provided content and metadata to address the given SEO feedback and achieve an SEO score of 90 or higher.
 
-**Content for SEO Improvement**
-
+**Content to Improve:**
 *   **Original Title:** {{{title}}}
 {{#if metaTitle}}*   **Original Meta Title:** {{{metaTitle}}}{{/if}}
 {{#if metaDescription}}*   **Original Meta Description:** {{{metaDescription}}}{{/if}}
-{{#if focusKeywords}}*   **Focus Keywords:** {{#each focusKeywords}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+*   **Focus Keywords:** {{#if focusKeywords}}{{#each focusKeywords}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Not provided{{/if}}
 *   **SEO Feedback to Address:** {{{feedback}}}
 
 **Original Content (Markdown):**
@@ -85,21 +86,13 @@ const prompt = ai.definePrompt({
 {{{content}}}
 ---
 
-**Your Tasks:**
+**Instructions:**
 
-1.  **Rewrite Content:** Rewrite the "Original Content" to directly address all points in the "SEO Feedback".
-    *   Integrate the "Focus Keywords" naturally.
-    *   Improve structure with headings (H2, H3), lists, and formatting (**bold**, _italic_).
-    *   Add placeholder internal \`[link text](/)\` and external \`[link text](https://example.com)\` links where relevant.
-    *   If the content looks like a blog post, use the \`findRelevantImage\` tool ONCE to add a relevant stock photo after the introduction.
-2.  **Rewrite Meta Tags:**
-    *   Create an \`improvedMetaTitle\` (50-60 characters).
-    *   Create an \`improvedMetaDescription\` (150-160 characters).
-3.  **Final Output:**
-    *   Provide your response as a single, valid JSON object matching the required schema.
-    *   The \`improvedContent\` field must contain the full, rewritten Markdown content.
-
-**IMPORTANT:** Your response MUST be a single, valid JSON object that conforms to the required output schema. Do not add any text before or after the JSON object.
+1.  **Rewrite Content & Metadata:** Rewrite the original content, meta title, and meta description to resolve all issues mentioned in the feedback. Integrate the focus keywords naturally. Improve structure, formatting, and add relevant placeholder links.
+{{#if isBlogPost}}
+2.  **Add a Relevant Image:** Use the \`findRelevantImage\` tool **once** to find and insert a suitable stock photo at the beginning of the content. Choose a search query that reflects the main topic.
+{{/if}}
+3.  **Return JSON:** Your entire response must be a single, valid JSON object that strictly follows the output schema.
 `,
 });
 

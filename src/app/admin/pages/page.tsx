@@ -255,6 +255,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         metaDescription: metaDescription,
         focusKeywords: form.getValues('focusKeywords').map(kw => kw.value),
         feedback: seoResult.feedback,
+        isBlogPost: false,
       });
       
       form.setValue("pageContent", result.improvedContent, { shouldDirty: true });
