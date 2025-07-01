@@ -1,13 +1,14 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import { ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AppFooter() {
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const footerLinks = [
     { href: "/about", label: "About Us" },
@@ -19,16 +20,27 @@ export function AppFooter() {
     { href: "/cookies", label: "Cookie Policy" },
   ];
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (footerRef.current && !footerRef.current.contains(event.target as Node)) {
+        setIsFooterExpanded(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [footerRef]);
+
   return (
     <footer className="bg-background border-t">
         <div className="container mx-auto px-4 py-4">
-            <div
-                className="relative inline-block"
-                onMouseEnter={() => setIsFooterExpanded(true)}
-                onMouseLeave={() => setIsFooterExpanded(false)}
-            >
+            <div ref={footerRef} className="relative inline-block">
                 {/* Trigger */}
-                <div className="flex cursor-default items-center gap-1.5 rounded-lg bg-muted p-1.5 text-xs text-muted-foreground transition-colors">
+                <div
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-muted p-1.5 text-xs text-muted-foreground transition-colors"
+                  onClick={() => setIsFooterExpanded(prev => !prev)}
+                >
                     <ChevronUp
                         className={cn(
                         'h-4 w-4 shrink-0 transition-transform duration-300',
@@ -49,7 +61,12 @@ export function AppFooter() {
                 >
                     <div className="flex flex-col items-start gap-1">
                         {footerLinks.map(link => (
-                            <Link key={link.href} href={link.href} className="block w-full rounded-sm px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground">
+                            <Link 
+                              key={link.href} 
+                              href={link.href} 
+                              className="block w-full rounded-sm px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+                              onClick={() => setIsFooterExpanded(false)}
+                            >
                                 {link.label}
                             </Link>
                         ))}
