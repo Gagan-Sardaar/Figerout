@@ -133,10 +133,6 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         const parsedData = JSON.parse(savedData);
         form.reset(parsedData);
         setLastSaved(new Date());
-        toast({
-          title: "Loaded Saved Content",
-          description: `Your previously saved content for "${topic}" has been loaded.`,
-        });
       } catch (error) {
         console.error("Failed to parse saved content", error);
         sessionStorage.removeItem(`page-content-${topic}`);
