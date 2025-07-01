@@ -25,17 +25,19 @@ export default async function PrivacyPolicyPage() {
       <main className="flex-grow flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl">
           <CardHeader>
-            <CardTitle className="text-3xl md:text-4xl">{content.pageTitle}</CardTitle>
-            <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
+            <div className="flex justify-between items-start gap-4">
+                <div>
+                    <CardTitle className="text-3xl md:text-4xl">{content.pageTitle}</CardTitle>
+                    <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
+                </div>
+                <Button asChild variant="outline">
+                    <Link href="/">Return to Home</Link>
+                </Button>
+            </div>
           </CardHeader>
           <CardContent>
               <div className="prose dark:prose-invert max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.pageContent}</ReactMarkdown>
-              </div>
-              <div className="not-prose mt-8">
-                  <Button asChild>
-                  <Link href="/">Return to Home</Link>
-                  </Button>
               </div>
           </CardContent>
         </Card>

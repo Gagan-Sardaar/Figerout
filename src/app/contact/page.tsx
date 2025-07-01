@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ContactForm } from '@/components/contact-form';
 import type { Metadata } from 'next';
 import { AppFooter } from '@/components/footer';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export async function generateMetadata(): Promise<Metadata> {
     const content = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
@@ -21,10 +23,17 @@ export default async function ContactUsPage() {
             <main className="flex-grow flex items-center justify-center p-4">
               <Card className="w-full max-w-2xl">
                   <CardHeader>
-                      <CardTitle className="text-2xl">{content.pageTitle}</CardTitle>
-                      <CardDescription>
-                          {content.pageContent}
-                      </CardDescription>
+                    <div className="flex justify-between items-start gap-4">
+                        <div>
+                            <CardTitle className="text-2xl">{content.pageTitle}</CardTitle>
+                            <CardDescription>
+                                {content.pageContent}
+                            </CardDescription>
+                        </div>
+                        <Button asChild variant="outline">
+                            <Link href="/">Return to Home</Link>
+                        </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                       <ContactForm />

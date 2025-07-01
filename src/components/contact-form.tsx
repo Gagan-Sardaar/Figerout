@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,10 +91,7 @@ export function ContactForm() {
             </FormItem>
           )}
         />
-        <div className="flex justify-between items-center">
-          <Button asChild variant="outline">
-            <Link href="/">Return to Home</Link>
-          </Button>
+        <div className="flex justify-end">
           <Button type="submit">Send Message</Button>
         </div>
       </form>
