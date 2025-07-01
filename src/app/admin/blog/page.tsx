@@ -39,9 +39,18 @@ export default function BlogPage() {
   }, []);
 
   const handleSavePost = (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
+    const summary = postData.content.length > 150 ? postData.content.substring(0, 150) + '...' : postData.content;
+    
     if (postData.id) {
       // Update existing post
-      setPosts(posts.map(p => p.id === postData.id ? { ...p, ...postData, title: postData.title, summary: postData.content, imageUrl: postData.featuredImage || p.imageUrl } : p));
+      setPosts(posts.map(p => p.id === postData.id ? { 
+          ...p, 
+          ...postData, 
+          title: postData.title, 
+          content: postData.content,
+          summary: summary,
+          imageUrl: postData.featuredImage || p.imageUrl 
+        } : p));
       toast({
           title: "Post Updated!",
           description: `"${postData.title}" has been saved.`,
@@ -52,7 +61,8 @@ export default function BlogPage() {
         id: posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1,
         slug: createSlug(postData.title),
         title: postData.title,
-        summary: postData.content,
+        summary: summary,
+        content: postData.content,
         imageUrl: postData.featuredImage || 'https://placehold.co/600x400.png',
         imageHint: 'placeholder image',
         photographer: 'Figerout',

@@ -133,7 +133,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
     if (post) {
       form.reset({
         title: post.title,
-        content: post.summary, // Assuming content is stored in summary for cards
+        content: post.content || post.summary,
         status: post.status,
         featuredImage: post.imageUrl,
         metaTitle: "", // These would typically come from your data source

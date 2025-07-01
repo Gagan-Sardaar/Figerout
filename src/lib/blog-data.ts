@@ -4,6 +4,7 @@ export interface BlogPost {
   slug: string;
   title: string;
   summary: string;
+  content: string;
   imageUrl: string;
   imageHint: string;
   photographer: string;
@@ -21,12 +22,16 @@ const getDateAgo = (days: number): string => {
   return date.toISOString();
 }
 
+const placeholderContent = `\n\nThis is a continuation of the article. Further points are discussed in detail here, providing more insights and information on the topic. We explore various aspects and provide a comprehensive overview for the reader.\n\nOur analysis delves deeper into the subject matter, offering examples and case studies to illustrate the key takeaways. We believe this thorough approach will help you better understand the complexities involved. Thank you for reading.`;
+
+
 export const blogPosts: BlogPost[] = [
   {
     id: 1,
     slug: 'top-10-eco-friendly-products',
     title: 'Top 10 Eco-Friendly Products for Your Home',
     summary: 'As more and more people become aware of the impact that our lifestyles have on the environment, the demand for eco-friendly products is on the rise.',
+    content: 'As more and more people become aware of the impact that our lifestyles have on the environment, the demand for eco-friendly products is on the rise.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/4108715/pexels-photo-4108715.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'eco friendly products',
     photographer: 'Sarah Chai',
@@ -42,6 +47,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'impact-of-climate-change',
     title: 'The Impact of Climate Change on Biodiversity',
     summary: 'Climate change is one of the most pressing issues facing our planet today. Rising temperatures, extreme weather events, and sea-level rise are threatening ecosystems worldwide.',
+    content: 'Climate change is one of the most pressing issues facing our planet today. Rising temperatures, extreme weather events, and sea-level rise are threatening ecosystems worldwide.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/14751274/pexels-photo-14751274.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'climate change biodiversity',
     photographer: 'Pexels',
@@ -57,6 +63,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'benefits-of-sustainable-business',
     title: 'The Benefits of Sustainable Business Practices',
     summary: 'Sustainability has become an increasingly important issue for businesses in recent years. Adopting sustainable practices is not just good for the environment, it’s good for business.',
+    content: 'Sustainability has become an increasingly important issue for businesses in recent years. Adopting sustainable practices is not just good for the environment, it’s good for business.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'sustainable business',
     photographer: 'Jopwell',
@@ -72,6 +79,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'the-psychology-of-color-in-marketing',
     title: 'The Psychology of Color in Marketing',
     summary: 'Discover how different colors influence consumer behavior and how you can use this knowledge to create more effective marketing campaigns.',
+    content: 'Discover how different colors influence consumer behavior and how you can use this knowledge to create more effective marketing campaigns.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/399161/pexels-photo-399161.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'color marketing psychology',
     photographer: 'Designecologist',
@@ -87,6 +95,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'a-guide-to-minimalist-wardrobe-palettes',
     title: 'A Guide to Minimalist Wardrobe Palettes',
     summary: 'Learn how to build a stylish and versatile wardrobe with a limited color palette. Simplify your life and always look put-together.',
+    content: 'Learn how to build a stylish and versatile wardrobe with a limited color palette. Simplify your life and always look put-together.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/10404244/pexels-photo-10404244.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'minimalist wardrobe',
     photographer: 'Lana Fashion',
@@ -102,6 +111,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'how-interior-colors-affect-your-mood',
     title: 'How Interior Colors Can Affect Your Mood',
     summary: 'The colors you choose for your home can have a significant impact on your emotions and well-being. Find the perfect shades for a happy home.',
+    content: 'The colors you choose for your home can have a significant impact on your emotions and well-being. Find the perfect shades for a happy home.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'interior design colors',
     photographer: 'Veejay Villafranca',
@@ -117,6 +127,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'figerout-in-daily-life',
     title: 'Beyond Design: Fun and Practical Ways to Use Figerout Every Day',
     summary: 'Discover how Figerout can brighten your daily tasks and bring a new level of fun to your routines. From matching your outfit to planning a party, learn how capturing colors can make the mundane magical.',
+    content: 'Discover how Figerout can brighten your daily tasks and bring a new level of fun to your routines. From matching your outfit to planning a party, learn how capturing colors can make the mundane magical.' + placeholderContent,
     imageUrl: 'https://images.pexels.com/photos/7973302/pexels-photo-7973302.jpeg?auto=compress&cs=tinysrgb&h=400&w=600&fit=crop',
     imageHint: 'colorful daily life',
     photographer: 'Liza Summer',
