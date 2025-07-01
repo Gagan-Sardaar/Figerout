@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NewPostDialog } from "@/components/blog/new-post-dialog";
 import { BlogPostCard } from "@/components/blog/blog-post-card";
 import { blogPosts as initialBlogPosts, BlogPost } from "@/lib/blog-data";
@@ -19,6 +19,24 @@ const createSlug = (title: string) => {
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>(initialBlogPosts);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
+    if (Object.keys(storedInteractions).length > 0) {
+        setPosts(currentPosts => currentPosts.map(post => {
+            const interaction = storedInteractions[post.id];
+            if (interaction) {
+                return {
+                    ...post,
+                    views: interaction.views ?? post.views,
+                    likes: interaction.likes ?? post.likes,
+                    shares: interaction.shares ?? post.shares,
+                };
+            }
+            return post;
+        }));
+    }
+  }, []);
 
   const handleSavePost = (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
     if (postData.id) {

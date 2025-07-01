@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -14,25 +14,63 @@ import { useToast } from '@/hooks/use-toast';
 
 export function BlogPostPageClient({ post }: { post: BlogPost }) {
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
-  
-  // Add state for interactive elements
   const { toast } = useToast();
+
+  const [views, setViews] = useState(post.views);
   const [likes, setLikes] = useState(post.likes);
   const [shares, setShares] = useState(post.shares);
   const [isLiked, setIsLiked] = useState(false);
   const [isShared, setIsShared] = useState(false);
 
-  // Handle like button click
-  const handleLike = () => {
-    if (isLiked) {
-      setLikes(likes - 1);
-    } else {
-      setLikes(likes + 1);
+  useEffect(() => {
+    // Load persisted data from localStorage
+    const storedInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
+    const postInteraction = storedInteractions[post.id];
+    
+    let currentViews = post.views;
+    if (postInteraction) {
+      setLikes(postInteraction.likes ?? post.likes);
+      setShares(postInteraction.shares ?? post.shares);
+      setIsLiked(postInteraction.isLiked ?? false);
+      setIsShared(postInteraction.isShared ?? false);
+      currentViews = postInteraction.views ?? post.views;
     }
-    setIsLiked(!isLiked);
+    setViews(currentViews);
+
+    // Handle view count increment only on the first "real" view per session
+    const viewedInSession = JSON.parse(sessionStorage.getItem('viewedPosts') || '[]');
+    if (!viewedInSession.includes(post.id)) {
+        const newViewCount = currentViews + 1;
+        setViews(newViewCount);
+        
+        // Persist the new view count
+        const allInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
+        const updatedInteraction = { ...(allInteractions[post.id] || {}), views: newViewCount };
+        const updatedAllInteractions = { ...allInteractions, [post.id]: updatedInteraction };
+        localStorage.setItem('postInteractions', JSON.stringify(updatedAllInteractions));
+        
+        // Mark as viewed for this session
+        sessionStorage.setItem('viewedPosts', JSON.stringify([...viewedInSession, post.id]));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.id]);
+
+  const updateStoredInteractions = (update: object) => {
+    const allInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
+    const postInteraction = allInteractions[post.id] || {};
+    const updatedInteraction = { ...postInteraction, ...update };
+    const updatedAllInteractions = { ...allInteractions, [post.id]: updatedInteraction };
+    localStorage.setItem('postInteractions', JSON.stringify(updatedAllInteractions));
   };
 
-  // Handle share button click
+  const handleLike = () => {
+    const newLikes = isLiked ? likes - 1 : likes + 1;
+    const newIsLiked = !isLiked;
+    setLikes(newLikes);
+    setIsLiked(newIsLiked);
+    updateStoredInteractions({ likes: newLikes, isLiked: newIsLiked });
+  };
+
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -41,8 +79,10 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
         description: "The blog post URL has been copied to your clipboard.",
       });
       if (!isShared) {
-        setShares(shares + 1);
+        const newShares = shares + 1;
+        setShares(newShares);
         setIsShared(true);
+        updateStoredInteractions({ shares: newShares, isShared: true });
       }
     }).catch(err => {
       console.error('Failed to copy text: ', err);
@@ -110,7 +150,7 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
                         <div className="flex items-center text-sm text-muted-foreground gap-4 pt-2 flex-wrap">
                             <div className="flex items-center gap-1.5">
                                 <Eye className="h-4 w-4" />
-                                <span>{post.views.toLocaleString()} Views</span>
+                                <span>{views.toLocaleString()} Views</span>
                             </div>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1.5 p-1 h-auto text-muted-foreground hover:text-foreground" onClick={handleLike}>
                                 <Heart className={cn("h-4 w-4", isLiked && "fill-red-500 text-red-500")} />

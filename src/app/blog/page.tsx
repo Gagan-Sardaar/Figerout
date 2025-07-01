@@ -1,4 +1,4 @@
-import { BlogPostCard } from '@/components/blog/blog-post-card';
+import { BlogPostList } from '@/components/blog/blog-post-list';
 import { blogPosts } from '@/lib/blog-data';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,7 @@ export default function BlogPage() {
                 </Link>
             </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
-            <BlogPostCard key={post.id} post={post} />
-          ))}
-        </div>
+        <BlogPostList initialPosts={blogPosts} />
       </div>
     </div>
   );
