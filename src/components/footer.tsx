@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -26,8 +27,8 @@ export function AppFooter() {
                 onMouseEnter={() => setIsFooterExpanded(true)}
                 onMouseLeave={() => setIsFooterExpanded(false)}
             >
-                <div className="rounded-lg bg-muted p-2 text-sm text-muted-foreground">
-                    <div className="flex cursor-default items-center gap-2">
+                <div className="rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground transition-all">
+                    <div className="flex cursor-default items-center gap-1.5">
                         <ChevronUp
                             className={cn(
                             'h-4 w-4 shrink-0 transition-transform duration-300',
@@ -41,13 +42,13 @@ export function AppFooter() {
                     <div
                         className={cn(
                             'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
-                            isFooterExpanded && 'grid-rows-[1fr] pt-2 mt-2'
+                            isFooterExpanded && 'grid-rows-[1fr] pt-1.5 mt-1.5'
                         )}
                     >
                         <div className="overflow-hidden">
-                            <div className="flex flex-col items-start gap-1.5 border-t border-border pt-2">
+                            <div className="flex flex-col items-start gap-1 border-t border-border pt-1.5">
                                 {footerLinks.map(link => (
-                                    <Link key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground">
+                                    <Link key={link.href} href={link.href} className="text-muted-foreground transition-colors hover:text-foreground">
                                         {link.label}
                                     </Link>
                                 ))}
