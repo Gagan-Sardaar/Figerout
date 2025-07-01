@@ -13,6 +13,7 @@ import type { BlogPost } from '@/lib/blog-data';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { AppFooter } from '@/components/footer';
 
 export function BlogPostPageClient({ post }: { post: BlogPost }) {
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
@@ -100,8 +101,8 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
   };
 
   return (
-    <div className="bg-background min-h-svh">
-        <div className="container mx-auto px-4 py-8">
+    <div className="bg-background min-h-svh flex flex-col">
+        <main className="container mx-auto px-4 py-8 flex-grow">
             <div className="max-w-4xl mx-auto">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/blog">
@@ -183,7 +184,8 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </main>
+        <AppFooter />
     </div>
   );
 }
