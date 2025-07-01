@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 import { AppFooter } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export async function generateMetadata(): Promise<Metadata> {
     const content = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
@@ -17,6 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactUsPage() {
     const content = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+    // AI can sometimes include a redundant H1 in the content, let's remove it
+    const pageContent = content.pageContent.replace(/^#\s[^\n\r]+(\r\n|\n|\r)?/, '');
 
     return (
         <div className="min-h-svh bg-background flex flex-col">
@@ -26,9 +30,9 @@ export default async function ContactUsPage() {
                     <div className="flex justify-between items-start gap-4">
                         <div>
                             <CardTitle className="text-2xl">{content.pageTitle}</CardTitle>
-                            <CardDescription>
-                                {content.pageContent}
-                            </CardDescription>
+                            <div className="prose dark:prose-invert max-w-none text-muted-foreground pt-2">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{pageContent}</ReactMarkdown>
+                            </div>
                         </div>
                         <Button asChild variant="outline">
                             <Link href="/">Return to Home</Link>
