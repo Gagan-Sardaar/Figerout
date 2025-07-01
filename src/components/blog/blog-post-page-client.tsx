@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Eye, Heart, Share2, User } from 'lucide-react';
+import { ArrowLeft, Eye, Heart, Share2, User, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { BlogPost } from '@/lib/blog-data';
@@ -20,6 +20,7 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
   const [likes, setLikes] = useState(post.likes);
   const [shares, setShares] = useState(post.shares);
   const [isLiked, setIsLiked] = useState(false);
+  const [isShared, setIsShared] = useState(false);
 
   // Handle like button click
   const handleLike = () => {
@@ -39,7 +40,10 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
         title: "Link Copied!",
         description: "The blog post URL has been copied to your clipboard.",
       });
-      setShares(shares + 1);
+      if (!isShared) {
+        setShares(shares + 1);
+        setIsShared(true);
+      }
     }).catch(err => {
       console.error('Failed to copy text: ', err);
       toast({
@@ -113,7 +117,11 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
                                 <span>{likes.toLocaleString()} Likes</span>
                             </Button>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1.5 p-1 h-auto text-muted-foreground hover:text-foreground" onClick={handleShare}>
-                                <Share2 className="h-4 w-4" />
+                                {isShared ? (
+                                    <Check className="h-4 w-4 text-primary" />
+                                ) : (
+                                    <Share2 className="h-4 w-4" />
+                                )}
                                 <span>{shares.toLocaleString()} Shares</span>
                             </Button>
                             <div className="ml-auto text-xs">
