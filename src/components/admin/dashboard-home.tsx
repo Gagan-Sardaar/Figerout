@@ -68,14 +68,20 @@ const LoadingSkeleton = () => (
 
 export default function DashboardHome() {
   const { toast } = useToast();
-  const [ideas, setIdeas] = useState<GenerateSeoContentOutput["suggestions"]>([]);
+  const [ideas, setIdeas] = useState<GenerateSeoContentOutput[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchIdeas = async () => {
     setIsLoading(true);
+    setIdeas([]);
     try {
-      const result = await generateSeoContent({ topic: "The Intersection of Color Theory and Modern Fashion" });
-      setIdeas(result.suggestions.slice(0, 2));
+      const topics = [
+        "The Intersection of Color Theory and Modern Fashion",
+        "How to Use Contrasting Colors in Home Decor",
+      ];
+      const ideaPromises = topics.map(topic => generateSeoContent({ topic }));
+      const results = await Promise.all(ideaPromises);
+      setIdeas(results);
     } catch (error) {
       console.error(error);
       toast({
@@ -83,6 +89,7 @@ export default function DashboardHome() {
         description: "Could not connect to the AI service.",
         variant: "destructive",
       });
+      setIdeas([]); // Clear ideas on error
     } finally {
       setIsLoading(false);
     }
