@@ -43,13 +43,13 @@ export function AppFooter() {
                 {/* Content - positioned to open upwards */}
                 <div
                     className={cn(
-                        'absolute bottom-full mb-2 w-full min-w-max rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground shadow-lg transition-all duration-300 ease-in-out',
+                        'absolute bottom-full mb-2 w-full min-w-max rounded-lg bg-popover p-1.5 text-xs text-popover-foreground shadow-lg transition-all duration-300 ease-in-out',
                         isFooterExpanded ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'
                     )}
                 >
                     <div className="flex flex-col items-start gap-1">
                         {footerLinks.map(link => (
-                            <Link key={link.href} href={link.href} className="block w-full rounded-sm px-2 py-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted">
+                            <Link key={link.href} href={link.href} className="block w-full rounded-sm px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground">
                                 {link.label}
                             </Link>
                         ))}
