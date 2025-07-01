@@ -28,7 +28,7 @@ export function AppFooter() {
                 onMouseLeave={() => setIsFooterExpanded(false)}
             >
                 {/* Trigger */}
-                <div className="flex cursor-default items-center gap-1.5 rounded-lg bg-muted/50 p-1.5 text-xs text-muted-foreground transition-all">
+                <div className="flex cursor-default items-center gap-1.5 rounded-lg bg-muted p-1.5 text-xs text-muted-foreground transition-colors">
                     <ChevronUp
                         className={cn(
                         'h-4 w-4 shrink-0 transition-transform duration-300',
@@ -43,7 +43,7 @@ export function AppFooter() {
                 {/* Content - positioned to open upwards */}
                 <div
                     className={cn(
-                        'absolute bottom-full mb-2 w-full min-w-max rounded-lg bg-popover p-1.5 text-xs text-popover-foreground shadow-lg transition-all duration-300 ease-in-out',
+                        'absolute bottom-full mb-2 w-full min-w-max rounded-lg border bg-popover p-1.5 text-xs text-popover-foreground shadow-lg transition-opacity duration-300 ease-in-out',
                         isFooterExpanded ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'
                     )}
                 >
