@@ -30,7 +30,7 @@ export default async function ContactUsPage() {
                     <div className="flex justify-between items-start gap-4">
                         <div>
                             <CardTitle className="text-2xl">{content.pageTitle}</CardTitle>
-                            <div className="prose dark:prose-invert max-w-none text-muted-foreground pt-2">
+                            <div className="prose dark:prose-invert max-w-none pt-2">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{pageContent}</ReactMarkdown>
                             </div>
                         </div>

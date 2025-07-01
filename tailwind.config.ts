@@ -103,6 +103,55 @@ export default {
         'progress': 'progress 5s linear forwards',
         'indeterminate-progress': 'indeterminate-progress 1.5s linear infinite',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'h1, h2, h3, h4, h5, h6': {
+              color: 'hsl(var(--primary))',
+              fontWeight: '700',
+            },
+            blockquote: {
+              color: 'hsl(var(--foreground))',
+              borderLeftColor: 'hsl(var(--primary))',
+              borderLeftWidth: '0.25rem',
+              fontStyle: 'italic',
+              paddingLeft: '1rem',
+            },
+            a: {
+              color: 'hsl(var(--primary))',
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
+            },
+            'ul > li::marker': {
+              backgroundColor: 'hsl(var(--primary))',
+            },
+            'ol > li::marker': {
+                color: 'hsl(var(--primary))',
+            },
+            img: {
+                borderRadius: 'var(--radius)',
+            },
+            code: {
+                backgroundColor: 'hsl(var(--muted))',
+                color: 'hsl(var(--muted-foreground))',
+                padding: '0.2em 0.4em',
+                borderRadius: 'calc(var(--radius) - 4px)',
+            },
+            'code::before': {
+                content: '""',
+            },
+            'code::after': {
+                content: '""',
+            },
+            pre: {
+                backgroundColor: 'hsl(var(--muted))',
+                color: 'hsl(var(--muted-foreground))',
+            }
+          },
+        },
+      },
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
