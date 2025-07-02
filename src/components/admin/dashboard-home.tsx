@@ -89,30 +89,32 @@ export default function DashboardHome() {
   const [ideas, setIdeas] = useState<(GenerateSeoContentOutput & { originalIndex: number })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [countdown, setCountdown] = useState("");
-  
-  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>(() => {
-    if (typeof window === 'undefined') {
-      return { 0: 'idle', 1: 'idle' };
-    }
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({ 0: 'idle', 1: 'idle' });
+
+  // Hydrate state from localStorage on the client to avoid hydration mismatch
+  useEffect(() => {
     const storedStatus = localStorage.getItem('generationStatus');
     if (storedStatus) {
-        try {
-            const parsedStatus = JSON.parse(storedStatus);
-            if (typeof parsedStatus === 'object' && parsedStatus !== null && '0' in parsedStatus && '1' in parsedStatus) {
-                return parsedStatus;
-            }
-        } catch (e) {
-            console.error("Failed to parse generationStatus from localStorage", e);
+      try {
+        const parsedStatus = JSON.parse(storedStatus);
+        if (typeof parsedStatus === 'object' && parsedStatus !== null && '0' in parsedStatus && '1' in parsedStatus) {
+            setGenerationStatus(parsedStatus);
         }
+      } catch (e) {
+        console.error("Failed to parse generationStatus from localStorage", e);
+      }
     }
-    return { 0: 'idle', 1: 'idle' };
-  });
-
+    setIsHydrated(true);
+  }, []);
+  
   const allDone = Object.values(generationStatus).every(s => s === 'done');
 
   useEffect(() => {
-    localStorage.setItem('generationStatus', JSON.stringify(generationStatus));
-  }, [generationStatus]);
+    if (isHydrated) {
+        localStorage.setItem('generationStatus', JSON.stringify(generationStatus));
+    }
+  }, [generationStatus, isHydrated]);
   
   const fetchIdeas = useCallback(async (topicsToFetch: { topic: string, index: number }[]) => {
     if (topicsToFetch.length === 0) {
@@ -157,6 +159,8 @@ export default function DashboardHome() {
   }, [toast]);
   
   useEffect(() => {
+    if (!isHydrated) return;
+
     let timer: NodeJS.Timeout | null = null;
     if (allDone) {
       const getNextGenerationTime = () => {
@@ -198,9 +202,11 @@ export default function DashboardHome() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [allDone]);
+  }, [allDone, isHydrated]);
 
   useEffect(() => {
+    if (!isHydrated) return;
+
     if (!allDone) {
       const topicsToRefresh = initialTopics
         .map((topic, index) => ({ topic, index }))
@@ -214,7 +220,7 @@ export default function DashboardHome() {
     } else {
         setIsLoading(false); 
     }
-  }, [allDone, fetchIdeas, generationStatus, ideas.length]);
+  }, [allDone, fetchIdeas, generationStatus, ideas.length, isHydrated]);
 
   const handleRefresh = () => {
     const topicsToRefresh = initialTopics
@@ -302,15 +308,21 @@ export default function DashboardHome() {
               </CardTitle>
               <CardDescription>Daily inspiration for your next article.</CardDescription>
             </div>
-            {allDone ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Next ideas available in">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-mono tabular-nums">{countdown}</span>
-                </div>
+            {isHydrated ? (
+              allDone ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Next ideas available in">
+                      <Clock className="h-4 w-4" />
+                      <span className="font-mono tabular-nums">{countdown}</span>
+                  </div>
+              ) : (
+                  <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
+                      <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                  </Button>
+              )
             ) : (
-                <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
-                    <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                </Button>
+               <Button variant="ghost" size="icon" disabled>
+                  <RefreshCw className="h-4 w-4" />
+              </Button>
             )}
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -334,7 +346,7 @@ export default function DashboardHome() {
                     </CardContent>
                     <CardContent>
                         {status === 'idle' && (
-                            <Button variant="ghost" onClick={() => handleGeneratePost(idea, idea.originalIndex)} disabled={isLoading}>
+                            <Button variant="ghost" onClick={() => handleGeneratePost(idea, idea.originalIndex)} disabled={isLoading || !isHydrated}>
                                 <Sparkles className="mr-2 h-4 w-4" />
                                 Generate Full Post
                             </Button>
