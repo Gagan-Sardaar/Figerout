@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,11 +27,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw, CheckCircle2 } from "lucide-react";
 import {
   generateSeoContent,
   GenerateSeoContentOutput,
 } from "@/ai/flows/generate-seo-content";
+import { generateBlogPost } from "@/ai/flows/generate-blog-post";
+import type { BlogPost } from "@/lib/blog-data";
+import { blogPosts as initialBlogPosts } from "@/lib/blog-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -67,10 +69,19 @@ const LoadingSkeleton = () => (
   </Card>
 );
 
+const createSlug = (title: string) => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+    .replace(/\s+/g, '-') // collapse whitespace and replace by -
+    .replace(/-+/g, '-'); // collapse dashes
+};
+
 export default function DashboardHome() {
   const { toast } = useToast();
   const [ideas, setIdeas] = useState<GenerateSeoContentOutput[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({});
 
   const fetchIdeas = async () => {
     setIsLoading(true);
@@ -101,8 +112,55 @@ export default function DashboardHome() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleGeneratePost = async (idea: GenerateSeoContentOutput, index: number) => {
+    setGenerationStatus(prev => ({ ...prev, [index]: 'generating' }));
+    try {
+      const blogPostResult = await generateBlogPost({ title: idea.title });
+
+      const storedPostsJSON = localStorage.getItem('blogPosts');
+      const allPosts: BlogPost[] = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
+
+      const newPostId = allPosts.length > 0 ? Math.max(...allPosts.map(p => p.id)) + 1 : 1;
+      
+      const newPost: BlogPost = {
+        id: newPostId,
+        slug: createSlug(idea.title),
+        title: idea.title,
+        summary: idea.summary,
+        content: blogPostResult.content,
+        imageUrl: 'https://placehold.co/600x400.png',
+        imageHint: 'abstract color',
+        photographer: 'AI Generator',
+        photographerUrl: '#',
+        views: 0,
+        likes: 0,
+        shares: 0,
+        status: 'draft',
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      const updatedPosts = [newPost, ...allPosts];
+      localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
+
+      toast({
+        title: "Post Generated!",
+        description: `"${idea.title}" has been saved as a draft.`,
+      });
+      setGenerationStatus(prev => ({ ...prev, [index]: 'done' }));
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error generating post",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+      setGenerationStatus(prev => ({ ...prev, [index]: 'idle' }));
+    }
+  };
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <div className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="grid gap-4">
         <Card>
           <CardHeader>
@@ -133,26 +191,43 @@ export default function DashboardHome() {
                 <LoadingSkeleton />
               </>
             ) : (
-              ideas.map((idea, index) => (
-                <Card key={index} className="bg-muted/20 dark:bg-muted/50 flex flex-col">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{idea.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-sm text-muted-foreground">
-                      {idea.summary}
-                    </p>
-                  </CardContent>
-                  <CardContent>
-                     <Button variant="ghost" asChild>
-                      <Link href="/admin/content-assistant">
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Generate Full Post
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
+              ideas.map((idea, index) => {
+                const status = generationStatus[index] || 'idle';
+                return (
+                    <Card key={index} className="bg-muted/20 dark:bg-muted/50 flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="text-lg">{idea.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <p className="text-sm text-muted-foreground">
+                        {idea.summary}
+                        </p>
+                    </CardContent>
+                    <CardContent>
+                        {status === 'idle' && (
+                            <Button variant="ghost" onClick={() => handleGeneratePost(idea, index)} disabled={isLoading}>
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Generate Full Post
+                            </Button>
+                        )}
+                        {status === 'generating' && (
+                            <div className="w-full space-y-2 text-center">
+                                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                    <div className="absolute top-0 h-full w-1/3 animate-indeterminate-progress bg-primary"></div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Generating post...</p>
+                            </div>
+                        )}
+                        {status === 'done' && (
+                            <div className="flex items-center gap-2 text-sm font-medium text-green-500">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Draft created!</span>
+                            </div>
+                        )}
+                    </CardContent>
+                    </Card>
+                )
+            })
             )}
           </CardContent>
         </Card>

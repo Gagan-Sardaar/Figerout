@@ -17,13 +17,16 @@ const createSlug = (title: string) => {
 };
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>(initialBlogPosts);
+  const [posts, setPostsState] = useState<BlogPost[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
+    const storedPostsJSON = localStorage.getItem('blogPosts');
+    let postsToLoad = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
+
     const storedInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
     if (Object.keys(storedInteractions).length > 0) {
-        setPosts(currentPosts => currentPosts.map(post => {
+        postsToLoad = postsToLoad.map(post => {
             const interaction = storedInteractions[post.id];
             if (interaction) {
                 return {
@@ -34,9 +37,22 @@ export default function BlogPage() {
                 };
             }
             return post;
-        }));
+        });
+    }
+    setPostsState(postsToLoad);
+    
+    // Ensure localStorage is seeded if it was empty
+    if (!storedPostsJSON) {
+        localStorage.setItem('blogPosts', JSON.stringify(initialBlogPosts));
     }
   }, []);
+  
+  const setPosts = (newPosts: BlogPost[] | ((prevState: BlogPost[]) => BlogPost[])) => {
+    const updatedPosts = typeof newPosts === 'function' ? newPosts(posts) : newPosts;
+    setPostsState(updatedPosts);
+    localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
+  };
+
 
   const handleSavePost = (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
     const summary = postData.content.length > 150 ? postData.content.substring(0, 150) + '...' : postData.content;
@@ -50,7 +66,7 @@ export default function BlogPage() {
           content: postData.content,
           summary: summary,
           imageUrl: postData.featuredImage || p.imageUrl 
-        } : p));
+        } as BlogPost : p));
       toast({
           title: "Post Updated!",
           description: `"${postData.title}" has been saved.`,
@@ -91,7 +107,7 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Blog Management</h1>
         <NewPostDialog onSave={handleSavePost} />
