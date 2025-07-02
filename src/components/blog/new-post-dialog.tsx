@@ -54,7 +54,6 @@ import {
   Sparkles,
   Loader2,
   Lightbulb,
-  Wand2,
   X,
   Send,
   Edit,
@@ -66,9 +65,8 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
-import { improveSeo } from "@/ai/flows/improve-seo";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDescriptionUi } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
@@ -108,7 +106,6 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
-  const [isAutoFixing, setIsAutoFixing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
@@ -364,47 +361,6 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
     onExit();
   };
 
-  const handleAutoFixSeo = async () => {
-    if (!seoResult || !content) return;
-
-    setIsAutoFixing(true);
-    try {
-      const result = await improveSeo({
-        title: title,
-        content: content,
-        metaTitle: metaTitle,
-        metaDescription: metaDescription,
-        focusKeywords: form.getValues('focusKeywords')?.map(kw => kw.value) || [],
-        feedback: seoResult.feedback,
-        isBlogPost: true,
-      });
-
-      form.setValue("content", result.improvedContent, { shouldDirty: true });
-      if (result.improvedMetaTitle) {
-        form.setValue("metaTitle", result.improvedMetaTitle, { shouldDirty: true });
-      }
-      if (result.improvedMetaDescription) {
-        form.setValue("metaDescription", result.improvedMetaDescription, { shouldDirty: true });
-      }
-
-      toast({
-        title: "SEO Content Improved!",
-        description: "The post content has been updated with SEO enhancements.",
-      });
-      // Re-analyze after fixing
-      setTimeout(() => handleAnalyzeSeo(), 500);
-    } catch (error) {
-      console.error("Error auto-fixing SEO:", error);
-      toast({
-        title: "Auto-fix Failed",
-        description: "Could not improve the content automatically.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAutoFixing(false);
-    }
-  };
-  
   const getSubmitButtonConfig = () => {
     const iconClass = "mr-2 h-4 w-4";
     if (isEditing) {
@@ -690,22 +646,6 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
                                   Feedback
                               </CardTitle>
                           </div>
-                          {seoResult && seoResult.score < 90 && (
-                              <Button
-                                  size="sm"
-                                  variant="default"
-                                  onClick={handleAutoFixSeo}
-                                  disabled={isAutoFixing}
-                                  type="button"
-                              >
-                                  {isAutoFixing ? (
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  ) : (
-                                      <Wand2 className="mr-2 h-4 w-4" />
-                                  )}
-                                  Auto-fix
-                              </Button>
-                          )}
                       </CardHeader>
                       <CardContent className="p-3 pt-0">
                         <p className="text-xs text-muted-foreground">

@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb, Wand2, Bold, Italic, Link as LinkIcon, Heading2, Heading3, Heading4, Heading5, Heading6, Pilcrow, Quote, ImagePlus } from "lucide-react";
+import { Sparkles, Loader2, Save, X, PlusCircle, Lightbulb, Bold, Italic, Link as LinkIcon, Heading2, Heading3, Heading4, Heading5, Heading6, Pilcrow, Quote, ImagePlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   generatePageContent
@@ -32,7 +32,6 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
-import { improveSeo } from "@/ai/flows/improve-seo";
 import {
   Form,
   FormControl,
@@ -62,7 +61,6 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
-  const [isAutoFixing, setIsAutoFixing] = useState(false);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
@@ -279,48 +277,6 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     }
   }
 
-  const handleAutoFixSeo = async () => {
-    if (!seoResult || !pageContent) return;
-
-    setIsAutoFixing(true);
-    try {
-      const result = await improveSeo({
-        title: pageTitle,
-        content: pageContent,
-        metaTitle: metaTitle,
-        metaDescription: metaDescription,
-        focusKeywords: form.getValues('focusKeywords').map(kw => kw.value),
-        feedback: seoResult.feedback,
-        isBlogPost: false,
-      });
-      
-      form.setValue("pageContent", result.improvedContent, { shouldDirty: true });
-      if (result.improvedMetaTitle) {
-        form.setValue("metaTitle", result.improvedMetaTitle, { shouldDirty: true });
-      }
-      if (result.improvedMetaDescription) {
-        form.setValue("metaDescription", result.improvedMetaDescription, { shouldDirty: true });
-      }
-
-      toast({
-        title: "SEO Content Improved!",
-        description: "The page content has been updated with SEO enhancements.",
-      });
-      // Re-analyze after fixing
-      setTimeout(() => handleAnalyzeSeo(), 500);
-
-    } catch (error) {
-      console.error("Error auto-fixing SEO:", error);
-      toast({
-        title: "Auto-fix Failed",
-        description: "Could not improve the content automatically.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAutoFixing(false);
-    }
-  };
-
   return (
     <Card>
       <ImageToolbarDialog 
@@ -495,21 +451,6 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                                     Feedback
                                 </CardTitle>
                             </div>
-                           {seoResult && seoResult.score < 90 && (
-                               <Button
-                                   size="sm"
-                                   variant="default"
-                                   onClick={handleAutoFixSeo}
-                                   disabled={isAutoFixing}
-                               >
-                                   {isAutoFixing ? (
-                                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                   ) : (
-                                       <Wand2 className="mr-2 h-4 w-4" />
-                                   )}
-                                   Auto-fix
-                               </Button>
-                           )}
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <p className="text-xs text-muted-foreground">
