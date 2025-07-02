@@ -46,7 +46,9 @@ export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPo
         try {
           const result = await generateSeoScore({
             title: post.title,
-            content: post.summary,
+            content: post.content,
+            metaTitle: post.metaTitle,
+            metaDescription: post.metaDescription,
           });
           setSeoResult(result);
         } catch (error) {
@@ -62,7 +64,7 @@ export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPo
       };
       fetchSeoScore();
     }
-  }, [isAdmin, post.title, post.summary, toast]);
+  }, [isAdmin, post.title, post.content, post.metaTitle, post.metaDescription, toast]);
   
   const statusVariant = {
     published: 'default',

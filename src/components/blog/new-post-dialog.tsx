@@ -136,9 +136,9 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
         content: post.content || post.summary,
         status: post.status,
         featuredImage: post.imageUrl,
-        metaTitle: "", // These would typically come from your data source
-        metaDescription: "",
-        focusKeywords: [],
+        metaTitle: post.metaTitle || '',
+        metaDescription: post.metaDescription || '',
+        focusKeywords: post.focusKeywords?.map(kw => ({ value: kw })) || [],
         password: "",
         scheduleDate: post.lastUpdated ? new Date(post.lastUpdated) : undefined,
       });
@@ -357,6 +357,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const onSubmit = (data: FormValues) => {
     const saveData = {
       ...data,
+      focusKeywords: data.focusKeywords?.map(kw => kw.value),
       id: post?.id,
     };
     onSave?.(saveData);
@@ -445,6 +446,57 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="metaTitle"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Meta Title</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Title for search engine results" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="metaDescription"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Meta Description</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Description for search engine results" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            </div>
+            
+            <div>
+              <Label>Focus Keywords</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {fields.map((field, index) => (
+                  <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
+                    {form.watch(`focusKeywords.${index}.value`)}
+                    <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add
+                </Button>
+              </div>
+              {form.formState.errors.focusKeywords && (
+                  <p className="text-sm font-medium text-destructive mt-2">
+                    {form.formState.errors.focusKeywords.message}
+                  </p>
+                )}
+            </div>
 
             <div>
               <FormLabel>Post Content</FormLabel>

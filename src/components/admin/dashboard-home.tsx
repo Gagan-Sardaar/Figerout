@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,6 +37,7 @@ import type { BlogPost } from "@/lib/blog-data";
 import { blogPosts as initialBlogPosts } from "@/lib/blog-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { searchPexelsImage } from "@/app/actions";
 
 const chartData = [
   { name: "Jan", engagement: 400 },
@@ -77,23 +78,47 @@ const createSlug = (title: string) => {
     .replace(/-+/g, '-'); // collapse dashes
 };
 
+const initialTopics = [
+    "The Intersection of Color Theory and Modern Fashion",
+    "How to Use Contrasting Colors in Home Decor",
+];
+
 export default function DashboardHome() {
   const { toast } = useToast();
-  const [ideas, setIdeas] = useState<GenerateSeoContentOutput[]>([]);
+  const [ideas, setIdeas] = useState<(GenerateSeoContentOutput & { originalIndex: number })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({});
+  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({ 0: 'idle', 1: 'idle' });
 
-  const fetchIdeas = async () => {
+  const fetchIdeas = useCallback(async (topicsToFetch: { topic: string, index: number }[]) => {
+    if (topicsToFetch.length === 0) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
-    setIdeas([]);
+
     try {
-      const topics = [
-        "The Intersection of Color Theory and Modern Fashion",
-        "How to Use Contrasting Colors in Home Decor",
-      ];
-      const ideaPromises = topics.map(topic => generateSeoContent({ topic }));
+      const ideaPromises = topicsToFetch.map(({ topic }) => generateSeoContent({ topic }));
       const results = await Promise.all(ideaPromises);
-      setIdeas(results);
+      
+      const newIdeas = results.map((result, i) => ({
+        ...result,
+        originalIndex: topicsToFetch[i].index,
+      }));
+
+      setIdeas(prevIdeas => {
+        const updatedIdeas = [...prevIdeas];
+        newIdeas.forEach(newIdea => {
+          const existingIndex = updatedIdeas.findIndex(i => i.originalIndex === newIdea.originalIndex);
+          if (existingIndex !== -1) {
+            updatedIdeas[existingIndex] = newIdea;
+          } else {
+            updatedIdeas.push(newIdea);
+          }
+        });
+        return updatedIdeas.sort((a, b) => a.originalIndex - b.originalIndex);
+      });
+
     } catch (error) {
       console.error(error);
       toast({
@@ -101,22 +126,40 @@ export default function DashboardHome() {
         description: "Could not connect to the AI service.",
         variant: "destructive",
       });
-      setIdeas([]); // Clear ideas on error
     } finally {
       setIsLoading(false);
     }
+  }, [toast]);
+  
+  const handleRefresh = () => {
+    const topicsToRefresh = initialTopics
+      .map((topic, index) => ({ topic, index }))
+      .filter(({ index }) => generationStatus[index] !== 'done');
+    
+    fetchIdeas(topicsToRefresh);
   };
-
+  
   useEffect(() => {
-    fetchIdeas();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const topics = initialTopics.map((topic, index) => ({ topic, index }));
+    fetchIdeas(topics);
+  }, [fetchIdeas]);
 
   const handleGeneratePost = async (idea: GenerateSeoContentOutput, index: number) => {
     setGenerationStatus(prev => ({ ...prev, [index]: 'generating' }));
     try {
       const blogPostResult = await generateBlogPost({ title: idea.title });
 
+      let featuredImage = 'https://placehold.co/600x400.png';
+      let imageHint = 'abstract color';
+
+      if (blogPostResult.imageSearchQuery) {
+        const imageResult = await searchPexelsImage(blogPostResult.imageSearchQuery);
+        if (imageResult) {
+          featuredImage = imageResult.dataUri;
+          imageHint = imageResult.alt;
+        }
+      }
+      
       const storedPostsJSON = localStorage.getItem('blogPosts');
       const allPosts: BlogPost[] = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
 
@@ -128,8 +171,8 @@ export default function DashboardHome() {
         title: idea.title,
         summary: idea.summary,
         content: blogPostResult.content,
-        imageUrl: 'https://placehold.co/600x400.png',
-        imageHint: 'abstract color',
+        imageUrl: featuredImage,
+        imageHint: imageHint,
         photographer: 'AI Generator',
         photographerUrl: '#',
         views: 0,
@@ -137,6 +180,9 @@ export default function DashboardHome() {
         shares: 0,
         status: 'draft',
         lastUpdated: new Date().toISOString(),
+        metaTitle: blogPostResult.metaTitle,
+        metaDescription: blogPostResult.metaDescription,
+        focusKeywords: blogPostResult.focusKeywords,
       };
       
       const updatedPosts = [newPost, ...allPosts];
@@ -154,6 +200,8 @@ export default function DashboardHome() {
       setGenerationStatus(prev => ({ ...prev, [index]: 'idle' }));
     }
   };
+
+  const allDone = Object.values(generationStatus).every(s => s === 'done');
 
   return (
     <div className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -176,21 +224,21 @@ export default function DashboardHome() {
               </CardTitle>
               <CardDescription>Daily inspiration for your next article.</CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchIdeas} disabled={isLoading}>
+            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading || allDone} className={cn(allDone && "hidden")}>
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            {isLoading ? (
+            {isLoading && ideas.length === 0 ? (
               <>
                 <LoadingSkeleton />
                 <LoadingSkeleton />
               </>
             ) : (
-              ideas.map((idea, index) => {
-                const status = generationStatus[index] || 'idle';
+              ideas.map((idea) => {
+                const status = generationStatus[idea.originalIndex] || 'idle';
                 return (
-                    <Card key={index} className="bg-muted/20 dark:bg-muted/50 flex flex-col">
+                    <Card key={idea.originalIndex} className="bg-muted/20 dark:bg-muted/50 flex flex-col">
                     <CardHeader>
                         <CardTitle className="text-lg">{idea.title}</CardTitle>
                     </CardHeader>
@@ -201,7 +249,7 @@ export default function DashboardHome() {
                     </CardContent>
                     <CardContent>
                         {status === 'idle' && (
-                            <Button variant="ghost" onClick={() => handleGeneratePost(idea, index)} disabled={isLoading}>
+                            <Button variant="ghost" onClick={() => handleGeneratePost(idea, idea.originalIndex)} disabled={isLoading}>
                                 <Sparkles className="mr-2 h-4 w-4" />
                                 Generate Full Post
                             </Button>
