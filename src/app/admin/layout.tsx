@@ -9,6 +9,7 @@ import {
   Settings, 
   FileText, 
   ExternalLink,
+  LogOut,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,10 +23,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppFooter } from "@/components/footer";
 
@@ -38,17 +38,20 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-4">
-      <Button variant="outline" size="sm" asChild>
-        <a href="/" target="_blank" rel="noopener noreferrer">
-          <ExternalLink className="mr-2 h-4 w-4" />
-          Visit Website
-        </a>
-      </Button>
+      <ThemeToggle />
       <div className="text-right hidden sm:block">
         <div className="font-semibold text-sm">{user.name}</div>
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </div>
-      <ThemeToggle />
+      <Avatar className="h-8 w-8 hidden sm:flex">
+          <AvatarFallback>A</AvatarFallback>
+      </Avatar>
+      <Button variant="outline" size="sm" asChild>
+        <Link href="/">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Logout</span>
+        </Link>
+      </Button>
     </div>
   )
 }
@@ -75,6 +78,17 @@ export default function AdminLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                asChild
+                tooltip="Visit Website"
+                >
+                <a href="/" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink />
+                    <span>Visit Website</span>
+                </a>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
@@ -125,27 +139,13 @@ export default function AdminLayout({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Logout">
-                        <Link href="/">
-                            <Avatar className="h-7 w-7">
-                                <AvatarFallback>A</AvatarFallback>
-                            </Avatar>
-                            <span>Logout</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 flex h-16 items-center justify-between gap-4 border-b bg-background px-6 z-10">
            <SidebarTrigger className="hidden md:flex"/>
            <UserNav />
         </header>
-        <main className="flex flex-1 flex-col">
+        <main className="flex-1">
           {children}
         </main>
         <AppFooter />
