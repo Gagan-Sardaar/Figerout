@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,7 +28,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw, CheckCircle2, Clock } from "lucide-react";
+import { Sparkles, RefreshCw, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import {
   generateSeoContent,
   GenerateSeoContentOutput,
@@ -347,9 +348,16 @@ export default function DashboardHome() {
                             </div>
                         )}
                         {status === 'done' && (
-                            <div className="flex items-center gap-2 text-sm font-medium text-green-500">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span>Draft created!</span>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm font-medium text-green-500">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    <span>Draft created!</span>
+                                </div>
+                                <Button asChild variant="link" size="sm" className="h-auto p-0 text-primary font-semibold">
+                                    <Link href="/admin/blog">
+                                        View Draft <ArrowRight className="ml-1 h-4 w-4" />
+                                    </Link>
+                                </Button>
                             </div>
                         )}
                     </CardContent>
