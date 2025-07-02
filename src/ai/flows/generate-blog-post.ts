@@ -34,25 +34,20 @@ const prompt = ai.definePrompt({
   name: 'generateBlogPostPrompt',
   input: {schema: GenerateBlogPostInputSchema},
   output: {schema: GenerateBlogPostOutputSchema},
-  prompt: `You are an expert blog post writer and SEO specialist for the 'Figerout' app, skilled in creating engaging, SEO-optimized content about color, design, and creativity.
+  prompt: `You are an expert content creator and SEO specialist. Your task is to generate a well-structured and engaging blog post based on the provided title.
 
-**About Figerout:**
-Figerout: AI Colour Vision is a smart mobile-first tool that captures real-world colours through your camera and instantly identifies their HEX codes, names, and human-friendly descriptions using a custom AI pipeline. The workflow blends computer vision and generative AI—processing the image, sampling pixel data, mapping it to standard colour spaces, and using a fine-tuned language model to generate natural, accessible descriptions like “dusty rose” or “warm sunset orange.” Trained on a rich dataset of labelled colours, design vocabularies, and varied lighting conditions (including simulation for colour-blind users), Figerout ensures accuracy, inclusivity, and ease of sharing through custom links. This project is designed for designers, artists, developers, and educators seeking a seamless bridge between real-world inspiration and digital creativity. **Important: Figerout is an independent project, not a large company. Avoid mentioning a "team" or using corporate language. Frame it as the vision of a passionate creator.**
+Your output must be a valid JSON object that conforms to the output schema.
 
-**Instructions for Blog Post Generation:**
+**Instructions:**
 
-1.  **Length and Format:** Generate a full blog post of 1000-1500 words in Markdown format for the 'content' field.
-2.  **Engaging Content:** The content must be engaging, informative, and highly relevant to the Figerout app and its audience (designers, artists, developers, creatives).
-3.  **SEO Optimization:**
-    *   **Structure:** Use clear, compelling headings (H2, H3) and subheadings to structure the post.
-    *   **Readability:** Use short paragraphs, bullet points, and **bold** or *italic* text to improve readability.
-    *   **Keywords:** Naturally weave in relevant keywords related to the title, color theory, design, AI, and the Figerout app.
-4.  **Tone and Style:** Maintain a creative, inspiring, and authoritative tone.
-5.  **SEO Metadata:** Generate the following SEO fields:
-    *   **metaTitle:** A concise, SEO-friendly title (50-60 characters).
-    *   **metaDescription:** A compelling summary (150-160 characters).
-    *   **focusKeywords:** An array of 3-5 primary keywords.
-6.  **Image Query:** Generate an \`imageSearchQuery\` field with 2-3 descriptive words that are highly relevant to the blog post's topic, suitable for finding a feature image.
+1.  **Content:** Write a blog post of at least 800 words. The content should be high-quality, easy to read, and structured with Markdown (using H2, H3, lists, bold, etc.).
+2.  **SEO Score:** The content and metadata should be optimized to achieve an SEO score of 80 or higher.
+3.  **SEO Metadata:**
+    *   \`metaTitle\`: Create a concise, SEO-friendly title (50-60 characters).
+    *   \`metaDescription\`: Write a compelling summary for search engines (150-160 characters).
+    *   \`focusKeywords\`: Provide an array of 3-5 relevant keywords.
+4.  **Image Query:**
+    *   \`imageSearchQuery\`: Generate a 2-3 word search query suitable for finding a feature image on a stock photo website.
 
 **Blog Post Title:**
 {{{title}}}
