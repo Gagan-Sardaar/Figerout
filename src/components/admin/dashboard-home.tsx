@@ -34,6 +34,7 @@ import {
   GenerateSeoContentOutput,
 } from "@/ai/flows/generate-seo-content";
 import { generateBlogPost } from "@/ai/flows/generate-blog-post";
+import { generateSeoScore } from "@/ai/flows/generate-seo-score";
 import type { BlogPost } from "@/lib/blog-data";
 import { blogPosts as initialBlogPosts } from "@/lib/blog-data";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -235,14 +236,25 @@ export default function DashboardHome() {
     try {
       const blogPostResult = await generateBlogPost({ title: idea.title });
 
+      const seoResult = await generateSeoScore({
+        title: blogPostResult.metaTitle || idea.title,
+        content: blogPostResult.content,
+        metaTitle: blogPostResult.metaTitle,
+        metaDescription: blogPostResult.metaDescription,
+      });
+
       let featuredImage = 'https://placehold.co/600x400.png';
       let imageHint = 'abstract color';
+      let photographer = 'AI Generator';
+      let photographerUrl = '#';
 
       if (blogPostResult.imageSearchQuery) {
         const imageResult = await searchPexelsImage(blogPostResult.imageSearchQuery);
         if (imageResult) {
           featuredImage = imageResult.dataUri;
           imageHint = imageResult.alt;
+          photographer = imageResult.photographer;
+          photographerUrl = imageResult.photographerUrl;
         }
       }
       
@@ -259,8 +271,8 @@ export default function DashboardHome() {
         content: blogPostResult.content,
         imageUrl: featuredImage,
         imageHint: imageHint,
-        photographer: 'AI Generator',
-        photographerUrl: '#',
+        photographer: photographer,
+        photographerUrl: photographerUrl,
         views: 0,
         likes: 0,
         shares: 0,
@@ -269,6 +281,7 @@ export default function DashboardHome() {
         metaTitle: blogPostResult.metaTitle,
         metaDescription: blogPostResult.metaDescription,
         focusKeywords: blogPostResult.focusKeywords,
+        seoScore: seoResult?.score
       };
       
       const updatedPosts = [newPost, ...allPosts];

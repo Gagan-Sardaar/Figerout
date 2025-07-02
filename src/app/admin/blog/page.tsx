@@ -88,6 +88,10 @@ export default function BlogPage() {
         shares: 0,
         status: postData.status,
         lastUpdated: new Date().toISOString(),
+        metaTitle: postData.metaTitle,
+        metaDescription: postData.metaDescription,
+        focusKeywords: postData.focusKeywords,
+        seoScore: postData.seoScore,
       };
       setPosts([newPost, ...posts]);
       toast({

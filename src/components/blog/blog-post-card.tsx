@@ -1,17 +1,14 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, Heart, Share2, Edit, Trash2, ArrowRight, User, Sparkles } from 'lucide-react';
 import type { BlogPost } from '@/lib/blog-data';
-import { generateSeoScore, GenerateSeoScoreOutput } from '@/ai/flows/generate-seo-score';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { NewPostDialog } from '@/components/blog/new-post-dialog';
 import {
@@ -34,37 +31,7 @@ interface BlogPostCardProps {
 }
 
 export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPostCardProps) {
-  const { toast } = useToast();
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
-  const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
-  const [isLoadingSeo, setIsLoadingSeo] = useState(false);
-
-  useEffect(() => {
-    if (isAdmin) {
-      const fetchSeoScore = async () => {
-        setIsLoadingSeo(true);
-        try {
-          const result = await generateSeoScore({
-            title: post.title,
-            content: post.content,
-            metaTitle: post.metaTitle,
-            metaDescription: post.metaDescription,
-          });
-          setSeoResult(result);
-        } catch (error) {
-          console.error("Failed to fetch SEO score:", error);
-          toast({
-            title: "SEO Analysis Failed",
-            description: "Could not fetch SEO score for the post.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoadingSeo(false);
-        }
-      };
-      fetchSeoScore();
-    }
-  }, [isAdmin, post.title, post.content, post.metaTitle, post.metaDescription, toast]);
   
   const statusVariant = {
     published: 'default',
@@ -134,12 +101,10 @@ export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPo
             <div className="flex items-center gap-4 ml-auto">
                 <div className="flex items-center gap-1.5 font-medium">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  {isLoadingSeo ? (
-                    <Skeleton className="h-4 w-16" />
-                  ) : seoResult ? (
-                    <span className="text-foreground">SEO: {seoResult.score}</span>
+                  {typeof post.seoScore === 'number' ? (
+                    <span className="text-foreground">SEO: {post.seoScore}</span>
                   ) : (
-                    <span>SEO: N/A</span>
+                    <span className="text-muted-foreground text-xs">SEO: N/A</span>
                   )}
                 </div>
                  <Badge variant={statusVariant[post.status]} className="capitalize">

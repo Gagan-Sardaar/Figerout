@@ -17,6 +17,7 @@ export interface BlogPost {
   metaTitle?: string;
   metaDescription?: string;
   focusKeywords?: string[];
+  seoScore?: number;
 }
 
 const getDateAgo = (days: number): string => {
@@ -47,6 +48,7 @@ export const blogPosts: BlogPost[] = [
     metaTitle: '10 Must-Have Eco-Friendly Home Products',
     metaDescription: 'Discover the top 10 eco-friendly products that can help you create a more sustainable and environmentally conscious home. Start making a difference today.',
     focusKeywords: ['eco-friendly products', 'sustainable home', 'green living'],
+    seoScore: 85,
   },
   {
     id: 2,
@@ -66,6 +68,7 @@ export const blogPosts: BlogPost[] = [
     metaTitle: 'How Climate Change Affects Global Biodiversity',
     metaDescription: 'Explore the profound impact of climate change on biodiversity, from coral reefs to rainforests. Understand the threats and what can be done to protect our planet.',
     focusKeywords: ['climate change', 'biodiversity', 'ecosystems', 'environmental impact'],
+    seoScore: 92,
   },
   {
     id: 3,
@@ -85,6 +88,7 @@ export const blogPosts: BlogPost[] = [
     metaTitle: 'Why Sustainable Business is Good for Business',
     metaDescription: 'Learn about the key benefits of adopting sustainable business practices, from improved brand reputation to increased profitability and long-term success.',
     focusKeywords: ['sustainable business', 'corporate sustainability', 'green business'],
+    seoScore: 78,
   },
    {
     id: 4,
@@ -104,6 +108,7 @@ export const blogPosts: BlogPost[] = [
     metaTitle: 'Color Psychology in Marketing: A Complete Guide',
     metaDescription: 'A deep dive into the psychology of color in marketing. Learn how colors like red, blue, and green can influence purchasing decisions and brand perception.',
     focusKeywords: ['color psychology', 'marketing', 'consumer behavior', 'branding'],
+    seoScore: 88,
   },
   {
     id: 5,
@@ -123,6 +128,7 @@ export const blogPosts: BlogPost[] = [
     metaTitle: 'How to Create a Minimalist Wardrobe Color Palette',
     metaDescription: 'Our guide to building a minimalist wardrobe. Learn how to choose a versatile color palette that simplifies your style and elevates your look.',
     focusKeywords: ['minimalist wardrobe', 'color palette', 'capsule wardrobe', 'fashion'],
+    seoScore: 82,
   },
   {
     id: 6,

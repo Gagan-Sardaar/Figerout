@@ -110,6 +110,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
   const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const isEditing = !!post;
 
   const form = useForm<FormValues>({
@@ -140,6 +141,9 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
         scheduleDate: post.lastUpdated ? new Date(post.lastUpdated) : undefined,
       });
       setImagePreview(post.imageUrl);
+      if (post.seoScore) {
+        setSeoResult({ score: post.seoScore, feedback: "SEO score from last save." });
+      }
     }
   }, [post, form]);
   
@@ -351,13 +355,37 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
     }
   };
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
+    setIsSaving(true);
+    let seoScore: number | undefined = undefined;
+
+    try {
+        const result = await generateSeoScore({
+            title: data.title,
+            content: data.content,
+            metaTitle: data.metaTitle,
+            metaDescription: data.metaDescription,
+        });
+        seoScore = result?.score;
+    } catch (error) {
+        console.error("Error calculating SEO score:", error);
+        toast({
+            title: "SEO Score Calculation Failed",
+            description: "The post was saved, but the SEO score could not be calculated. You can analyze it again later.",
+            variant: "destructive"
+        });
+    }
+
     const saveData = {
       ...data,
       focusKeywords: data.focusKeywords?.map(kw => kw.value),
       id: post?.id,
+      seoScore: seoScore,
     };
+
     onSave?.(saveData);
+    setLastSaved(new Date());
+    setIsSaving(false);
     onExit();
   };
 
@@ -721,9 +749,9 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
                     </div>
                 </PopoverContent>
             </Popover>
-            <Button type="submit">
-                {submitButtonConfig.icon}
-                {submitButtonConfig.text}
+            <Button type="submit" disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : submitButtonConfig.icon}
+                {isSaving ? 'Saving...' : submitButtonConfig.text}
             </Button>
         </div>
       </form>
