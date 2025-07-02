@@ -27,7 +27,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Sparkles, RefreshCw, CheckCircle2, Clock } from "lucide-react";
 import {
   generateSeoContent,
   GenerateSeoContentOutput,
@@ -87,8 +87,32 @@ export default function DashboardHome() {
   const { toast } = useToast();
   const [ideas, setIdeas] = useState<(GenerateSeoContentOutput & { originalIndex: number })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({ 0: 'idle', 1: 'idle' });
+  const [countdown, setCountdown] = useState("");
+  
+  const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>(() => {
+    if (typeof window === 'undefined') {
+      return { 0: 'idle', 1: 'idle' };
+    }
+    const storedStatus = localStorage.getItem('generationStatus');
+    if (storedStatus) {
+        try {
+            const parsedStatus = JSON.parse(storedStatus);
+            if (typeof parsedStatus === 'object' && parsedStatus !== null && '0' in parsedStatus && '1' in parsedStatus) {
+                return parsedStatus;
+            }
+        } catch (e) {
+            console.error("Failed to parse generationStatus from localStorage", e);
+        }
+    }
+    return { 0: 'idle', 1: 'idle' };
+  });
 
+  const allDone = Object.values(generationStatus).every(s => s === 'done');
+
+  useEffect(() => {
+    localStorage.setItem('generationStatus', JSON.stringify(generationStatus));
+  }, [generationStatus]);
+  
   const fetchIdeas = useCallback(async (topicsToFetch: { topic: string, index: number }[]) => {
     if (topicsToFetch.length === 0) {
       setIsLoading(false);
@@ -131,6 +155,66 @@ export default function DashboardHome() {
     }
   }, [toast]);
   
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (allDone) {
+      const getNextGenerationTime = () => {
+        let nextTime = localStorage.getItem('nextGenerationTime');
+        if (!nextTime) {
+          const newNextTime = new Date().getTime() + 24 * 60 * 60 * 1000;
+          localStorage.setItem('nextGenerationTime', String(newNextTime));
+          return newNextTime;
+        }
+        return Number(nextTime);
+      };
+      
+      const nextGenerationTime = getNextGenerationTime();
+      
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const distance = nextGenerationTime - now;
+        
+        if (distance < 0) {
+          if (timer) clearInterval(timer);
+          setCountdown("");
+          localStorage.removeItem('nextGenerationTime');
+          localStorage.removeItem('generationStatus');
+          setGenerationStatus({ 0: 'idle', 1: 'idle' });
+          return;
+        }
+        
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        setCountdown(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      };
+      
+      updateTimer(); // Initial call
+      timer = setInterval(updateTimer, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [allDone]);
+
+  useEffect(() => {
+    if (!allDone) {
+      const topicsToRefresh = initialTopics
+        .map((topic, index) => ({ topic, index }))
+        .filter(({ index }) => generationStatus[index] !== 'done');
+      
+      if (topicsToRefresh.length > 0 && ideas.length === 0) {
+        fetchIdeas(topicsToRefresh);
+      } else {
+        setIsLoading(false);
+      }
+    } else {
+        setIsLoading(false); 
+    }
+  }, [allDone, fetchIdeas, generationStatus, ideas.length]);
+
   const handleRefresh = () => {
     const topicsToRefresh = initialTopics
       .map((topic, index) => ({ topic, index }))
@@ -138,11 +222,6 @@ export default function DashboardHome() {
     
     fetchIdeas(topicsToRefresh);
   };
-  
-  useEffect(() => {
-    const topics = initialTopics.map((topic, index) => ({ topic, index }));
-    fetchIdeas(topics);
-  }, [fetchIdeas]);
 
   const handleGeneratePost = async (idea: GenerateSeoContentOutput, index: number) => {
     setGenerationStatus(prev => ({ ...prev, [index]: 'generating' }));
@@ -201,8 +280,6 @@ export default function DashboardHome() {
     }
   };
 
-  const allDone = Object.values(generationStatus).every(s => s === 'done');
-
   return (
     <div className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="grid gap-4">
@@ -224,9 +301,16 @@ export default function DashboardHome() {
               </CardTitle>
               <CardDescription>Daily inspiration for your next article.</CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading || allDone} className={cn(allDone && "hidden")}>
-              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            </Button>
+            {allDone ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Next ideas available in">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-mono tabular-nums">{countdown}</span>
+                </div>
+            ) : (
+                <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
+                    <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                </Button>
+            )}
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             {isLoading && ideas.length === 0 ? (
