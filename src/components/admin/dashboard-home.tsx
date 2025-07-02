@@ -142,10 +142,6 @@ export default function DashboardHome() {
       const updatedPosts = [newPost, ...allPosts];
       localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
 
-      toast({
-        title: "Post Generated!",
-        description: `"${idea.title}" has been saved as a draft.`,
-      });
       setGenerationStatus(prev => ({ ...prev, [index]: 'done' }));
 
     } catch (error) {
