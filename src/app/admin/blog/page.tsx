@@ -107,7 +107,7 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex flex-col flex-1 gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Blog Management</h1>
         <NewPostDialog onSave={handleSavePost} />

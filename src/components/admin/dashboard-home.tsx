@@ -288,7 +288,7 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <div className="flex flex-col flex-1 gap-8 p-6">
       <div className="grid gap-4">
         <Card>
           <CardHeader>
@@ -308,7 +308,7 @@ export default function DashboardHome() {
               </CardTitle>
               <CardDescription>Daily inspiration for your next article.</CardDescription>
             </div>
-            {isHydrated ? (
+            {isHydrated && (
               allDone ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Next ideas available in">
                       <Clock className="h-4 w-4" />
@@ -319,10 +319,6 @@ export default function DashboardHome() {
                       <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
                   </Button>
               )
-            ) : (
-               <Button variant="ghost" size="icon" disabled>
-                  <RefreshCw className="h-4 w-4" />
-              </Button>
             )}
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">

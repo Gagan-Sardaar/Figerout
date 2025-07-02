@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex flex-col flex-1 gap-6 p-6">
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">App Settings</h1>
       </div>
