@@ -21,41 +21,65 @@ export default function BlogPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Merge posts from static data and localStorage to ensure all posts are loaded.
     const storedPostsJSON = localStorage.getItem('blogPosts');
-    let postsToLoad = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
+    const filePosts = initialBlogPosts;
+    const combinedPosts = new Map<number, BlogPost>();
 
+    // Start with the base posts from the file.
+    for (const post of filePosts) {
+      combinedPosts.set(post.id, post);
+    }
+
+    // Overwrite with any newer or dynamically created posts from localStorage.
+    if (storedPostsJSON) {
+      try {
+        const storedPosts: BlogPost[] = JSON.parse(storedPostsJSON);
+        for (const post of storedPosts) {
+          combinedPosts.set(post.id, post);
+        }
+      } catch (e) {
+        console.error("Failed to parse blog posts from localStorage", e);
+      }
+    }
+
+    // Sort posts to have the newest ones first.
+    let postsToLoad = Array.from(combinedPosts.values()).sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+    
+    // Merge interaction data (views, likes, shares)
     const storedInteractions = JSON.parse(localStorage.getItem('postInteractions') || '{}');
     if (Object.keys(storedInteractions).length > 0) {
-        postsToLoad = postsToLoad.map(post => {
-            const interaction = storedInteractions[post.id];
-            if (interaction) {
-                return {
-                    ...post,
-                    views: interaction.views ?? post.views,
-                    likes: interaction.likes ?? post.likes,
-                    shares: interaction.shares ?? post.shares,
-                };
-            }
-            return post;
-        });
+      postsToLoad = postsToLoad.map(post => {
+        const interaction = storedInteractions[post.id];
+        if (interaction) {
+          return {
+            ...post,
+            views: interaction.views ?? post.views,
+            likes: interaction.likes ?? post.likes,
+            shares: interaction.shares ?? post.shares,
+          };
+        }
+        return post;
+      });
     }
+
     setPostsState(postsToLoad);
     
-    // Ensure localStorage is seeded if it was empty
-    if (!storedPostsJSON) {
-        localStorage.setItem('blogPosts', JSON.stringify(initialBlogPosts));
-    }
+    // Persist the definitive merged list back to localStorage.
+    localStorage.setItem('blogPosts', JSON.stringify(postsToLoad));
   }, []);
   
   const setPosts = (newPosts: BlogPost[] | ((prevState: BlogPost[]) => BlogPost[])) => {
     const updatedPosts = typeof newPosts === 'function' ? newPosts(posts) : newPosts;
-    setPostsState(updatedPosts);
-    localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
+    const sortedPosts = [...updatedPosts].sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+    setPostsState(sortedPosts);
+    localStorage.setItem('blogPosts', JSON.stringify(sortedPosts));
   };
 
 
   const handleSavePost = (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
     const summary = postData.content.length > 150 ? postData.content.substring(0, 150) + '...' : postData.content;
+    const lastUpdated = new Date().toISOString();
     
     if (postData.id) {
       // Update existing post
@@ -65,7 +89,8 @@ export default function BlogPage() {
           title: postData.title, 
           content: postData.content,
           summary: summary,
-          imageUrl: postData.featuredImage || p.imageUrl 
+          imageUrl: postData.featuredImage || p.imageUrl,
+          lastUpdated: lastUpdated,
         } as BlogPost : p));
       toast({
           title: "Post Updated!",
@@ -87,13 +112,13 @@ export default function BlogPage() {
         likes: 0,
         shares: 0,
         status: postData.status,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: lastUpdated,
         metaTitle: postData.metaTitle,
         metaDescription: postData.metaDescription,
         focusKeywords: postData.focusKeywords,
         seoScore: postData.seoScore,
       };
-      setPosts([newPost, ...posts]);
+      setPosts(prevPosts => [newPost, ...prevPosts]);
       toast({
         title: "Post Created!",
         description: `"${newPost.title}" has been created as a ${newPost.status}.`,
