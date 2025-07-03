@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   LineChart,
   Line,
@@ -73,16 +74,47 @@ const initialTopics = [
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const postsInMonth: { title: string; views: number; likes: number; shares: number }[] = data.posts || [];
+
+    if (data.views === 0 && data.likes === 0 && data.shares === 0) {
+      return null;
+    }
+
     return (
-      <div className="rounded-lg border bg-card p-2 shadow-sm text-card-foreground">
-        <p className="font-bold mb-1">{label}</p>
-        {payload.map((p: any, index: number) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></span>
-            <span className="capitalize">{p.name}:</span>
-            <span className="font-medium ml-auto">{p.value.toLocaleString()}</span>
-          </div>
-        ))}
+      <div className="rounded-lg border bg-card p-3 shadow-sm text-card-foreground max-w-xs w-64">
+        <p className="font-bold text-base mb-2">{label}</p>
+        <div className="space-y-1">
+          {payload.map((p: any, index: number) => (
+            <div key={index} className="flex items-center gap-2 text-sm">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></span>
+              <span className="capitalize text-muted-foreground">{p.name}:</span>
+              <span className="font-medium ml-auto">{p.value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+
+        {postsInMonth.length > 0 && (
+          <>
+            <Separator className="my-2" />
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+              <p className="font-semibold text-sm mb-1">Top Posts</p>
+              {postsInMonth.slice(0, 5).map((post, index) => (
+                <div key={index} className="text-xs">
+                  <p className="font-medium truncate" title={post.title}>{post.title}</p>
+                  <div className="flex justify-between text-muted-foreground gap-2">
+                    <span>Views: {post.views.toLocaleString()}</span>
+                    <span>Likes: {post.likes.toLocaleString()}</span>
+                    <span>Shares: {post.shares.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+              {postsInMonth.length > 5 && (
+                <p className="text-xs text-center text-muted-foreground mt-1">...and {postsInMonth.length - 5} more</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -118,7 +150,12 @@ export default function DashboardHome() {
     const storedPostsJSON = localStorage.getItem('blogPosts');
     const posts: BlogPost[] = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
 
-    const monthlyData = Array.from({ length: 12 }, () => ({ views: 0, likes: 0, shares: 0 }));
+    const monthlyData = Array.from({ length: 12 }, () => ({
+      views: 0,
+      likes: 0,
+      shares: 0,
+      posts: [] as { title: string; views: number; likes: number; shares: number }[],
+    }));
 
     posts.forEach(post => {
       const postDate = new Date(post.lastUpdated);
@@ -126,6 +163,18 @@ export default function DashboardHome() {
       monthlyData[month].views += post.views;
       monthlyData[month].likes += post.likes;
       monthlyData[month].shares += post.shares;
+      if (post.views > 0 || post.likes > 0 || post.shares > 0) {
+        monthlyData[month].posts.push({
+          title: post.title,
+          views: post.views,
+          likes: post.likes,
+          shares: post.shares,
+        });
+      }
+    });
+
+    monthlyData.forEach(month => {
+      month.posts.sort((a, b) => (b.views + b.likes + b.shares) - (a.views + a.likes + a.shares));
     });
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -330,7 +379,7 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="flex flex-col flex-1 gap-8 p-6">
+    <div className="flex flex-col flex-1 gap-6 p-6">
       <div className="grid gap-4">
         <Card>
           <CardHeader>
