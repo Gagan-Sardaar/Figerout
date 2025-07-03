@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -24,8 +25,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Image as ImageIcon, Link2 } from "lucide-react";
+import { Save, Image as ImageIcon, Link2, Sparkles, Loader2, Lightbulb } from "lucide-react";
 import { ImageUploader } from "@/components/admin/image-uploader";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { suggestSeoImprovements } from "@/ai/flows/suggest-seo-improvements";
 
 // SVGs for social icons as they are not in lucide-react
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -72,6 +79,8 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ suggestedMetaTitle?: string; suggestedMetaDescription?: string } | null>(null);
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -104,6 +113,41 @@ export default function SettingsPage() {
     return null; // or a loading spinner
   }
 
+  const handleSuggestSeo = async () => {
+    setIsSuggesting(true);
+    setSuggestions(null);
+    const currentTitle = form.getValues("metaTitle");
+    const currentDescription = form.getValues("metaDescription");
+
+    if (!currentTitle && !currentDescription) {
+        toast({
+            title: "Nothing to improve",
+            description: "Please enter a meta title or description first.",
+            variant: "destructive"
+        });
+        setIsSuggesting(false);
+        return;
+    }
+
+    try {
+        const result = await suggestSeoImprovements({
+            metaTitle: currentTitle,
+            metaDescription: currentDescription,
+            appName: "Figerout",
+        });
+        setSuggestions(result);
+    } catch (error) {
+        console.error("Error getting SEO suggestions:", error);
+        toast({
+            title: "Suggestion Failed",
+            description: "Could not connect to the AI service.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSuggesting(false);
+    }
+  };
+
   const onSubmit = (data: SettingsFormValues) => {
     const now = new Date();
     localStorage.setItem("appSettings", JSON.stringify(data));
@@ -134,7 +178,59 @@ export default function SettingsPage() {
             <div className="lg:col-span-2 space-y-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>SEO & Metadata</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>SEO & Metadata</CardTitle>
+                            <Popover onOpenChange={() => setSuggestions(null)}>
+                                <PopoverTrigger asChild>
+                                <Button variant="ghost" size="sm" onClick={handleSuggestSeo} disabled={isSuggesting}>
+                                    {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-primary" />}
+                                    <span className="ml-2 hidden sm:inline">Get suggestions</span>
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80" align="end">
+                                <div className="grid gap-4">
+                                    <div className="space-y-2">
+                                    <h4 className="font-medium leading-none flex items-center gap-2"><Lightbulb className="h-4 w-4 text-primary" /> Suggestions</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        AI-powered recommendations to boost your SEO.
+                                    </p>
+                                    </div>
+                                    {isSuggesting && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                                    {suggestions && (
+                                    <div className="grid gap-4">
+                                        {suggestions.suggestedMetaTitle && (
+                                        <div className="space-y-2">
+                                            <Label>Meta Title</Label>
+                                            <div className="rounded-md border bg-muted p-2 text-sm">{suggestions.suggestedMetaTitle}</div>
+                                            <Button size="sm" variant="outline" className="w-full" onClick={() => {
+                                                form.setValue("metaTitle", suggestions.suggestedMetaTitle || "", { shouldValidate: true, shouldDirty: true });
+                                                toast({ title: "Meta title updated!" });
+                                            }}>
+                                            Use this title
+                                            </Button>
+                                        </div>
+                                        )}
+                                        {suggestions.suggestedMetaDescription && (
+                                        <div className="space-y-2">
+                                            <Label>Meta Description</Label>
+                                            <div className="rounded-md border bg-muted p-2 text-sm">{suggestions.suggestedMetaDescription}</div>
+                                            <Button size="sm" variant="outline" className="w-full" onClick={() => {
+                                                form.setValue("metaDescription", suggestions.suggestedMetaDescription || "", { shouldValidate: true, shouldDirty: true });
+                                                toast({ title: "Meta description updated!" });
+                                            }}>
+                                            Use this description
+                                            </Button>
+                                        </div>
+                                        )}
+                                    </div>
+                                    )}
+                                    {!suggestions && !isSuggesting && (
+                                    <p className="text-sm text-muted-foreground text-center py-4">Click "Get suggestions" to start.</p>
+                                    )}
+                                </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         <CardDescription>
                         Manage your website's appearance on search engines.
                         </CardDescription>
