@@ -71,6 +71,7 @@ const defaultValues: SettingsFormValues = {
 export default function SettingsPage() {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -88,6 +89,10 @@ export default function SettingsPage() {
       try {
         const parsedSettings = JSON.parse(savedSettings);
         form.reset(parsedSettings);
+        const lastSavedTimestamp = localStorage.getItem("appSettingsLastSaved");
+        if (lastSavedTimestamp) {
+            setLastSaved(new Date(lastSavedTimestamp));
+        }
       } catch (e) {
         console.error("Failed to parse app settings from localStorage", e);
       }
@@ -100,7 +105,10 @@ export default function SettingsPage() {
   }
 
   const onSubmit = (data: SettingsFormValues) => {
+    const now = new Date();
     localStorage.setItem("appSettings", JSON.stringify(data));
+    localStorage.setItem("appSettingsLastSaved", now.toISOString());
+    setLastSaved(now);
     toast({
       title: "Settings Saved!",
       description: "Your application settings have been updated.",
@@ -113,10 +121,13 @@ export default function SettingsPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold md:text-2xl">App Settings</h1>
-            <Button type="submit">
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
+            <div className="flex items-center gap-4">
+              {lastSaved && <p className="text-xs text-muted-foreground">Last saved: {lastSaved.toLocaleString()}</p>}
+              <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
