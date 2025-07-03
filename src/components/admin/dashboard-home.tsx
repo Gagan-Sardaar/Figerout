@@ -42,6 +42,7 @@ import { blogPosts as initialBlogPosts } from "@/lib/blog-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { searchPexelsImage } from "@/app/actions";
+import { subDays, format } from "date-fns";
 
 const LoadingSkeleton = () => (
   <Card className="bg-muted/20 dark:bg-muted/50">
@@ -129,6 +130,7 @@ export default function DashboardHome() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({ 0: 'idle', 1: 'idle' });
   const [chartData, setChartData] = useState<any[]>([]);
+  const [timeRange, setTimeRange] = useState<'day' | 'month' | 'year'>('month');
 
   // Hydrate state from localStorage on the client to avoid hydration mismatch
   useEffect(() => {
@@ -145,48 +147,125 @@ export default function DashboardHome() {
         console.error("Failed to parse generationStatus from localStorage", e);
       }
     }
-    
-    // Process chart data
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated) return;
+
     const storedPostsJSON = localStorage.getItem('blogPosts');
     const posts: BlogPost[] = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
 
-    const monthlyData = Array.from({ length: 12 }, () => ({
-      views: 0,
-      likes: 0,
-      shares: 0,
-      posts: [] as { title: string; views: number; likes: number; shares: number }[],
-    }));
-
-    posts.forEach(post => {
-      const postDate = new Date(post.lastUpdated);
-      const month = postDate.getMonth();
-      monthlyData[month].views += post.views;
-      monthlyData[month].likes += post.likes;
-      monthlyData[month].shares += post.shares;
-      if (post.views > 0 || post.likes > 0 || post.shares > 0) {
-        monthlyData[month].posts.push({
-          title: post.title,
-          views: post.views,
-          likes: post.likes,
-          shares: post.shares,
-        });
-      }
-    });
-
-    monthlyData.forEach(month => {
-      month.posts.sort((a, b) => (b.views + b.likes + b.shares) - (a.views + a.likes + a.shares));
-    });
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const newChartData = monthlyData.map((data, index) => ({
-      name: monthNames[index],
-      ...data,
-    }));
+    let newChartData: any[] = [];
+    const now = new Date();
     
-    setChartData(newChartData);
+    if (timeRange === 'month') { // This Year
+      const currentYear = now.getFullYear();
+      const monthlyData = Array.from({ length: 12 }, () => ({
+        views: 0,
+        likes: 0,
+        shares: 0,
+        posts: [] as { title: string; views: number; likes: number; shares: number }[],
+      }));
 
-  }, []);
-  
+      posts.forEach(post => {
+        const postDate = new Date(post.lastUpdated);
+        if (postDate.getFullYear() === currentYear) {
+            const month = postDate.getMonth();
+            monthlyData[month].views += post.views;
+            monthlyData[month].likes += post.likes;
+            monthlyData[month].shares += post.shares;
+            if (post.views > 0 || post.likes > 0 || post.shares > 0) {
+                monthlyData[month].posts.push({
+                    title: post.title,
+                    views: post.views,
+                    likes: post.likes,
+                    shares: post.shares,
+                });
+            }
+        }
+      });
+
+      monthlyData.forEach(month => {
+        month.posts.sort((a, b) => (b.views + b.likes + b.shares) - (a.views + a.likes + a.shares));
+      });
+
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      newChartData = monthlyData.map((data, index) => ({
+        name: monthNames[index],
+        ...data,
+      }));
+    } else if (timeRange === 'day') { // Last 30 days
+        const dailyData = new Map<string, { views: number; likes: number; shares: number; posts: any[] }>();
+        
+        for (let i = 0; i < 30; i++) {
+            const date = subDays(now, i);
+            const key = format(date, 'yyyy-MM-dd');
+            dailyData.set(key, { views: 0, likes: 0, shares: 0, posts: [] });
+        }
+
+        const thirtyDaysAgo = subDays(now, 30);
+        posts.forEach(post => {
+            const postDate = new Date(post.lastUpdated);
+            if (postDate >= thirtyDaysAgo) {
+                const key = format(postDate, 'yyyy-MM-dd');
+                if (dailyData.has(key)) {
+                    const dayData = dailyData.get(key)!;
+                    dayData.views += post.views;
+                    dayData.likes += post.likes;
+                    dayData.shares += post.shares;
+                    if (post.views > 0 || post.likes > 0 || post.shares > 0) {
+                        dayData.posts.push({
+                            title: post.title,
+                            views: post.views,
+                            likes: post.likes,
+                            shares: post.shares,
+                        });
+                    }
+                }
+            }
+        });
+        
+        const sortedDailyData = Array.from(dailyData.entries()).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+
+        newChartData = sortedDailyData.map(([dateKey, data]) => {
+            const name = format(new Date(dateKey), 'MMM d');
+            data.posts.sort((a, b) => (b.views + b.likes + b.shares) - (a.views + a.likes + a.shares));
+            return { name, ...data };
+        });
+
+    } else if (timeRange === 'year') { // All Time
+        const yearlyData = new Map<number, { views: number; likes: number; shares: number; posts: any[] }>();
+
+        posts.forEach(post => {
+            const year = new Date(post.lastUpdated).getFullYear();
+            if (!yearlyData.has(year)) {
+                yearlyData.set(year, { views: 0, likes: 0, shares: 0, posts: [] });
+            }
+            const yearData = yearlyData.get(year)!;
+            yearData.views += post.views;
+            yearData.likes += post.likes;
+            yearData.shares += post.shares;
+             if (post.views > 0 || post.likes > 0 || post.shares > 0) {
+                yearData.posts.push({
+                    title: post.title,
+                    views: post.views,
+                    likes: post.likes,
+                    shares: post.shares,
+                });
+            }
+        });
+        
+        const sortedYearlyData = Array.from(yearlyData.entries()).sort((a, b) => a[0] - b[0]);
+        
+        newChartData = sortedYearlyData.map(([year, data]) => {
+            data.posts.sort((a, b) => (b.views + b.likes + b.shares) - (a.views + a.likes + a.shares));
+            return { name: year.toString(), ...data };
+        });
+    }
+
+    setChartData(newChartData);
+  }, [isHydrated, timeRange]);
+
   const allDone = Object.values(generationStatus).every(s => s === 'done');
 
   useEffect(() => {
@@ -472,15 +551,17 @@ export default function DashboardHome() {
             <div className="space-y-1">
               <CardTitle className="text-xl">Post Engagement</CardTitle>
               <CardDescription>
-                Monthly engagement metrics for all posts.
+                Engagement metrics for all posts.
               </CardDescription>
             </div>
-            <Select defaultValue="month">
-              <SelectTrigger className="w-[120px]">
+            <Select value={timeRange} onValueChange={(value) => setTimeRange(value as any)}>
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="day">Last 30 Days</SelectItem>
                 <SelectItem value="month">This Year</SelectItem>
+                <SelectItem value="year">All Time</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
