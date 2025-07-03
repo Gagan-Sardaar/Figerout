@@ -25,6 +25,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
@@ -40,21 +41,6 @@ import { blogPosts as initialBlogPosts } from "@/lib/blog-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { searchPexelsImage } from "@/app/actions";
-
-const chartData = [
-  { name: "Jan", engagement: 400 },
-  { name: "Feb", engagement: 300 },
-  { name: "Mar", engagement: 200 },
-  { name: "Apr", engagement: 278 },
-  { name: "May", engagement: 189 },
-  { name: "Jun", engagement: 239 },
-  { name: "Jul", engagement: 349 },
-  { name: "Aug", engagement: 450 },
-  { name: "Sep", engagement: 360 },
-  { name: "Oct", engagement: 500 },
-  { name: "Nov", engagement: 420 },
-  { name: "Dec", engagement: 600 },
-];
 
 const LoadingSkeleton = () => (
   <Card className="bg-muted/20 dark:bg-muted/50">
@@ -85,6 +71,24 @@ const initialTopics = [
     "How to Use Contrasting Colors in Home Decor",
 ];
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-card p-2 shadow-sm text-card-foreground">
+        <p className="font-bold mb-1">{label}</p>
+        {payload.map((p: any, index: number) => (
+          <div key={index} className="flex items-center gap-2 text-sm">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></span>
+            <span className="capitalize">{p.name}:</span>
+            <span className="font-medium ml-auto">{p.value.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function DashboardHome() {
   const { toast } = useToast();
   const [ideas, setIdeas] = useState<(GenerateSeoContentOutput & { originalIndex: number })[]>([]);
@@ -92,9 +96,12 @@ export default function DashboardHome() {
   const [countdown, setCountdown] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
   const [generationStatus, setGenerationStatus] = useState<Record<number, 'idle' | 'generating' | 'done'>>({ 0: 'idle', 1: 'idle' });
+  const [chartData, setChartData] = useState<any[]>([]);
 
   // Hydrate state from localStorage on the client to avoid hydration mismatch
   useEffect(() => {
+    setIsHydrated(true);
+
     const storedStatus = localStorage.getItem('generationStatus');
     if (storedStatus) {
       try {
@@ -106,7 +113,29 @@ export default function DashboardHome() {
         console.error("Failed to parse generationStatus from localStorage", e);
       }
     }
-    setIsHydrated(true);
+    
+    // Process chart data
+    const storedPostsJSON = localStorage.getItem('blogPosts');
+    const posts: BlogPost[] = storedPostsJSON ? JSON.parse(storedPostsJSON) : initialBlogPosts;
+
+    const monthlyData = Array.from({ length: 12 }, () => ({ views: 0, likes: 0, shares: 0 }));
+
+    posts.forEach(post => {
+      const postDate = new Date(post.lastUpdated);
+      const month = postDate.getMonth();
+      monthlyData[month].views += post.views;
+      monthlyData[month].likes += post.likes;
+      monthlyData[month].shares += post.shares;
+    });
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const newChartData = monthlyData.map((data, index) => ({
+      name: monthNames[index],
+      ...data,
+    }));
+    
+    setChartData(newChartData);
+
   }, []);
   
   const allDone = Object.values(generationStatus).every(s => s === 'done');
@@ -394,7 +423,7 @@ export default function DashboardHome() {
             <div className="space-y-1">
               <CardTitle className="text-xl">Post Engagement</CardTitle>
               <CardDescription>
-                Daily engagement metrics for posts created or updated in the selected period.
+                Monthly engagement metrics for all posts.
               </CardDescription>
             </div>
             <Select defaultValue="month">
@@ -402,8 +431,7 @@ export default function DashboardHome() {
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="month">Month</SelectItem>
-                <SelectItem value="year">Year</SelectItem>
+                <SelectItem value="month">This Year</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
@@ -416,13 +444,12 @@ export default function DashboardHome() {
                   <YAxis tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
                   <Tooltip
                     cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1, strokeDasharray: '3 3' }}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
+                    content={<CustomTooltip />}
                   />
-                  <Line type="monotone" dataKey="engagement" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  <Legend />
+                  <Line type="monotone" dataKey="views" name="Views" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="likes" name="Likes" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="shares" name="Shares" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
