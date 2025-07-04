@@ -17,9 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const PolicyPageHeader = () => (
-    <header className="bg-primary text-primary-foreground py-16">
+    <header className="bg-primary text-white py-12 md:py-20 overflow-hidden">
         <div className="container mx-auto px-4 text-center">
-            <h1 className="text-5xl md:text-7xl font-headline font-extrabold tracking-tighter">
+            <h1 className="text-[20vw] lg:text-[15rem] font-headline font-extrabold tracking-tighter leading-none select-none">
                 Figerout
             </h1>
         </div>
