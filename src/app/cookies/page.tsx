@@ -31,8 +31,8 @@ export default async function CookiePolicyPage() {
   return (
     <div className="min-h-svh bg-background flex flex-col">
       <PolicyPageHeader />
-      <main className="flex-grow flex items-center justify-center p-4 -mt-12">
-        <Card className="w-full max-w-4xl z-10">
+      <main className="flex-grow flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl">
           <CardHeader>
             <div className="flex justify-between items-start gap-4">
                 <div>
