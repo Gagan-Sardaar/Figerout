@@ -16,14 +16,25 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
+const PolicyPageHeader = () => (
+    <header className="bg-primary text-primary-foreground py-16">
+        <div className="container mx-auto px-4 text-center">
+            <h1 className="text-5xl md:text-7xl font-headline font-extrabold tracking-tighter">
+                Figerout
+            </h1>
+        </div>
+    </header>
+);
+
 export default async function TermsOfServicePage() {
   const content = await generatePageContent({ pageTopic: "Terms of Service", appName: "Figerout" });
   const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
     <div className="min-h-svh bg-background flex flex-col">
-      <main className="flex-grow flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl">
+      <PolicyPageHeader />
+      <main className="flex-grow flex items-center justify-center p-4 -mt-12">
+        <Card className="w-full max-w-4xl z-10">
           <CardHeader>
             <div className="flex justify-between items-start gap-4">
                 <div>
