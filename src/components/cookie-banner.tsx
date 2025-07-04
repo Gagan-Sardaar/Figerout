@@ -29,23 +29,23 @@ export function CookieBanner() {
   return (
     <div
       className={cn(
-        'fixed bottom-4 inset-x-4 z-50 w-auto max-w-lg rounded-lg border bg-card p-4 text-card-foreground shadow-lg transition-transform duration-500 ease-out md:right-8 md:left-auto',
-        isVisible ? 'translate-y-0' : 'translate-y-[calc(100%+2rem)]'
+        'fixed bottom-0 inset-x-0 z-50 w-full border-t bg-background/80 p-4 text-card-foreground shadow-lg backdrop-blur-sm transition-transform duration-500 ease-out',
+        isVisible ? 'translate-y-0' : 'translate-y-full'
       )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+      <div className="container mx-auto flex flex-col items-center gap-4 sm:flex-row">
         <div className="flex items-center gap-3">
           <Cookie className="h-6 w-6 shrink-0 text-primary" />
           <h3 className="font-semibold text-lg">Cookie Preferences</h3>
         </div>
-        <p className="text-sm text-muted-foreground mt-2 sm:mt-0 flex-grow">
+        <p className="text-sm text-muted-foreground flex-grow sm:text-left text-center">
           We use cookies to enhance your experience. By clicking "Accept", you agree to our use of cookies.
           {' '}
           <Link href="/cookies" className="underline hover:text-primary">
             Learn more
           </Link>.
         </p>
-        <div className="flex justify-end mt-4 sm:mt-0 shrink-0">
+        <div className="shrink-0">
           <Button size="sm" onClick={handleAccept}>
             Accept
           </Button>
