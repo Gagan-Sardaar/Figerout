@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getPexelsImages } from '@/app/actions';
+import { CookieBanner } from '@/components/cookie-banner';
 
 
 type Position = {
@@ -313,6 +314,7 @@ const WelcomeScreen = () => {
               <User className="h-3 w-3 shrink-0" />
             </div>
           </div>
+          <CookieBanner />
         </>
       )}
     </div>
