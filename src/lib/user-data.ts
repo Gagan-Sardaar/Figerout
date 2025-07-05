@@ -8,6 +8,11 @@ export interface User {
   status: 'active' | 'inactive';
 }
 
+// This type will be used on the client-side to display formatted dates.
+export interface DisplayUser extends Omit<User, 'lastLogin'> {
+    lastLogin: string;
+}
+
 export const users: User[] = [
   {
     id: 'usr_001',

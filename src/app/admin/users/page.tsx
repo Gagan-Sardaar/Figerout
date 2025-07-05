@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { users as staticUsers, User } from "@/lib/user-data";
+import { users as staticUsers, User, DisplayUser } from "@/lib/user-data";
 import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,18 +23,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
-
-// Extend User type to include the formatted string for lastLogin
-interface DisplayUser extends Omit<User, 'lastLogin'> {
-    lastLogin: string;
-}
+import { EditUserDialog } from "@/components/admin/edit-user-dialog";
 
 export default function UsersPage() {
-  const [hydratedUsers, setHydratedUsers] = useState<DisplayUser[]>([]);
+  const [users, setUsers] = useState<DisplayUser[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     // This effect runs only on the client, after hydration.
+    // To prevent hydration errors, we process dates and set the initial state here.
     const processedUsers = staticUsers.map(user => {
       const date = new Date();
       date.setDate(date.getDate() - user.lastLogin.days);
@@ -55,18 +52,19 @@ export default function UsersPage() {
       };
     });
     
-    setHydratedUsers(processedUsers);
+    setUsers(processedUsers);
   }, []);
 
-  const handleEdit = (user: DisplayUser) => {
-    toast({
-      title: "Edit Action",
-      description: `Editing user: ${user.name}`,
-    });
+  const handleSaveUser = (updatedUser: Omit<User, 'lastLogin'>) => {
+    setUsers(prevUsers => 
+      prevUsers.map(user => 
+        user.id === updatedUser.id ? { ...user, ...updatedUser } : user
+      )
+    );
   };
 
   const handleDelete = (userId: string) => {
-    setHydratedUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({
       title: "User Deleted",
       description: "The user has been removed from the list.",
@@ -75,8 +73,8 @@ export default function UsersPage() {
   };
 
   // During SSR and initial client render, use a version of the data without dates to avoid mismatch.
-  const usersToRender = hydratedUsers.length > 0 
-    ? hydratedUsers 
+  const usersToRender = users.length > 0 
+    ? users 
     : staticUsers.map(u => ({ ...u, lastLogin: '' }));
 
 
@@ -136,9 +134,11 @@ export default function UsersPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onSelect={() => handleEdit(user)} className="focus:bg-primary focus:text-primary-foreground">
-                      Edit
-                    </DropdownMenuItem>
+                    <EditUserDialog user={user} onSave={handleSaveUser}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-primary focus:text-primary-foreground">
+                        Edit
+                      </DropdownMenuItem>
+                    </EditUserDialog>
                     <DropdownMenuItem onSelect={() => handleDelete(user.id)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
                       Delete
                     </DropdownMenuItem>
