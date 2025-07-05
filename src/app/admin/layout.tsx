@@ -69,10 +69,13 @@ export default function AdminLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex h-14 items-center gap-2 p-2 justify-between border-b lg:h-[60px]">
-            <div className="font-headline text-lg font-bold p-2">Figerout Admin</div>
+            <div className="font-headline text-lg font-bold p-2">
+              <span className="group-data-[state=collapsed]:hidden">Figerout Admin</span>
+              <span className="hidden group-data-[state=collapsed]:inline">F</span>
+            </div>
             <SidebarTrigger className="md:hidden" />
           </div>
         </SidebarHeader>
@@ -85,7 +88,7 @@ export default function AdminLayout({
                 >
                 <a href="/" target="_blank" rel="noopener noreferrer">
                     <ExternalLink />
-                    <span>Visit Website</span>
+                    <span className="group-data-[state=collapsed]:hidden">Visit Website</span>
                 </a>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -97,7 +100,7 @@ export default function AdminLayout({
               >
                 <Link href="/admin">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span className="group-data-[state=collapsed]:hidden">Dashboard</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -109,7 +112,7 @@ export default function AdminLayout({
               >
                 <Link href="/admin/blog">
                   <Newspaper />
-                  <span>Blog</span>
+                  <span className="group-data-[state=collapsed]:hidden">Blog</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -121,7 +124,7 @@ export default function AdminLayout({
               >
                 <Link href="/admin/pages">
                   <FileText />
-                  <span>Pages</span>
+                  <span className="group-data-[state=collapsed]:hidden">Pages</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -133,7 +136,7 @@ export default function AdminLayout({
               >
                 <Link href="/admin/settings">
                   <Settings />
-                  <span>App Settings</span>
+                  <span className="group-data-[state=collapsed]:hidden">App Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
