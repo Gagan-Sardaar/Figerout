@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Metadata } from 'next';
 import { AppFooter } from "@/components/footer";
-import { cache } from 'next/cache';
+import { unstable_cache as cache } from 'next/cache';
 
 const getCachedPageContent = cache(
     async () => {

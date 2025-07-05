@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { cache } from 'next/cache';
+import { unstable_cache as cache } from 'next/cache';
 
 const getCachedPageContent = cache(
     async () => {
