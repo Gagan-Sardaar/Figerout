@@ -8,6 +8,7 @@ const ImageSchema = z.object({
   photographer_url: z.string(),
   src: z.object({
     portrait: z.string(),
+    large: z.string(),
   }),
   alt: z.string(),
 });
@@ -53,7 +54,7 @@ export async function getPexelsImages(ids: number[]): Promise<Record<number, Ima
        if (validatedData.success) {
             const { id, src, photographer, photographer_url, alt } = validatedData.data;
             imageData[id] = {
-                src: src.portrait,
+                src: src.large,
                 photographer,
                 photographerUrl: photographer_url,
                 hint: alt,
@@ -70,6 +71,7 @@ const PexelsSearchSchema = z.object({
   photos: z.array(z.object({
     src: z.object({
       portrait: z.string(),
+      large: z.string(),
     }),
     photographer: z.string(),
     photographer_url: z.string(),
@@ -106,7 +108,7 @@ export async function searchPexelsImage(query: string): Promise<PexelsSearchImag
 
     if (validatedData.success && validatedData.data.photos.length > 0) {
       const photo = validatedData.data.photos[0];
-      const imageUrl = photo.src.portrait;
+      const imageUrl = photo.src.large;
       
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
