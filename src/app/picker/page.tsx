@@ -215,7 +215,7 @@ const ColorPickerView = () => {
 
   const CalloutContent = (
     <div 
-        className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden w-64"
+        className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden"
     >
         <div className="flex items-center p-3">
             <div className="w-8 h-8 rounded-full border-2 border-white/20" style={{ backgroundColor: pickedColor }} />
@@ -223,8 +223,11 @@ const ColorPickerView = () => {
                 <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
                 <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
             </div>
-            <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
-            <Button variant="ghost" className="h-8 px-2 text-white/80 hover:text-white flex items-center gap-1" onClick={() => setIsPaletteOpen(true)}>
+            <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
+                <Share2 className="w-4 h-4" />
+                <span className="text-xs">Share</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="w-8 h-8 text-white/80 hover:text-white" onClick={() => setIsPaletteOpen(true)}>
                 <Palette className="w-4 h-4" />
             </Button>
         </div>
