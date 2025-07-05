@@ -5,14 +5,14 @@ import React from 'react';
 export const InteractivePolicyHeader = () => {
     const word = "Figerout";
     const images = [
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png',
-        'https://placehold.co/400x600.png'
+        'https://images.pexels.com/photos/114979/pexels-photo-114979.jpeg',
+        'https://images.pexels.com/photos/1269968/pexels-photo-1269968.jpeg',
+        'https://images.pexels.com/photos/1020320/pexels-photo-1020320.jpeg',
+        'https://images.pexels.com/photos/36717/amazing-animal-beautiful-beautifull.jpg',
+        'https://images.pexels.com/photos/1212487/pexels-photo-1212487.jpeg',
+        'https://images.pexels.com/photos/579474/pexels-photo-579474.jpeg',
+        'https://images.pexels.com/photos/7994468/pexels-photo-7994468.jpeg',
+        'https://images.pexels.com/photos/1118439/pexels-photo-1118439.jpeg'
     ];
     const hints = [
         'vibrant color',
@@ -26,8 +26,8 @@ export const InteractivePolicyHeader = () => {
     ];
 
     return (
-        <header className="bg-zinc-900 py-16 md:py-24 overflow-hidden">
-            <h1 className="text-center text-[15vw] lg:text-[12rem] font-headline font-extrabold tracking-tighter leading-[1] select-none flex justify-center">
+        <header className="bg-zinc-900 overflow-hidden">
+            <h1 className="text-center text-[15vw] lg:text-[12rem] font-headline font-extrabold tracking-tighter leading-[1.05] select-none flex justify-center">
                 {word.split('').map((char, index) => (
                     <span
                         key={index}
