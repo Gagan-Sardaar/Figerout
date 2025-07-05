@@ -10,7 +10,7 @@ export const InteractivePolicyHeader = () => {
         'https://images.pexels.com/photos/720815/pexels-photo-720815.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/36717/amazing-animal-beautiful-beautifull.jpg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/1212487/pexels-photo-1212487.jpeg?auto=compress&cs=tinysrgb&w=400',
-        'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1624487/pexels-photo-1624487.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/7994468/pexels-photo-7994468.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/1118439/pexels-photo-1118439.jpeg?auto=compress&cs=tinysrgb&w=400'
     ];
@@ -20,7 +20,7 @@ export const InteractivePolicyHeader = () => {
         'goldenrod yellow',
         'glowing light',
         'liquid swirl',
-        'colorful texture',
+        'colorful smoke',
         'holographic foil',
         'ink cloud'
     ];
