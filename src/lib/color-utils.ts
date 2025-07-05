@@ -22,7 +22,7 @@ const colorMap: { [hex: string]: string } = {
   '#4A148C': 'Deep Purple',
   '#673AB7': 'Blue-Purple',
   '#F0F0F0': 'Light Gray',
-  '#263238': 'Dark Blue-Gray',
+  '#18181B': 'Zinc',
   '#F2BFC8': 'Pastel Pink',
   '#C3C7A6': 'Sage Green',
   '#6A1910': 'Russet',
