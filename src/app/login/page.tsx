@@ -1,5 +1,7 @@
 
-import Link from "next/link"
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,6 +12,18 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
@@ -22,64 +36,86 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const { toast } = useToast();
+
+  const handleLoginLink = () => {
+    if (email) {
+      toast({
+        title: "Check your email",
+        description: `A login link has been sent to ${email}.`,
+      });
+    } else {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to receive a login link.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-      <Card className="mx-auto w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Choose your preferred login method
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-             <Button variant="outline" className="w-full">
-                <GoogleIcon className="mr-2 h-5 w-5" />
-                Login with Google
-            </Button>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
+      <AlertDialog>
+        <Card className="mx-auto w-full max-w-sm">
+            <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>
+                Choose your preferred login method
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <div className="grid gap-4">
+                <Button variant="outline" className="w-full">
+                    <GoogleIcon className="mr-2 h-5 w-5" />
+                    Login with Google
+                </Button>
+                <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                    </span>
+                </div>
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                </div>
+                <Button type="button" className="w-full" onClick={handleLoginLink}>
+                    Email me a login link
+                </Button>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-              />
+            <div className="mt-4 text-center text-sm">
+                Don&apos;t have an account?{" "}
+                <AlertDialogTrigger asChild>
+                    <Button variant="link" className="underline p-0 h-auto">Sign up</Button>
+                </AlertDialogTrigger>
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </div>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="underline">
-              Sign up
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
+            <AlertDialogDescription>
+                We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
