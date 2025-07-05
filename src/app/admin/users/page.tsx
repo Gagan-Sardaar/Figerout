@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,8 +21,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast";
 
 // Extend User type to include the formatted string for lastLogin
 interface DisplayUser extends Omit<User, 'lastLogin'> {
@@ -30,6 +31,7 @@ interface DisplayUser extends Omit<User, 'lastLogin'> {
 
 export default function UsersPage() {
   const [hydratedUsers, setHydratedUsers] = useState<DisplayUser[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     // This effect runs only on the client, after hydration.
@@ -55,6 +57,22 @@ export default function UsersPage() {
     
     setHydratedUsers(processedUsers);
   }, []);
+
+  const handleEdit = (user: DisplayUser) => {
+    toast({
+      title: "Edit Action",
+      description: `Editing user: ${user.name}`,
+    });
+  };
+
+  const handleDelete = (userId: string) => {
+    setHydratedUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    toast({
+      title: "User Deleted",
+      description: "The user has been removed from the list.",
+      variant: "destructive",
+    });
+  };
 
   // During SSR and initial client render, use a version of the data without dates to avoid mismatch.
   const usersToRender = hydratedUsers.length > 0 
@@ -118,9 +136,12 @@ export default function UsersPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">Delete</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleEdit(user)} className="focus:bg-primary focus:text-primary-foreground">
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleDelete(user.id)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+                      Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
