@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -10,6 +9,7 @@ import {
   FileText, 
   ExternalLink,
   LogOut,
+  Users,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -127,6 +127,18 @@ export default function AdminLayout({
                 <Link href="/admin/pages">
                   <FileText />
                   <span className="group-data-[state=collapsed]:hidden">Pages</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/admin/users")}
+                tooltip="Users"
+              >
+                <Link href="/admin/users">
+                  <Users />
+                  <span className="group-data-[state=collapsed]:hidden">Users</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
