@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { users as staticUsers, User, DisplayUser } from "@/lib/user-data";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,10 +24,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
 import { EditUserDialog } from "@/components/admin/edit-user-dialog";
+import { NewUserDialog } from "@/components/admin/new-user-dialog";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<DisplayUser[]>([]);
   const { toast } = useToast();
+  // Mock signed-in user. In a real app this would come from an auth context.
+  const signedInUser = { email: 'admin@figerout.com', role: 'Admin' };
 
   useEffect(() => {
     // This effect runs only on the client, after hydration.
@@ -63,6 +66,26 @@ export default function UsersPage() {
     );
   };
 
+  const handleCreateUser = (newUserData: Omit<User, 'id' | 'lastLogin' | 'initials' | 'status'>) => {
+    const newUser: DisplayUser = {
+      id: `usr_${Math.random().toString(36).substr(2, 9)}`, // Create a pseudo-random ID
+      name: newUserData.name,
+      email: newUserData.email,
+      initials: newUserData.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+      role: newUserData.role,
+      lastLogin: new Date().toLocaleString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }),
+      status: 'active',
+    };
+
+    setUsers(prevUsers => [newUser, ...prevUsers]);
+  };
+
   const handleDelete = (userId: string) => {
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({
@@ -80,11 +103,21 @@ export default function UsersPage() {
 
   return (
     <div className="flex flex-col flex-1 gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground">
-          A list of all users with access to your project.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+            <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+            <p className="text-muted-foreground">
+              A list of all users with access to your project.
+            </p>
+        </div>
+        {signedInUser.role === 'Admin' && (
+          <NewUserDialog onSave={handleCreateUser}>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New User
+            </Button>
+          </NewUserDialog>
+        )}
       </div>
 
       <Table>
@@ -139,9 +172,14 @@ export default function UsersPage() {
                         Edit
                       </DropdownMenuItem>
                     </EditUserDialog>
-                    <DropdownMenuItem onSelect={() => handleDelete(user.id)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                      Delete
-                    </DropdownMenuItem>
+                    {/* Admins can delete any user except themselves */}
+                    {signedInUser.role === 'Admin' && signedInUser.email !== user.email ? (
+                        <DropdownMenuItem onSelect={() => handleDelete(user.id)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+                        Delete
+                        </DropdownMenuItem>
+                    ) : (
+                        <DropdownMenuItem disabled>Delete</DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
