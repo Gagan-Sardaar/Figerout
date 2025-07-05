@@ -7,20 +7,20 @@ export const InteractivePolicyHeader = () => {
     const images = [
         'https://images.pexels.com/photos/114979/pexels-photo-114979.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/1269968/pexels-photo-1269968.jpeg?auto=compress&cs=tinysrgb&w=400',
-        'https://images.pexels.com/photos/1020320/pexels-photo-1020320.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/36717/amazing-animal-beautiful-beautifull.jpg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/1212487/pexels-photo-1212487.jpeg?auto=compress&cs=tinysrgb&w=400',
-        'https://images.pexels.com/photos/579474/pexels-photo-579474.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/7994468/pexels-photo-7994468.jpeg?auto=compress&cs=tinysrgb&w=400',
         'https://images.pexels.com/photos/1118439/pexels-photo-1118439.jpeg?auto=compress&cs=tinysrgb&w=400'
     ];
     const hints = [
         'vibrant color',
         'abstract texture',
-        'paint splash',
+        'colorful mountains',
         'glowing light',
         'liquid swirl',
-        'geometric pattern',
+        'light trails',
         'holographic foil',
         'ink cloud'
     ];
