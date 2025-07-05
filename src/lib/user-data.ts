@@ -4,16 +4,8 @@ export interface User {
   email: string;
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
-  lastLogin: string;
+  lastLogin: { days: number; hours?: number; minutes?: number };
   status: 'active' | 'inactive';
-}
-
-const getDateAgo = (days: number, hours: number = 0, minutes: number = 0): string => {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  date.setHours(date.getHours() - hours);
-  date.setMinutes(date.getMinutes() - minutes);
-  return date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
 export const users: User[] = [
@@ -23,7 +15,7 @@ export const users: User[] = [
     email: 'admin@figerout.com',
     initials: 'A',
     role: 'Admin',
-    lastLogin: getDateAgo(0, 0, 5),
+    lastLogin: { days: 0, hours: 0, minutes: 5 },
     status: 'active',
   },
   {
@@ -32,7 +24,7 @@ export const users: User[] = [
     email: 'emily.carter@example.com',
     initials: 'EC',
     role: 'Editor',
-    lastLogin: getDateAgo(1, 3, 20),
+    lastLogin: { days: 1, hours: 3, minutes: 20 },
     status: 'active',
   },
   {
@@ -41,7 +33,7 @@ export const users: User[] = [
     email: 'david.lee@example.com',
     initials: 'DL',
     role: 'Viewer',
-    lastLogin: getDateAgo(3, 8, 45),
+    lastLogin: { days: 3, hours: 8, minutes: 45 },
     status: 'inactive',
   },
   {
@@ -50,7 +42,7 @@ export const users: User[] = [
     email: 'sophia.chen@example.com',
     initials: 'SC',
     role: 'Editor',
-    lastLogin: getDateAgo(0, 2, 10),
+    lastLogin: { days: 0, hours: 2, minutes: 10 },
     status: 'active',
   },
   {
@@ -59,7 +51,7 @@ export const users: User[] = [
     email: 'michael.r@example.com',
     initials: 'MR',
     role: 'Viewer',
-    lastLogin: getDateAgo(7, 1, 0),
+    lastLogin: { days: 7, hours: 1, minutes: 0 },
     status: 'active',
   },
 ];
