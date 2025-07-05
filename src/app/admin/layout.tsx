@@ -71,10 +71,12 @@ export default function AdminLayout({
     <SidebarProvider>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex h-14 items-center gap-2 p-2 justify-between border-b lg:h-[60px]">
-            <div className="font-headline text-lg font-bold p-2">
-              <span className="group-data-[state=collapsed]:hidden">Figerout Admin</span>
-              <span className="hidden group-data-[state=collapsed]:inline">F</span>
+          <div className="flex h-14 items-center justify-between border-b lg:h-[60px]">
+            <div className="flex w-full items-center justify-center group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-2">
+              <Link href="/admin" className="font-headline text-lg font-bold">
+                <span className="group-data-[state=collapsed]:hidden">Figerout Admin</span>
+                <span className="hidden group-data-[state=collapsed]:inline">F</span>
+              </Link>
             </div>
             <SidebarTrigger className="md:hidden" />
           </div>
