@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .interactive-char {
+    @apply text-primary cursor-pointer transition-colors duration-300;
+  }
+  .interactive-char:hover {
+    color: transparent;
+    background-size: cover;
+    background-position: center;
+    background-image: var(--bg-image);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 94.1%;

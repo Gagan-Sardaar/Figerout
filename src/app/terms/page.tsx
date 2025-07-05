@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import type { Metadata } from 'next';
 import { AppFooter } from "@/components/footer";
 import { unstable_cache as cache } from 'next/cache';
+import { InteractivePolicyHeader } from "@/components/interactive-policy-header";
 
 const getCachedPageContent = cache(
     async () => {
@@ -26,21 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
-const PolicyPageHeader = () => (
-    <header className="bg-zinc-900 py-16 md:py-24 overflow-hidden">
-        <h1 className="text-center text-[15vw] lg:text-[12rem] font-headline font-extrabold tracking-tighter leading-tight select-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Figerout
-        </h1>
-    </header>
-);
-
 export default async function TermsOfServicePage() {
   const content = await getCachedPageContent();
   const lastUpdated = "July 3, 2024";
 
   return (
     <div className="min-h-svh bg-background flex flex-col">
-      <PolicyPageHeader />
+      <InteractivePolicyHeader />
       <main className="flex-grow flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl">
           <CardHeader>
