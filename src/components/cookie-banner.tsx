@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Cookie } from 'lucide-react';
+import { Cookie, X } from 'lucide-react';
 
 export function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Wait for the component to mount before checking localStorage
     const consent = localStorage.getItem('cookie_consent');
-    if (consent !== 'true') {
-      // Use a timeout to make the banner appear smoothly after page load
+    const dismissed = sessionStorage.getItem('cookie_banner_dismissed');
+
+    if (consent !== 'true' && dismissed !== 'true') {
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 1500);
@@ -23,6 +23,11 @@ export function CookieBanner() {
 
   const handleAccept = () => {
     localStorage.setItem('cookie_consent', 'true');
+    setIsVisible(false);
+  };
+
+  const handleDismiss = () => {
+    sessionStorage.setItem('cookie_banner_dismissed', 'true');
     setIsVisible(false);
   };
 
@@ -52,9 +57,13 @@ export function CookieBanner() {
               Learn more
             </Link>.
           </p>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
             <Button size="sm" onClick={handleAccept}>
               Accept
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleDismiss} className="h-8 w-8 rounded-full">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Dismiss</span>
             </Button>
           </div>
         </div>
