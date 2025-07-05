@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,18 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Metadata } from 'next';
 import { AppFooter } from "@/components/footer";
+import { cache } from 'next/cache';
+
+const getCachedPageContent = cache(
+    async () => {
+        return generatePageContent({ pageTopic: "Terms of Service", appName: "Figerout" });
+    },
+    ['page-content-terms'],
+    { revalidate: 3600 }
+);
 
 export async function generateMetadata(): Promise<Metadata> {
-    const content = await generatePageContent({ pageTopic: "Terms of Service", appName: "Figerout" });
+    const content = await getCachedPageContent();
     return {
         title: content.metaTitle,
         description: content.metaDescription,
@@ -25,8 +35,8 @@ const PolicyPageHeader = () => (
 );
 
 export default async function TermsOfServicePage() {
-  const content = await generatePageContent({ pageTopic: "Terms of Service", appName: "Figerout" });
-  const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const content = await getCachedPageContent();
+  const lastUpdated = "July 3, 2024";
 
   return (
     <div className="min-h-svh bg-background flex flex-col">

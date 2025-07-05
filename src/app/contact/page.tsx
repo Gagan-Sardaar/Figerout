@@ -1,3 +1,4 @@
+
 import { generatePageContent } from '@/ai/flows/generate-page-content';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ContactForm } from '@/components/contact-form';
@@ -7,9 +8,18 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { cache } from 'next/cache';
+
+const getCachedPageContent = cache(
+    async () => {
+        return generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+    },
+    ['page-content-contact'],
+    { revalidate: 3600 }
+);
 
 export async function generateMetadata(): Promise<Metadata> {
-    const content = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+    const content = await getCachedPageContent();
     return {
         title: content.metaTitle,
         description: content.metaDescription,
@@ -18,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactUsPage() {
-    const content = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+    const content = await getCachedPageContent();
     // AI can sometimes include a redundant H1 in the content, let's remove it
     const pageContent = content.pageContent.replace(/^#\s[^\n\r]+(\r\n|\n|\r)?/, '');
 
