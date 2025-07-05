@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -47,7 +48,7 @@ function UserNav() {
           <AvatarFallback>A</AvatarFallback>
       </Avatar>
       <Button variant="outline" size="sm" asChild>
-        <Link href="/">
+        <Link href="/login">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
         </Link>
