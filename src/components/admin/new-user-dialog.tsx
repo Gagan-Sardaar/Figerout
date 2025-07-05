@@ -38,17 +38,12 @@ const newUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Please enter a valid email address."),
   role: z.enum(["Admin", "Editor", "Viewer"]),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
 type NewUserFormValues = z.infer<typeof newUserSchema>;
 
 interface NewUserDialogProps {
-  onSave: (newUser: Omit<User, 'id' | 'lastLogin' | 'initials' | 'status'> & { password?: string }) => void;
+  onSave: (newUser: Omit<User, 'id' | 'lastLogin' | 'initials' | 'status'>) => void;
   children: React.ReactNode;
 }
 
@@ -62,8 +57,6 @@ export function NewUserDialog({ onSave, children }: NewUserDialogProps) {
       name: "",
       email: "",
       role: "Viewer",
-      password: "",
-      confirmPassword: "",
     },
   });
 
@@ -72,12 +65,11 @@ export function NewUserDialog({ onSave, children }: NewUserDialogProps) {
       name: data.name,
       email: data.email,
       role: data.role,
-      password: data.password, // This won't be stored in state, but is passed for simulation
     });
     
     toast({
-      title: "User Created",
-      description: `A new user account for ${data.name} has been created.`,
+      title: "Invitation Sent",
+      description: `An invitation has been sent to ${data.name}.`,
     });
     setIsOpen(false);
     form.reset();
@@ -143,34 +135,8 @@ export function NewUserDialog({ onSave, children }: NewUserDialogProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Create a secure password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Confirm the password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <DialogFooter>
-              <Button type="submit">Create User</Button>
+              <Button type="submit">Send Invitation</Button>
             </DialogFooter>
           </form>
         </Form>

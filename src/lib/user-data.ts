@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name: string;
@@ -5,7 +6,7 @@ export interface User {
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
   lastLogin: { days: number; hours?: number; minutes?: number };
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'invited';
 }
 
 // This type will be used on the client-side to display formatted dates.

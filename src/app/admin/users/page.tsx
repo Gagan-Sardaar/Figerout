@@ -36,6 +36,9 @@ export default function UsersPage() {
     // This effect runs only on the client, after hydration.
     // To prevent hydration errors, we process dates and set the initial state here.
     const processedUsers = staticUsers.map(user => {
+      if (user.status === 'invited') {
+        return { ...user, lastLogin: "Never" };
+      }
       const date = new Date();
       date.setDate(date.getDate() - user.lastLogin.days);
       date.setHours(date.getHours() - (user.lastLogin.hours || 0));
@@ -73,14 +76,8 @@ export default function UsersPage() {
       email: newUserData.email,
       initials: newUserData.name.split(' ').map(n => n[0]).join('').toUpperCase(),
       role: newUserData.role,
-      lastLogin: new Date().toLocaleString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      }),
-      status: 'active',
+      lastLogin: 'Never',
+      status: 'invited',
     };
 
     setUsers(prevUsers => [newUser, ...prevUsers]);
@@ -150,7 +147,7 @@ export default function UsersPage() {
                 <Badge variant="outline">{user.role}</Badge>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <Badge variant={user.status === 'active' ? 'secondary' : 'outline'} className="capitalize">
+                <Badge variant={user.status === 'active' ? 'secondary' : user.status === 'invited' ? 'default' : 'outline'} className="capitalize">
                   {user.status}
                 </Badge>
               </TableCell>

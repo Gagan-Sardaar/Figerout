@@ -37,7 +37,7 @@ import type { User, DisplayUser } from "@/lib/user-data";
 const editUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   role: z.enum(["Admin", "Editor", "Viewer"]),
-  status: z.enum(["active", "inactive"]),
+  status: z.enum(["active", "inactive", "invited"]),
   password: z.string().optional(),
   confirmPassword: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -152,6 +152,7 @@ export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) 
                         <SelectContent>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="invited">Invited</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
