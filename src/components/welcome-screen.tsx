@@ -174,13 +174,6 @@ const WelcomeScreen = () => {
       <div className="absolute inset-0 bg-black/5" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
       
-      {!isLoaded && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1/2">
-            <Progress value={loadingProgress} className="w-full" />
-            <p className="text-center text-white/80 text-sm mt-2">Loading inspiration...</p>
-          </div>
-      )}
-
       {isLoaded && activeSlide && (
         <>
           {/* Top Center Content */}
