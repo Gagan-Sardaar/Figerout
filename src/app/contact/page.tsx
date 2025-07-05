@@ -1,6 +1,5 @@
 
 import { generatePageContent } from '@/ai/flows/generate-page-content';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ContactForm } from '@/components/contact-form';
 import type { Metadata } from 'next';
 import { AppFooter } from '@/components/footer';
@@ -29,30 +28,28 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactUsPage() {
     const content = await getCachedPageContent();
-    // AI can sometimes include a redundant H1 in the content, let's remove it
     const pageContent = content.pageContent.replace(/^#\s[^\n\r]+(\r\n|\n|\r)?/, '');
 
     return (
         <div className="min-h-svh bg-background flex flex-col">
-            <main className="flex-grow flex items-center justify-center p-4">
-              <Card className="w-full max-w-2xl">
-                  <CardHeader>
-                    <div className="flex justify-between items-start gap-4">
-                        <div>
-                            <CardTitle className="text-2xl">{content.pageTitle}</CardTitle>
-                            <div className="prose dark:prose-invert max-w-none pt-2">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{pageContent}</ReactMarkdown>
-                            </div>
+             <div className="absolute top-6 right-6 z-10">
+                 <Button asChild variant="outline">
+                    <Link href="/">Return to Home</Link>
+                </Button>
+            </div>
+            <main className="flex-grow container mx-auto px-4 py-12 md:py-24">
+                <div className="grid md:grid-cols-2 gap-16 items-center max-w-5xl mx-auto">
+                    <div className="space-y-4">
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
+                        <div className="prose dark:prose-invert max-w-none text-muted-foreground">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{pageContent}</ReactMarkdown>
                         </div>
-                        <Button asChild variant="outline">
-                            <Link href="/">Return to Home</Link>
-                        </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                      <ContactForm />
-                  </CardContent>
-              </Card>
+                    <div className="bg-card p-8 rounded-lg shadow-sm border">
+                        <h2 className="text-2xl font-bold mb-4">Send us a message</h2>
+                        <ContactForm />
+                    </div>
+                </div>
             </main>
             <AppFooter />
         </div>

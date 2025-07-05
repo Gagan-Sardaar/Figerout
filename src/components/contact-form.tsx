@@ -92,7 +92,7 @@ export function ContactForm() {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit">Send Message</Button>
+          <Button type="submit" className="w-full sm:w-auto">Send Message</Button>
         </div>
       </form>
     </Form>

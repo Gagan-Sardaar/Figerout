@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { generatePageContent } from "@/ai/flows/generate-page-content";
@@ -32,25 +31,21 @@ export default async function AboutUsPage() {
   
   return (
     <div className="min-h-svh bg-background flex flex-col">
-      <main className="flex-grow flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl">
-          <CardHeader>
-            <div className="flex justify-between items-start gap-4">
+      <main className="flex-grow container mx-auto px-4 py-12 md:py-24">
+        <div className="max-w-3xl mx-auto">
+            <div className="flex justify-between items-start gap-4 mb-12">
                 <div>
-                    <CardTitle className="text-3xl md:text-4xl">{content.pageTitle}</CardTitle>
-                    <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
+                    <p className="mt-2 text-muted-foreground">Last updated: {lastUpdated}</p>
                 </div>
                 <Button asChild variant="outline">
                     <Link href="/">Return to Home</Link>
                 </Button>
             </div>
-          </CardHeader>
-          <CardContent>
             <div className="prose dark:prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.pageContent}</ReactMarkdown>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       </main>
       <AppFooter />
     </div>
