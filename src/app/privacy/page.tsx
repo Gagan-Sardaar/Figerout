@@ -31,17 +31,19 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-svh bg-background flex flex-col">
-      <main className="flex-grow container mx-auto px-4 py-12 md:py-24">
-        <div className="max-w-3xl mx-auto">
-            <div className="flex justify-between items-start gap-4 mb-12">
-                <div>
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
-                    <p className="mt-2 text-muted-foreground">Last updated: {lastUpdated}</p>
-                </div>
+      <header className="border-b">
+        <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center py-6">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
                 <Button asChild variant="outline">
                     <Link href="/">Return to Home</Link>
                 </Button>
             </div>
+        </div>
+      </header>
+      <main className="flex-grow container mx-auto px-4 py-12">
+        <div className="max-w-3xl mx-auto">
+            <p className="mb-8 text-sm text-muted-foreground">Last updated: {lastUpdated}</p>
             <div className="prose dark:prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.pageContent}</ReactMarkdown>
             </div>
