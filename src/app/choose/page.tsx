@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -55,7 +54,7 @@ export default function ChoosePage() {
         </Link>
       </header>
       <main className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
+        <div className="w-full max-w-xl text-center">
             <Card className="border-none shadow-none bg-transparent">
                 <CardHeader className="px-0">
                     <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
@@ -63,7 +62,7 @@ export default function ChoosePage() {
                         Capture a new moment or explore colors from an existing photo.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 pt-6">
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
                     <div 
                         onClick={() => router.push('/camera')}
                         className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
