@@ -601,14 +601,19 @@ const ColorPickerView = () => {
       {/* Retake Button */}
       <div className={cn(
         "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300 pointer-events-none",
-        isDragging || isPaletteOpen ? "opacity-0" : "opacity-100"
+        (isDragging && !isAtBoundary) || isPaletteOpen ? "opacity-0" : "opacity-100"
         )}>
          <Button
             onClick={() => router.push('/choose')}
-            className="h-20 w-20 rounded-full border-4 border-white bg-white/30 hover:bg-white/50 active:scale-95 transition-transform pointer-events-auto"
+            className={cn(
+              "h-20 w-20 rounded-full border-4 active:scale-95 transition-all",
+              isAtBoundary 
+                ? "border-red-500 bg-red-500/30 text-red-500 pointer-events-none" 
+                : "border-white bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
+            )}
             aria-label="Retake photo"
           >
-            <RefreshCw className="h-9 w-9 text-white" />
+            <RefreshCw className="h-9 w-9" />
          </Button>
       </div>
 
