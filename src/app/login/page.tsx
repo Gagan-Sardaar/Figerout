@@ -1,17 +1,17 @@
-
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { users } from "@/lib/user-data";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -38,17 +39,38 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleLoginLink = () => {
-    if (email) {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to receive a login link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (user) {
+      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      
       toast({
         title: "Check your email",
         description: `A login link has been sent to ${email}.`,
       });
+      
+      if (user.role === 'Admin' || user.role === 'Editor') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+
     } else {
       toast({
-        title: "Email required",
-        description: "Please enter your email address to receive a login link.",
+        title: "User not found",
+        description: "This email is not registered. Please sign up or contact an admin.",
         variant: "destructive",
       });
     }

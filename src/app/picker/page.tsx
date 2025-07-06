@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
@@ -198,10 +197,29 @@ const ColorPickerView = () => {
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
+    
+    // Save to local storage for the dashboard
+    try {
+        const storedColorsRaw = localStorage.getItem('savedColors');
+        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
+        const newColor = {
+            hex: pickedColor.toUpperCase(),
+            name: colorName,
+            sharedAt: new Date().toISOString()
+        };
+        // Avoid duplicates
+        if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
+             const updatedColors = [newColor, ...savedColors];
+             localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+        }
+    } catch (e) {
+        console.error("Could not save color to localStorage", e);
+    }
+
     navigator.clipboard.writeText(textToCopy).then(() => {
         toast({
-            title: 'Color copied!',
-            description: `${colorName} (${pickedColor.toUpperCase()}) is ready to share.`,
+            title: 'Color copied & saved!',
+            description: `${colorName} (${pickedColor.toUpperCase()}) is ready to share and has been saved to your dashboard.`,
         });
     }).catch(err => {
         console.error('Failed to copy text: ', err);

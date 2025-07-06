@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   Newspaper, 
@@ -31,10 +30,16 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { AppFooter } from "@/components/footer";
 
 function UserNav() {
+  const router = useRouter();
   const user = {
     name: "Admin User",
     email: "admin@figerout.com",
     avatar: "" 
+  }
+  
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    router.push('/login');
   }
 
   return (
@@ -47,11 +52,9 @@ function UserNav() {
       <Avatar className="h-8 w-8 hidden sm:flex">
           <AvatarFallback>A</AvatarFallback>
       </Avatar>
-      <Button variant="outline" size="sm" asChild>
-        <Link href="/login">
+      <Button variant="outline" size="sm" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
-        </Link>
       </Button>
     </div>
   )
