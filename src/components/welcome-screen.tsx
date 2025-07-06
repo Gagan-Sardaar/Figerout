@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -103,6 +104,29 @@ const WelcomeScreen = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const isMobile = useIsMobile();
+  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const [isAuthorCreditExpanded, setIsAuthorCreditExpanded] = useState(false);
+  const footerRef = useRef<HTMLDivElement>(null);
+
+  const footerLinks = [
+    { href: "/about", label: "About Us" },
+    { href: "/blog", label: "Blog" },
+    { href: "/contact", label: "Contact Us" },
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (footerRef.current && !footerRef.current.contains(event.target as Node)) {
+        setIsFooterExpanded(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [footerRef]);
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -228,31 +252,69 @@ const WelcomeScreen = () => {
           ))}
           
           {/* Footer left */}
-          <div className="absolute bottom-2 left-2 z-20">
-            <div className="flex items-center gap-x-4 gap-y-1 flex-wrap rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm">
-              <span>&copy; {new Date().getFullYear()} Figerout</span>
-              <div className="hidden items-center gap-x-3 border-l border-white/20 pl-3 sm:flex">
-                <Link href="/about" className="hover:text-white">About</Link>
-                <Link href="/blog" className="hover:text-white">Blog</Link>
-                <Link href="/contact" className="hover:text-white">Contact</Link>
-                <Link href="/privacy" className="hover:text-white">Privacy</Link>
-                <Link href="/terms" className="hover:text-white">Terms</Link>
-              </div>
+           <div className="absolute bottom-2 left-2 z-20">
+                <div ref={footerRef} className="relative inline-block">
+                    <div
+                      className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm transition-colors hover:text-white"
+                      onClick={() => setIsFooterExpanded(prev => !prev)}
+                    >
+                        <ChevronUp
+                            className={cn(
+                            'h-4 w-4 shrink-0 transition-transform duration-300',
+                            isFooterExpanded && 'rotate-180'
+                            )}
+                        />
+                        <span>
+                            &copy; {new Date().getFullYear()} Figerout
+                        </span>
+                    </div>
+                    <div
+                        className={cn(
+                            'absolute bottom-full mb-2 w-full min-w-max rounded-lg border border-white/10 bg-black/70 p-1.5 text-xs text-white/80 backdrop-blur-md shadow-lg transition-opacity duration-300 ease-in-out',
+                            isFooterExpanded ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'
+                        )}
+                    >
+                        <div className="flex flex-col items-start gap-1">
+                            {footerLinks.map(link => (
+                                <Link 
+                                  key={link.href} 
+                                  href={link.href} 
+                                  className="block w-full rounded-sm px-2 py-1 transition-colors hover:bg-white/10"
+                                  onClick={() => setIsFooterExpanded(false)}
+                                >
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
 
           {/* Footer right */}
-          <div className="absolute bottom-2 right-2 z-20">
-            <a
-              href={activeSlide.photographerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm transition-colors hover:text-white"
+           <div
+              className="absolute bottom-2 right-2 z-20"
+              onMouseEnter={() => setIsAuthorCreditExpanded(true)}
+              onMouseLeave={() => setIsAuthorCreditExpanded(false)}
             >
-              <User className="h-3 w-3 shrink-0" />
-              <span className="hidden sm:inline">Photo by {activeSlide.photographer}</span>
-            </a>
-          </div>
+              <a
+                href={activeSlide.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1 pl-2 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <div
+                  className={cn(
+                    'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
+                    isAuthorCreditExpanded && 'ml-1 grid-cols-[1fr]'
+                  )}
+                >
+                  <span className="overflow-hidden whitespace-nowrap">
+                    Photo by {activeSlide.photographer}
+                  </span>
+                </div>
+              </a>
+            </div>
           <CookieBanner />
         </>
       )}
