@@ -87,16 +87,12 @@ const CameraView = () => {
 
       const videoTrack = newStream.getVideoTracks()[0];
       const capabilities = videoTrack.getCapabilities();
+      // Check for torch capability
       const hasTorch = 'torch' in capabilities;
       setHasFlash(hasTorch);
-
-      const hour = new Date().getHours();
-      const isNight = hour < 6 || hour > 18;
       
-      setIsFlashOn(isNight);
-      if (hasTorch && mode === 'environment') {
-        videoTrack.applyConstraints({ advanced: [{ torch: isNight }] });
-      }
+      // Ensure flash is off by default, removing automatic activation.
+      setIsFlashOn(false);
 
     } catch (err) {
       setHasCameraPermission(false);
@@ -126,6 +122,8 @@ const CameraView = () => {
   const toggleFlash = () => {
     const newFlashState = !isFlashOn;
     setIsFlashOn(newFlashState);
+    
+    // Only apply physical torch for back camera.
     if (hasFlash && stream && facingMode === 'environment') {
       const videoTrack = stream.getVideoTracks()[0];
       videoTrack.applyConstraints({ advanced: [{ torch: newFlashState }] });
@@ -139,6 +137,17 @@ const CameraView = () => {
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
+    // Turn off physical flash if it's on before navigating away.
+    if (stream && hasFlash && isFlashOn && facingMode === 'environment') {
+      const videoTrack = stream.getVideoTracks()[0];
+      try {
+        videoTrack.applyConstraints({ advanced: [{ torch: false }] });
+      } catch (e) {
+        console.error("Failed to turn off torch", e);
+      }
+      setIsFlashOn(false);
+    }
+    
     const video = videoRef.current;
     const canvas = canvasRef.current;
     canvas.width = video.videoWidth;
