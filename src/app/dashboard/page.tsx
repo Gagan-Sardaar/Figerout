@@ -98,7 +98,7 @@ const RoleSwitcher = () => {
     }
 
     return (
-        <div className="mt-4">
+        <div className="mt-auto pt-4">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between text-base px-3 py-2 h-auto text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white">
@@ -121,7 +121,7 @@ const RoleSwitcher = () => {
 export default function VisitorDashboardPage() {
   const { toast } = useToast();
   const [userName, setUserName] = useState("Visitor");
-  const [userEmail, setUserEmail] = useState("visitor@figerout.com");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, color: null });
@@ -136,14 +136,24 @@ export default function VisitorDashboardPage() {
             setUserEmail(user.email);
         } catch (e) { console.error(e) }
     }
-
-    const storedColors = localStorage.getItem('savedColors');
-    if (storedColors) {
-        try {
-            setSavedColors(JSON.parse(storedColors));
-        } catch (e) { console.error(e) }
-    }
   }, []);
+
+  useEffect(() => {
+    if (userEmail) {
+      const storageKey = `savedColors_${userEmail}`;
+      const storedColors = localStorage.getItem(storageKey);
+      if (storedColors) {
+        try {
+          setSavedColors(JSON.parse(storedColors));
+        } catch (e) {
+          console.error(e);
+          setSavedColors([]);
+        }
+      } else {
+        setSavedColors([]);
+      }
+    }
+  }, [userEmail]);
 
   const filteredColors = useMemo(() => {
     const now = new Date();
@@ -168,9 +178,11 @@ export default function VisitorDashboardPage() {
   }, [savedColors, activeFilter]);
 
   const handleDeleteColor = (hex: string) => {
+    if (!userEmail) return;
+    const storageKey = `savedColors_${userEmail}`;
     const updatedColors = savedColors.filter(color => color.hex !== hex);
     setSavedColors(updatedColors);
-    localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+    localStorage.setItem(storageKey, JSON.stringify(updatedColors));
     toast({
       title: "Color Removed",
       description: `The color ${hex} has been removed from your collection.`,
@@ -187,12 +199,13 @@ export default function VisitorDashboardPage() {
   };
 
   const handleSaveNote = () => {
-    if (!dialogState.color) return;
+    if (!dialogState.color || !userEmail) return;
+    const storageKey = `savedColors_${userEmail}`;
     const updatedColors = savedColors.map(c => 
       c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
     );
     setSavedColors(updatedColors);
-    localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+    localStorage.setItem(storageKey, JSON.stringify(updatedColors));
     toast({
       title: "Note Saved",
       description: `Your note for ${dialogState.color.hex} has been saved.`,
@@ -218,9 +231,9 @@ export default function VisitorDashboardPage() {
                   F
               </AvatarFallback>
               </Avatar>
-              <p className="text-primary-foreground/80">Saved Colors for</p>
-              <h1 className="text-2xl md:text-3xl font-bold truncate">{userName}</h1>
-              <p className="text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
+              <p className="text-primary-foreground/80 text-sm md:text-base">Saved Colors for</p>
+              <h1 className="text-xl md:text-3xl font-bold truncate">{userName}</h1>
+              <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
 
               <RoleSwitcher />
               

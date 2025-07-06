@@ -106,7 +106,8 @@ export default function LoginPage() {
       if (colorToSaveJSON) {
         try {
           const colorToSave = JSON.parse(colorToSaveJSON);
-          const storedColorsRaw = localStorage.getItem('savedColors');
+          const storageKey = `savedColors_${user.email}`;
+          const storedColorsRaw = localStorage.getItem(storageKey);
           const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
           const newColor = {
             ...colorToSave,
@@ -114,7 +115,7 @@ export default function LoginPage() {
           };
           if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
             const updatedColors = [newColor, ...savedColors];
-            localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+            localStorage.setItem(storageKey, JSON.stringify(updatedColors));
           }
           sessionStorage.removeItem('colorToSaveAfterLogin');
         } catch (e) {

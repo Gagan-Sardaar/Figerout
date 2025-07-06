@@ -68,6 +68,7 @@ const ColorPickerView = () => {
   const [showHint, setShowHint] = useState(true);
   const [isAtBoundary, setIsAtBoundary] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({
     opacity: 0,
     position: 'absolute',
@@ -90,8 +91,15 @@ const ColorPickerView = () => {
     } else {
       router.push('/choose');
     }
-    const user = localStorage.getItem('loggedInUser');
-    setIsUserLoggedIn(!!user);
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+      setIsUserLoggedIn(true);
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }, [router]);
 
   const shades = React.useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
@@ -258,10 +266,11 @@ const ColorPickerView = () => {
   };
 
   const handleSave = () => {
-    if (isUserLoggedIn) {
+    if (isUserLoggedIn && user) {
       const colorName = getColorName(pickedColor);
       try {
-        const storedColorsRaw = localStorage.getItem('savedColors');
+        const storageKey = `savedColors_${user.email}`;
+        const storedColorsRaw = localStorage.getItem(storageKey);
         const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
         const newColor = {
           hex: pickedColor.toUpperCase(),
@@ -270,7 +279,7 @@ const ColorPickerView = () => {
         };
         if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
            const updatedColors = [newColor, ...savedColors];
-           localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+           localStorage.setItem(storageKey, JSON.stringify(updatedColors));
            toast({
               title: 'Color Saved!',
               description: `${colorName} has been saved to your dashboard.`,
@@ -316,9 +325,10 @@ const ColorPickerView = () => {
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
 
-    if (isUserLoggedIn) {
+    if (isUserLoggedIn && user) {
       try {
-        const storedColorsRaw = localStorage.getItem('savedColors');
+        const storageKey = `savedColors_${user.email}`;
+        const storedColorsRaw = localStorage.getItem(storageKey);
         const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
         const newColor = {
           hex: pickedColor.toUpperCase(),
@@ -327,7 +337,7 @@ const ColorPickerView = () => {
         };
         if (!savedColors.some((c: {hex: string}) => c.hex === newColor.hex)) {
           const updatedColors = [newColor, ...savedColors];
-          localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+          localStorage.setItem(storageKey, JSON.stringify(updatedColors));
         }
       } catch (e) {
         console.error('Could not save color to localStorage', e);
