@@ -140,11 +140,14 @@ export default function LoginPage() {
         ) : (
           <AlertDialog>
             <Card className="mx-auto w-full max-w-sm bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
-                <CardHeader>
-                <CardTitle className="text-2xl">Login</CardTitle>
-                <CardDescription>
-                    Choose your preferred login method
-                </CardDescription>
+                <CardHeader className="items-center text-center">
+                    <Link href="/" className="font-headline text-3xl font-bold tracking-tight text-foreground mb-2">
+                        Figerout
+                    </Link>
+                    <CardTitle className="text-2xl">Login</CardTitle>
+                    <CardDescription>
+                        Choose your preferred login method
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                 <div className="grid gap-4">
