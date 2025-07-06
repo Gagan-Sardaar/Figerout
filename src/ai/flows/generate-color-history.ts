@@ -30,17 +30,17 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateColorHistoryOutputSchema },
   prompt: `You are a creative historian and futurist who finds fascinating stories about colors.
 
-Generate ONE fun, single-sentence fact about the color provided. The fact can be historical, futuristic, or purely fantastical. Make it sound specific and intriguing.
+Generate ONE fun, single-sentence fact about the color '{{{colorName}}}' (hex: {{{colorHex}}}). The fact can be historical, futuristic, or purely fantastical. Make it sound specific and intriguing. Do NOT mention the color name or hex code in your response.
 
-Examples:
-- "1327 BC, Nile River—Egyptians painted pyramids with your #C1A57B (Mud of Glory)."
-- "Year 3057—Interstellar Embassy uses your #4B0082 (Galactic Indigo) for emergency alerts."
-- "In medieval alchemy, #FFD700 (Gilded Sun) was believed to be powdered sunlight."
+Examples for the color 'Galactic Indigo':
+- "In the year 3057, this shade was used for all emergency alerts broadcast by the Interstellar Embassy."
+- "Medieval alchemists believed this color was powdered starlight, captured only on moonless nights."
+- "Ancient cartographers used this pigment to draw the edges of the known world on their maps."
 
 Color Name: {{{colorName}}}
 Hex Code: {{{colorHex}}}
 
-Generate a new, unique fact in a similar style.
+Generate a new, unique fact in a similar style about the provided color.
 `,
 });
 
