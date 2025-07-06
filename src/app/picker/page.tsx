@@ -206,6 +206,43 @@ const ColorPickerView = () => {
     router.push('/login');
   };
 
+  const handleSave = () => {
+    if (isUserLoggedIn) {
+      const colorName = getColorName(pickedColor);
+      try {
+        const storedColorsRaw = localStorage.getItem('savedColors');
+        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
+        const newColor = {
+          hex: pickedColor.toUpperCase(),
+          name: colorName,
+          sharedAt: new Date().toISOString()
+        };
+        if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
+           const updatedColors = [newColor, ...savedColors];
+           localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+           toast({
+              title: 'Color Saved!',
+              description: `${colorName} has been saved to your dashboard.`,
+           });
+        } else {
+           toast({
+              title: 'Color Already Saved',
+              description: `${colorName} is already in your collection.`,
+           });
+        }
+      } catch (e) {
+        console.error("Could not save color to localStorage", e);
+        toast({
+          variant: 'destructive',
+          title: 'Save Failed',
+          description: 'Could not save the color.',
+        });
+      }
+    } else {
+      handleSaveRedirect();
+    }
+  };
+
   const handleShare = () => {
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
@@ -264,12 +301,10 @@ const ColorPickerView = () => {
                 <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
             </div>
             <div className="flex items-center gap-1">
-                {!isUserLoggedIn && (
-                    <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleSaveRedirect}>
-                        <Save className="w-4 h-4" />
-                        <span className="text-xs">Save</span>
-                    </Button>
-                )}
+                <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleSave}>
+                    <Save className="w-4 h-4" />
+                    <span className="text-xs">Save</span>
+                </Button>
                 <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
                     <Share2 className="w-4 h-4" />
                     <span className="text-xs">Share</span>
