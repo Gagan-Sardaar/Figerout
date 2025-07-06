@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -48,40 +49,42 @@ export default function ChoosePage() {
 
   return (
     <div className="flex flex-col min-h-svh items-center justify-center bg-muted/40 p-4">
-      <div className="absolute top-6 left-6">
-        <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
-            Figerout
-        </Link>
-      </div>
-      <main className="w-full max-w-2xl text-center">
+      <main className="w-full max-w-md text-center">
         <Card className="border-none shadow-none bg-transparent">
             <CardHeader className="px-0">
-                <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
-                <CardDescription className="text-md sm:text-lg text-muted-foreground pt-2 max-w-lg mx-auto">
+                <Link href="/" className="font-headline text-3xl font-bold tracking-tight text-foreground mb-2">
+                    Figerout
+                </Link>
+                <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
+                <CardDescription className="text-sm sm:text-base text-muted-foreground pt-2 max-w-lg mx-auto">
                     Capture a new moment or explore colors from an existing photo.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 pt-8">
+            <CardContent className="grid grid-cols-1 gap-4 pt-6">
                  <div 
                     onClick={() => router.push('/camera')}
-                    className="group relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
+                    className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
                  >
-                    <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-4 transition-transform duration-300 group-hover:scale-110">
-                        <Camera className="w-10 h-10" />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
+                        <Camera className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground">Live Capture</h3>
-                    <p className="text-muted-foreground mt-2 text-center">Use your camera to find colors in real-time.</p>
+                    <div className="ml-4 text-left">
+                        <h3 className="text-lg font-semibold text-foreground">Live Capture</h3>
+                        <p className="text-sm text-muted-foreground">Use your camera to find colors.</p>
+                    </div>
                  </div>
 
                  <div 
                     onClick={handleUploadClick}
-                    className="group relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
+                    className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
                  >
-                     <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-4 transition-transform duration-300 group-hover:scale-110">
-                        <ImageIcon className="w-10 h-10" />
+                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
+                        <ImageIcon className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground">Upload Image</h3>
-                    <p className="text-muted-foreground mt-2 text-center">Pick colors from a photo in your library.</p>
+                    <div className="ml-4 text-left">
+                        <h3 className="text-lg font-semibold text-foreground">Upload Image</h3>
+                        <p className="text-sm text-muted-foreground">Pick from your photo library.</p>
+                    </div>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -91,7 +94,7 @@ export default function ChoosePage() {
                     />
                  </div>
             </CardContent>
-            <div className="text-center text-sm text-muted-foreground pt-8">
+            <div className="text-center text-sm text-muted-foreground pt-6">
                 <p>We only see the colours — your image isn’t stored anywhere.</p>
             </div>
         </Card>
