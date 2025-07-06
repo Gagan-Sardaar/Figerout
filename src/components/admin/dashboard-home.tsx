@@ -458,8 +458,8 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="flex flex-col flex-1 gap-6 p-6">
-      <div className="grid gap-4">
+    <div className="flex flex-col flex-1 gap-4 p-4 md:gap-6 md:p-6">
+      <div className="grid gap-4 md:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Welcome to your Admin Dashboard</CardTitle>

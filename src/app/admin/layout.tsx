@@ -57,7 +57,7 @@ function UserNav() {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       <ThemeToggle />
       <div className="text-right hidden sm:block">
         <div className="font-semibold text-sm">{user.name}</div>
@@ -67,8 +67,8 @@ function UserNav() {
           <AvatarFallback>A</AvatarFallback>
       </Avatar>
       <Button variant="outline" size="sm" onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Logout</span>
+          <LogOut className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Logout</span>
       </Button>
     </div>
   )
