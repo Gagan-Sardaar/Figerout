@@ -487,7 +487,7 @@ const ColorPickerView = () => {
               </div>
             </div>
             <div className="p-8 text-center">
-              <h2 className="text-3xl font-bold tracking-tight">{getColorName(pickedColor)}</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Color Time‑Machine Postcards</h2>
               <div className="h-12 mt-4 flex items-center justify-center">
                 {isFetchingHistory ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
