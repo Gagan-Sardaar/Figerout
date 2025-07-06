@@ -516,14 +516,17 @@ const ColorPickerView = () => {
             </Button>
             
             <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <p className="font-mono text-4xl font-bold tracking-widest text-white/80" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
                   {pickedColor.toUpperCase()}
+                </p>
+                <p className="text-lg text-white/70 uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                    {getColorName(pickedColor)}
                 </p>
               </div>
             </div>
             <div className="p-8 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Color Time‑Machine Postcards</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Color Time-Machine</h2>
               <div className="h-12 mt-4 flex items-center justify-center">
                 {isFetchingHistory ? (
                   <Loader2 className="w-6 h-6 animate-spin" />

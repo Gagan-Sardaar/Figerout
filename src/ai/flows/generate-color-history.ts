@@ -16,7 +16,7 @@ const GenerateColorHistoryInputSchema = z.object({
 export type GenerateColorHistoryInput = z.infer<typeof GenerateColorHistoryInputSchema>;
 
 const GenerateColorHistoryOutputSchema = z.object({
-  history: z.string().describe('A single, concise, creative sentence about the color. It can be a historical fact, a futuristic use, or a fantastical story. Should be engaging and surprising.'),
+  history: z.string().describe('A single, very concise, creative sentence (around 15-20 words) about the color. It can be a historical fact, a futuristic use, or a fantastical story. It must be engaging and surprising.'),
 });
 export type GenerateColorHistoryOutput = z.infer<typeof GenerateColorHistoryOutputSchema>;
 
@@ -30,17 +30,17 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateColorHistoryOutputSchema },
   prompt: `You are a creative historian and futurist who finds fascinating stories about colors.
 
-Generate ONE fun, single-sentence fact about the color '{{{colorName}}}' (hex: {{{colorHex}}}). The fact can be historical, futuristic, or purely fantastical. Make it sound specific and intriguing. Do NOT mention the color name or hex code in your response.
+Generate ONE fun, single, very concise sentence (around 15-20 words) about the color '{{{colorName}}}' (hex: {{{colorHex}}}). The fact can be historical, futuristic, or purely fantastical. Make it sound specific and intriguing. Do NOT mention the color name or hex code in your response.
 
 Examples for the color 'Galactic Indigo':
-- "In the year 3057, this shade was used for all emergency alerts broadcast by the Interstellar Embassy."
+- "In 3057, this shade was used for all emergency alerts broadcast by the Interstellar Embassy."
 - "Medieval alchemists believed this color was powdered starlight, captured only on moonless nights."
-- "Ancient cartographers used this pigment to draw the edges of the known world on their maps."
+- "Ancient cartographers used it to draw the edges of the known world."
 
 Color Name: {{{colorName}}}
 Hex Code: {{{colorHex}}}
 
-Generate a new, unique fact in a similar style about the provided color.
+Generate a new, unique, and concise fact in a similar style about the provided color.
 `,
 });
 
