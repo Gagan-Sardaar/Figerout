@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { LogOut, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppFooter } from "@/components/footer";
 import { useRouter } from 'next/navigation';
 import {
@@ -110,9 +109,6 @@ function UserNav() {
         <div className="font-semibold text-sm">{user.name}</div>
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </div>
-      <Avatar className="h-8 w-8">
-          <AvatarFallback>{user.initials}</AvatarFallback>
-      </Avatar>
       <Button variant="outline" size="sm" onClick={handleLogout}>
         <LogOut className="mr-2 h-4 w-4" />
         <span>Logout</span>
