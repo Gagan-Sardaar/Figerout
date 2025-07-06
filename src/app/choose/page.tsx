@@ -53,15 +53,15 @@ export default function ChoosePage() {
             Figerout
         </Link>
       </div>
-      <div className="w-full max-w-4xl">
+      <main className="w-full max-w-2xl text-center">
         <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="text-center">
-                <CardTitle className="text-3xl md:text-4xl font-bold">How would you like to find a color?</CardTitle>
-                <CardDescription className="text-lg text-muted-foreground pt-2">
+            <CardHeader className="px-0">
+                <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
+                <CardDescription className="text-md sm:text-lg text-muted-foreground pt-2 max-w-lg mx-auto">
                     Capture a new moment or explore colors from an existing photo.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 pt-8">
                  <div 
                     onClick={() => router.push('/camera')}
                     className="group relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
@@ -95,7 +95,7 @@ export default function ChoosePage() {
                 <p>We only see the colours — your image isn’t stored anywhere.</p>
             </div>
         </Card>
-      </div>
+      </main>
       <div className="absolute bottom-0 w-full">
          <AppFooter />
       </div>
