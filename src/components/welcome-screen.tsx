@@ -213,7 +213,7 @@ const WelcomeScreen = () => {
               size="lg"
               className="rounded-full h-14 px-10 text-lg font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:scale-105 transition-transform duration-300"
             >
-              <Link href="/camera">
+              <Link href="/choose">
                 Find Your Color
               </Link>
             </Button>
