@@ -25,7 +25,7 @@ const BrokenHeartIcon = ({ className }: { className?: string }) => {
       <style>
         {`
           .picker-heart-left, .picker-heart-right {
-            transform-origin: center 21px; /* Animate from bottom point */
+            transform-origin: center bottom;
             animation-duration: 0.6s;
             animation-timing-function: ease-out;
             animation-fill-mode: forwards;
@@ -38,21 +38,21 @@ const BrokenHeartIcon = ({ className }: { className?: string }) => {
           }
           @keyframes picker-break-left {
             0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(-4px, -2px) rotate(-15deg); }
+            100% { transform: translate(-2px, -2px) rotate(-10deg); }
           }
           @keyframes picker-break-right {
             0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(4px, -2px) rotate(15deg); }
+            100% { transform: translate(2px, -2px) rotate(10deg); }
           }
         `}
       </style>
       <path
         className="picker-heart-left"
-        d="M12 21.35L10.55 19.81C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09V21.35z"
+        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09L12 5.09V21.35z"
       />
       <path
         className="picker-heart-right"
-        d="M12 21.35L13.45 19.81C18.6 15.36 22 12.28 22 8.5C22 5.42 19.58 3 16.5 3C14.76 3 13.09 3.81 12 5.09V21.35z"
+        d="M16.5 3C14.76 3 13.09 3.81 12 5.09v16.26l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z"
       />
     </svg>
   );
@@ -659,7 +659,7 @@ const ColorPickerView = () => {
             )}
             aria-label="Retake photo"
           >
-            {isAtBoundary ? <BrokenHeartIcon className="h-12 w-12" /> : <RefreshCw className="h-9 w-9" />}
+            {isAtBoundary ? <BrokenHeartIcon className="h-16 w-16" /> : <RefreshCw className="h-9 w-9" />}
          </Button>
       </div>
 
@@ -669,5 +669,7 @@ const ColorPickerView = () => {
 
 export default ColorPickerView;
 
+
+    
 
     
