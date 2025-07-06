@@ -142,39 +142,41 @@ export default function VisitorDashboardPage() {
   }, [dialogState]);
 
   return (
-    <div className="bg-background text-foreground h-full p-4 sm:p-6 md:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-full">
+    <div className="bg-background text-foreground h-full">
+      <div className="flex flex-col md:flex-row gap-8 h-full p-4 sm:p-6 md:p-8">
         
-        <div className="md:col-span-1">
-          <Card className="bg-primary text-primary-foreground p-6 rounded-2xl h-full flex flex-col">
-            <Avatar className="h-16 w-16 mb-4">
-              <AvatarFallback className="text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
-                F
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-primary-foreground/80">Saved Colors for</p>
-            <h1 className="text-3xl font-bold">{userName}</h1>
-            <p className="text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
-            
-            <nav className="mt-8 space-y-1">
-              {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
-                <Button
-                  key={filter}
-                  variant="ghost"
-                  className={cn(
-                      "w-full justify-start text-lg capitalize px-3 py-2 h-auto",
-                      activeFilter === filter ? "text-white font-semibold" : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
-                  )}
-                  onClick={() => setActiveFilter(filter)}
-                >
-                  {filter === 'all' ? 'All Time' : filter}
-                </Button>
-              ))}
-            </nav>
-          </Card>
+        <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
+          <div className="md:sticky md:top-24">
+            <Card className="bg-primary text-primary-foreground p-6 rounded-2xl flex flex-col">
+                <Avatar className="h-16 w-16 mb-4">
+                <AvatarFallback className="text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
+                    F
+                </AvatarFallback>
+                </Avatar>
+                <p className="text-primary-foreground/80">Saved Colors for</p>
+                <h1 className="text-3xl font-bold">{userName}</h1>
+                <p className="text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
+                
+                <nav className="mt-8 space-y-1">
+                {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
+                    <Button
+                    key={filter}
+                    variant="ghost"
+                    className={cn(
+                        "w-full justify-start text-lg capitalize px-3 py-2 h-auto",
+                        activeFilter === filter ? "text-white font-semibold" : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
+                    )}
+                    onClick={() => setActiveFilter(filter)}
+                    >
+                    {filter === 'all' ? 'All Time' : filter}
+                    </Button>
+                ))}
+                </nav>
+            </Card>
+          </div>
         </div>
 
-        <div className="md:col-span-2 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {filteredColors.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredColors.map(color => (
