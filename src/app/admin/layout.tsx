@@ -66,7 +66,11 @@ function UserNav() {
       <Avatar className="h-8 w-8 hidden sm:flex">
           <AvatarFallback>A</AvatarFallback>
       </Avatar>
-      <Button variant="outline" size="sm" onClick={handleLogout}>
+      <Button variant="outline" size="icon" className="sm:hidden" onClick={handleLogout}>
+          <LogOut className="h-4 w-4" />
+          <span className="sr-only">Logout</span>
+      </Button>
+      <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={handleLogout}>
           <LogOut className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Logout</span>
       </Button>
@@ -245,7 +249,7 @@ export default function AdminLayout({
                               <ChevronsUpDown className="h-4 w-4 shrink-0 group-data-[state=expanded]:opacity-50" />
                           </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent side="right" align="start" className="w-56">
+                      <DropdownMenuContent side="top" align="center" className="w-56">
                           <DropdownMenuLabel>Switch Dashboard View</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleSwitchRole('Admin')}>
