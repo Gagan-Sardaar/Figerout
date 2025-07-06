@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { users as staticUsers, User, DisplayUser } from "@/lib/user-data";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,10 +30,23 @@ import { NewUserDialog } from "@/components/admin/new-user-dialog";
 export default function UsersPage() {
   const [users, setUsers] = useState<DisplayUser[]>([]);
   const { toast } = useToast();
-  // Mock signed-in user. In a real app this would come from an auth context.
-  const signedInUser = { email: 'admin@figerout.com', role: 'Admin' };
+  const [signedInUser, setSignedInUser] = useState<{ email: string; role: 'Admin' | 'Editor' | 'Viewer' } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
+    const storedUserJson = localStorage.getItem('loggedInUser');
+    if (storedUserJson) {
+      const user = JSON.parse(storedUserJson);
+      setSignedInUser(user);
+      if (user.role !== 'Admin') {
+        router.replace('/admin');
+        return;
+      }
+    } else {
+      router.replace('/login');
+      return;
+    }
+    
     // This effect runs only on the client, after hydration.
     // To prevent hydration errors, we process dates and set the initial state here.
     const processedUsers = staticUsers.map(user => {
@@ -59,7 +73,15 @@ export default function UsersPage() {
     });
     
     setUsers(processedUsers);
-  }, []);
+  }, [router]);
+
+  if (!signedInUser) {
+    return (
+        <div className="flex h-full flex-1 items-center justify-center p-6">
+            <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+    );
+  }
 
   const handleSaveUser = (updatedUser: Omit<User, 'lastLogin'>) => {
     setUsers(prevUsers => 

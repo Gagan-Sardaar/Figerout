@@ -1,7 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   Newspaper, 
@@ -10,6 +12,7 @@ import {
   ExternalLink,
   LogOut,
   Users,
+  Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -66,10 +69,40 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<'Admin' | 'Editor' | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser.role === 'Viewer') {
+                router.replace('/dashboard');
+            } else {
+                setUserRole(parsedUser.role);
+            }
+        } catch (e) {
+            console.error("Failed to parse user from localStorage", e);
+            router.replace('/login');
+        }
+    } else {
+        router.replace('/login');
+    }
+  }, [router]);
+
 
   const isActive = (path: string) => {
     return pathname === path || (path !== "/admin" && pathname.startsWith(path));
   };
+  
+  if (!userRole) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -122,42 +155,46 @@ export default function AdminLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/admin/pages")}
-                tooltip="Pages"
-              >
-                <Link href="/admin/pages">
-                  <FileText />
-                  <span className="group-data-[state=collapsed]:hidden">Pages</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/admin/users")}
-                tooltip="Users"
-              >
-                <Link href="/admin/users">
-                  <Users />
-                  <span className="group-data-[state=collapsed]:hidden">Users</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/admin/settings")}
-                tooltip="App Settings"
-              >
-                <Link href="/admin/settings">
-                  <Settings />
-                  <span className="group-data-[state=collapsed]:hidden">App Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {userRole === 'Admin' && (
+              <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/pages")}
+                    tooltip="Pages"
+                  >
+                    <Link href="/admin/pages">
+                      <FileText />
+                      <span className="group-data-[state=collapsed]:hidden">Pages</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/users")}
+                    tooltip="Users"
+                  >
+                    <Link href="/admin/users">
+                      <Users />
+                      <span className="group-data-[state=collapsed]:hidden">Users</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/settings")}
+                    tooltip="App Settings"
+                  >
+                    <Link href="/admin/settings">
+                      <Settings />
+                      <span className="group-data-[state=collapsed]:hidden">App Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

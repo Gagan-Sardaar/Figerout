@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -77,11 +78,30 @@ const defaultValues: SettingsFormValues = {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [isMounted, setIsMounted] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<{ suggestedMetaTitle?: string; suggestedMetaDescription?: string } | null>(null);
+  const router = useRouter();
+  const [isAllowed, setIsAllowed] = useState(false);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+        try {
+            const user = JSON.parse(storedUser);
+            if (user.role === 'Admin') {
+                setIsAllowed(true);
+            } else {
+                router.replace('/admin');
+            }
+        } catch (e) {
+            router.replace('/login');
+        }
+    } else {
+        router.replace('/login');
+    }
+  }, [router]);
+  
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -93,6 +113,8 @@ export default function SettingsPage() {
   });
   
   useEffect(() => {
+    if (!isAllowed) return;
+
     const savedSettings = localStorage.getItem("appSettings");
     if (savedSettings) {
       try {
@@ -106,11 +128,14 @@ export default function SettingsPage() {
         console.error("Failed to parse app settings from localStorage", e);
       }
     }
-    setIsMounted(true);
-  }, [form]);
+  }, [form, isAllowed]);
 
-  if (!isMounted) {
-    return null; // or a loading spinner
+  if (!isAllowed) {
+    return (
+      <div className="flex flex-1 items-center justify-center h-full p-6">
+        <Loader2 className="h-10 w-10 animate-spin" />
+      </div>
+    );
   }
 
   const handleSuggestSeo = async () => {

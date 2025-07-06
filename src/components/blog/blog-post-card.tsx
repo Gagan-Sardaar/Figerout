@@ -28,9 +28,10 @@ interface BlogPostCardProps {
   isAdmin?: boolean;
   onSave?: (postData: any) => void;
   onDelete?: (postId: number) => void;
+  userRole?: 'Admin' | 'Editor' | null;
 }
 
-export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPostCardProps) {
+export function BlogPostCard({ post, isAdmin = false, onSave, onDelete, userRole }: BlogPostCardProps) {
   const [isCreditExpanded, setIsCreditExpanded] = useState(false);
   
   const statusVariant = {
@@ -121,28 +122,30 @@ export function BlogPostCard({ post, isAdmin = false, onSave, onDelete }: BlogPo
                   <Edit className="mr-2 h-4 w-4" /> Edit
                 </Button>
               </NewPostDialog>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the post
-                      "{post.title}".
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete?.(post.id)}>
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {userRole === 'Admin' && onDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the post
+                        "{post.title}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(post.id)}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           ) : (
             <Button asChild variant="link" className="p-0 h-auto text-primary font-semibold">

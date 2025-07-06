@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -471,6 +472,35 @@ function PageEditor({ topic }: { topic: PageTopic }) {
 }
 
 export default function PagesPage() {
+  const router = useRouter();
+  const [isAllowed, setIsAllowed] = useState(false);
+  
+  useEffect(() => {
+      const storedUser = localStorage.getItem('loggedInUser');
+      if (storedUser) {
+          try {
+              const user = JSON.parse(storedUser);
+              if (user.role === 'Admin') {
+                  setIsAllowed(true);
+              } else {
+                  router.replace('/admin');
+              }
+          } catch (e) {
+              router.replace('/login');
+          }
+      } else {
+          router.replace('/login');
+      }
+  }, [router]);
+  
+  if (!isAllowed) {
+    return (
+      <div className="flex flex-1 items-center justify-center h-full p-6">
+        <Loader2 className="h-10 w-10 animate-spin" />
+      </div>
+    );
+  }
+
   const pages: PageTopic[] = [
     "About Us",
     "Contact Us",

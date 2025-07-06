@@ -18,9 +18,17 @@ const createSlug = (title: string) => {
 
 export default function BlogPage() {
   const [posts, setPostsState] = useState<BlogPost[]>([]);
+  const [userRole, setUserRole] = useState<'Admin' | 'Editor' | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (loggedInUser) {
+        try {
+            setUserRole(JSON.parse(loggedInUser).role);
+        } catch(e) { console.error(e) }
+    }
+    
     // Merge posts from static data and localStorage to ensure all posts are loaded.
     const storedPostsJSON = localStorage.getItem('blogPosts');
     const filePosts = initialBlogPosts;
@@ -143,7 +151,7 @@ export default function BlogPage() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
-          <BlogPostCard key={post.id} post={post} isAdmin={true} onSave={handleSavePost} onDelete={handleDeletePost} />
+          <BlogPostCard key={post.id} post={post} isAdmin={true} onSave={handleSavePost} onDelete={handleDeletePost} userRole={userRole} />
         ))}
       </div>
     </div>
