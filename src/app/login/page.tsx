@@ -86,11 +86,11 @@ export default function LoginPage() {
     fetchAndSetBackground();
   }, []);
 
-  const handleLoginLink = () => {
+  const handleLogin = () => {
     if (!email) {
       toast({
         title: "Email required",
-        description: "Please enter your email address to receive a login link.",
+        description: "Please enter your email address.",
         variant: "destructive",
       });
       return;
@@ -102,8 +102,8 @@ export default function LoginPage() {
       localStorage.setItem('loggedInUser', JSON.stringify(user));
       
       toast({
-        title: "Check your email",
-        description: `A login link has been sent to ${email}.`,
+        title: "Login Successful",
+        description: `Welcome back, ${user.name}. Redirecting...`,
       });
       
       if (user.role === 'Admin' || user.role === 'Editor') {
@@ -115,7 +115,7 @@ export default function LoginPage() {
     } else {
       toast({
         title: "User not found",
-        description: "This email is not registered. Please sign up or contact an admin.",
+        description: "This email is not registered. Please check the email or contact an admin.",
         variant: "destructive",
       });
     }
@@ -161,25 +161,29 @@ export default function LoginPage() {
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                         <span className="bg-background/0 px-2 text-muted-foreground">
-                        Or continue with
+                        Or continue with email
                         </span>
                     </div>
                     </div>
+                    
                     <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
                         id="email"
                         type="email"
-                        placeholder="m@example.com"
+                        placeholder="Enter a test email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="bg-background/50 border-white/20 focus:bg-background/70"
                     />
                     </div>
-                    <Button type="button" className="w-full" onClick={handleLoginLink}>
-                        Email me a login link
+                    <Button type="button" className="w-full" onClick={handleLogin}>
+                        Login / Continue
                     </Button>
+                     <div className="text-center text-xs text-muted-foreground">
+                        Use <code className="bg-muted px-1 py-0.5 rounded">admin@figerout.com</code>, <code className="bg-muted px-1 py-0.5 rounded">editor@figerout.com</code>, or <code className="bg-muted px-1 py-0.5 rounded">visitor@figerout.com</code> to log in.
+                    </div>
                 </div>
                 <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{" "}
