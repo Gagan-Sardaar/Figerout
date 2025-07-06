@@ -98,7 +98,7 @@ const RoleSwitcher = () => {
     }
 
     return (
-        <div className="mt-auto pt-4">
+        <div className="pt-4">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between text-base px-3 py-2 h-auto text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white">
@@ -225,7 +225,7 @@ export default function VisitorDashboardPage() {
       <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
-          <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col h-full">
+          <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col">
               <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4">
               <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
                   F
@@ -238,7 +238,7 @@ export default function VisitorDashboardPage() {
               <RoleSwitcher />
               
               {/* Desktop Filters */}
-              <nav className="mt-auto pt-4 space-y-1 hidden md:block">
+              <nav className="pt-4 space-y-1 hidden md:block">
                 {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                   <Button
                     key={filter}
@@ -257,7 +257,7 @@ export default function VisitorDashboardPage() {
               </nav>
 
               {/* Mobile Filters */}
-              <div className="block md:hidden mt-auto pt-4">
+              <div className="block md:hidden pt-4">
                 <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
                   {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                     <Button
@@ -273,7 +273,7 @@ export default function VisitorDashboardPage() {
                       )}
                       onClick={() => setActiveFilter(filter)}
                     >
-                      {filter === 'all' ? 'All' : filter}
+                      {filter === 'all' ? 'ALL' : filter}
                     </Button>
                   ))}
                 </div>
