@@ -208,7 +208,7 @@ export default function VisitorDashboardPage() {
   }, [dialogState]);
 
   return (
-    <div className="bg-background text-foreground h-full">
+    <div className="bg-background text-foreground flex-1">
       <div className="flex flex-col md:flex-row gap-8 h-full p-4 sm:p-6 md:p-8">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
