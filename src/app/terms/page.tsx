@@ -34,7 +34,9 @@ export default async function TermsOfServicePage() {
       <header className="border-b">
         <div className="container mx-auto px-4">
             <div className="flex justify-between items-center py-6">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
+                <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
+                    Figerout
+                </Link>
                 <Button asChild variant="outline">
                     <Link href="/">Return to Home</Link>
                 </Button>
@@ -43,6 +45,7 @@ export default async function TermsOfServicePage() {
       </header>
       <main className="flex-grow container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">{content.pageTitle}</h1>
             <p className="mb-8 text-sm text-muted-foreground">Last updated: {lastUpdated}</p>
             <div className="prose dark:prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.pageContent}</ReactMarkdown>

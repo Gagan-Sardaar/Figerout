@@ -102,14 +102,23 @@ export function BlogPostPageClient({ post }: { post: BlogPost }) {
 
   return (
     <div className="bg-background min-h-svh flex flex-col">
+        <header className="border-b">
+            <div className="container mx-auto px-4">
+                <div className="flex justify-between items-center py-6">
+                    <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
+                        Figerout
+                    </Link>
+                    <Button asChild variant="outline">
+                        <Link href="/blog">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Blog
+                        </Link>
+                    </Button>
+                </div>
+            </div>
+        </header>
         <main className="container mx-auto px-4 py-8 flex-grow">
             <div className="max-w-4xl mx-auto">
-                <Button asChild variant="ghost" className="mb-4">
-                    <Link href="/blog">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Blog
-                    </Link>
-                </Button>
                 <Card>
                     <CardHeader>
                         <div className="relative aspect-video mb-4">

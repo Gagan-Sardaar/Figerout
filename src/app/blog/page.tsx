@@ -59,14 +59,23 @@ export default function BlogPage() {
 
   return (
     <div className="bg-background min-h-svh flex flex-col">
+      <header className="border-b">
+        <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center py-6">
+                <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
+                    Figerout
+                </Link>
+                <Button asChild variant="outline">
+                    <Link href="/">
+                        Return to Home
+                    </Link>
+                </Button>
+            </div>
+        </div>
+      </header>
       <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold">From the Blog</h1>
-            <Button asChild variant="outline">
-                <Link href="/">
-                    Return to Home
-                </Link>
-            </Button>
         </div>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

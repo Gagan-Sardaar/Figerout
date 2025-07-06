@@ -32,7 +32,9 @@ export default async function ContactUsPage() {
              <header className="border-b">
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center py-6">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">{content.pageTitle}</h1>
+                         <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
+                            Figerout
+                        </Link>
                         <Button asChild variant="outline">
                             <Link href="/">Return to Home</Link>
                         </Button>
@@ -42,7 +44,7 @@ export default async function ContactUsPage() {
             <main className="flex-grow">
                 <div className="relative bg-muted/40">
                     <div className="container mx-auto px-4 py-16 text-center">
-                         <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">Get in Touch</h2>
+                         <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">{content.pageTitle}</h2>
                         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                            The best way to reach us is by email. We'd love to hear from you and will do our best to respond as soon as possible.
                         </p>
