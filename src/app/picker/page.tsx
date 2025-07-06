@@ -140,7 +140,7 @@ const ColorPickerView = () => {
   }, [updateColor]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPaletteOpen || calloutRef.current?.contains(e.target as Node)) {
+    if (isHistoryModalOpen || isPaletteOpen || calloutRef.current?.contains(e.target as Node)) {
       return;
     }
     e.preventDefault();
@@ -164,7 +164,7 @@ const ColorPickerView = () => {
     window.addEventListener('pointerup', handlePointerUp);
 
     updatePickerPosition(e.nativeEvent);
-  }, [isPaletteOpen, showHint, updatePickerPosition]);
+  }, [isPaletteOpen, showHint, updatePickerPosition, isHistoryModalOpen]);
 
   const onImageLoad = (img: HTMLImageElement) => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -506,9 +506,9 @@ const ColorPickerView = () => {
                   <div className="absolute inset-0 h-full bg-white/10 rounded-full overflow-hidden">
                       <div className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-primary/50 via-primary to-accent animate-indeterminate-progress"></div>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center px-4">
-                      <p className="text-xs font-semibold text-white/90 truncate" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                          Fetching your color's history…
+                  <div className="absolute inset-0 flex items-center justify-center px-4 py-2">
+                      <p className="text-xs font-semibold text-white/90 truncate px-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                          Fetching your color's history...
                       </p>
                   </div>
               </div>
