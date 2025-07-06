@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getColorName, generateColorShades } from '@/lib/color-utils';
+import { getColorName, generateColorShades, isColorLight } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
 
 type Point = { x: number; y: number };
@@ -36,6 +36,11 @@ const ColorPickerView = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [colorHistory, setColorHistory] = useState('');
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+
+  const isPickedColorLight = React.useMemo(() => {
+    if (!pickedColor) return false;
+    return isColorLight(pickedColor);
+  }, [pickedColor]);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -518,14 +523,19 @@ const ColorPickerView = () => {
           onClick={() => setIsHistoryModalOpen(false)}
         >
           <div
-            className="bg-zinc-800 rounded-3xl shadow-2xl text-white w-full max-w-sm overflow-hidden relative"
+            className="bg-zinc-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
              <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSave}
-                className="absolute top-4 left-4 h-8 w-8 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white z-10"
+                className={cn(
+                    "absolute top-4 left-4 h-8 w-8 rounded-full z-10 transition-colors",
+                    isPickedColorLight 
+                        ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                        : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                )}
                 aria-label="Save color"
             >
                 <Save className="h-4 w-4" />
@@ -534,7 +544,12 @@ const ColorPickerView = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white z-10"
+                className={cn(
+                    "absolute top-4 right-4 h-8 w-8 rounded-full z-10 transition-colors",
+                    isPickedColorLight
+                        ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black"
+                        : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                )}
                 aria-label="Close"
             >
                 <X className="h-4 w-4" />
@@ -542,15 +557,21 @@ const ColorPickerView = () => {
             
             <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                <p className="font-mono text-4xl font-bold tracking-widest text-white/80" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                <p className={cn(
+                    "font-mono text-4xl font-bold tracking-widest",
+                    isPickedColorLight ? "text-zinc-900" : "text-white"
+                   )} style={{ textShadow: isPickedColorLight ? '0 1px 1px rgba(255,255,255,0.7)' : '0 2px 4px rgba(0,0,0,0.5)' }}>
                   {pickedColor.toUpperCase()}
                 </p>
-                <p className="text-lg text-white/70 uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                <p className={cn(
+                    "text-lg uppercase",
+                    isPickedColorLight ? "text-zinc-900/80" : "text-white/80"
+                   )} style={{ textShadow: isPickedColorLight ? '0 1px 1px rgba(255,255,255,0.7)' : '0 1px 2px rgba(0,0,0,0.5)' }}>
                     {getColorName(pickedColor)}
                 </p>
               </div>
             </div>
-            <div className="p-8 text-center">
+            <div className="p-8 text-center bg-zinc-800 text-white">
               <h2 className="text-2xl font-bold tracking-tight">Color Time-Machine</h2>
               <div className="h-12 mt-4 flex items-center justify-center">
                 {isFetchingHistory ? (

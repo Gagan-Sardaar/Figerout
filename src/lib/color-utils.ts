@@ -83,6 +83,19 @@ export function getColorName(hex: string): string {
 }
 
 /**
+ * Determines if a hex color is light or dark.
+ * @param hex The hex color string.
+ * @returns True if the color is light, false if it is dark.
+ */
+export function isColorLight(hex: string): boolean {
+  if (!hex) return false;
+  const [r, g, b] = hexToRgb(hex);
+  // Formula for luminance using sRGB standard
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.6;
+}
+
+/**
  * Generates lighter and darker shades of a given color.
  * @param hex The base hex color string.
  * @param count The number of shades to generate on each side (lighter/darker).
