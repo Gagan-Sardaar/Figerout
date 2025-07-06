@@ -56,7 +56,6 @@ import {
   Lightbulb,
   X,
   Send,
-  Edit,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
@@ -761,29 +760,18 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
 
 export function NewPostDialog({ post, children, onSave }: { post?: BlogPost; children?: React.ReactNode, onSave?: (data: any) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const trigger = children ?? (
-    <Button>
-      <PlusCircle className="mr-2 h-4 w-4" />
-      New Post
-    </Button>
-  );
+  const isEditing = !!post;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {children || (
-          <Button>
-            {post ? <Edit className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-            {post ? 'Edit Post' : 'New Post'}
-          </Button>
-        )}
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{post ? 'Edit Post' : 'Create New Blog Post'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Post' : 'Create New Blog Post'}</DialogTitle>
           <DialogDescription>
-            {post ? "Make changes to your post here. Click update when you're done." : "Fill out the details below. Click save when you're done."}
+            {isEditing ? "Make changes to your post here. Click update when you're done." : "Fill out the details below. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto -mr-6 pr-6">

@@ -2,6 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 import { NewPostDialog } from "@/components/blog/new-post-dialog";
 import { BlogPostCard } from "@/components/blog/blog-post-card";
 import { blogPosts as initialBlogPosts, BlogPost } from "@/lib/blog-data";
@@ -147,7 +149,12 @@ export default function BlogPage() {
     <div className="flex flex-col flex-1 gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Blog Management</h1>
-        <NewPostDialog onSave={handleSavePost} />
+        <NewPostDialog onSave={handleSavePost}>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Post
+          </Button>
+        </NewPostDialog>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
