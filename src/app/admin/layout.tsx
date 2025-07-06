@@ -13,6 +13,7 @@ import {
   LogOut,
   Users,
   Loader2,
+  ChevronsUpDown,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -31,6 +32,15 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppFooter } from "@/components/footer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { User } from "@/lib/user-data";
 
 function UserNav() {
   const router = useRouter();
@@ -42,6 +52,7 @@ function UserNav() {
   
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('originalLoggedInUser');
     router.push('/login');
   }
 
@@ -70,14 +81,27 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [userRole, setUserRole] = useState<'Admin' | 'Editor' | null>(null);
+  const [userRole, setUserRole] = useState<'Admin' | 'Editor' | 'Viewer' | null>(null);
+  const [originalUser, setOriginalUser] = useState<User | null>(null);
 
   useEffect(() => {
+    const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
+    if (storedOriginalUser) {
+      setOriginalUser(JSON.parse(storedOriginalUser));
+    }
+
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
         try {
             const parsedUser = JSON.parse(storedUser);
-            if (parsedUser.role === 'Viewer') {
+            if (!storedOriginalUser && parsedUser.role === 'Admin') {
+                localStorage.setItem('originalLoggedInUser', JSON.stringify(parsedUser));
+                setOriginalUser(parsedUser);
+            }
+
+            // A real viewer gets redirected. An admin viewing as a viewer stays.
+            const effectiveOriginalUser = storedOriginalUser ? JSON.parse(storedOriginalUser) : null;
+            if (parsedUser.role === 'Viewer' && effectiveOriginalUser?.role !== 'Admin') {
                 router.replace('/dashboard');
             } else {
                 setUserRole(parsedUser.role);
@@ -87,9 +111,25 @@ export default function AdminLayout({
             router.replace('/login');
         }
     } else {
+        localStorage.removeItem('originalLoggedInUser');
         router.replace('/login');
     }
   }, [router]);
+
+  const handleSwitchRole = (newRole: 'Admin' | 'Editor' | 'Viewer') => {
+    const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
+    if (!storedOriginalUser) return;
+
+    const userToModify = JSON.parse(storedOriginalUser);
+    userToModify.role = newRole;
+    localStorage.setItem('loggedInUser', JSON.stringify(userToModify));
+    
+    if (newRole === 'Viewer') {
+      router.push('/dashboard');
+    } else {
+      window.location.reload();
+    }
+  };
 
 
   const isActive = (path: string) => {
@@ -196,6 +236,33 @@ export default function AdminLayout({
               </>
             )}
           </SidebarMenu>
+          {originalUser?.role === 'Admin' && (
+            <div className="mt-auto p-2">
+              <div className="group-data-[state=collapsed]:-m-2 group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center">
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-between group-data-[state=collapsed]:size-8 group-data-[state=collapsed]:p-0">
+                              <span className="group-data-[state=collapsed]:hidden">View: {userRole}</span>
+                              <ChevronsUpDown className="h-4 w-4 shrink-0 group-data-[state=expanded]:opacity-50" />
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" className="w-56">
+                          <DropdownMenuLabel>Switch Dashboard View</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleSwitchRole('Admin')}>
+                              Admin
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSwitchRole('Editor')}>
+                              Editor
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSwitchRole('Viewer')}>
+                              Viewer
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
+            </div>
+          )}
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
