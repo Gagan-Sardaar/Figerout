@@ -6,9 +6,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
+import { generateColorHistory } from '@/ai/flows/generate-color-history';
 
 type Point = { x: number; y: number };
 
@@ -31,6 +32,9 @@ const ColorPickerView = () => {
     position: 'absolute',
     pointerEvents: 'none',
   });
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [colorHistory, setColorHistory] = useState('');
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
   useEffect(() => {
     const dataUrl = sessionStorage.getItem('capturedImage');
@@ -243,7 +247,11 @@ const ColorPickerView = () => {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    setIsHistoryModalOpen(true);
+    setIsFetchingHistory(true);
+    setColorHistory('');
+
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
@@ -281,6 +289,16 @@ const ColorPickerView = () => {
             description: 'Could not copy to clipboard.',
         });
     });
+
+    try {
+        const result = await generateColorHistory({ colorHex: pickedColor, colorName });
+        setColorHistory(result.history);
+    } catch (error) {
+        console.error("Error generating color history:", error);
+        setColorHistory("A truly unique color with a story yet to be written.");
+    } finally {
+        setIsFetchingHistory(false);
+    }
   };
 
   const CalloutContent = (
@@ -301,10 +319,6 @@ const ColorPickerView = () => {
                 <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
             </div>
             <div className="flex items-center gap-1">
-                <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleSave}>
-                    <Save className="w-4 h-4" />
-                    <span className="text-xs">Save</span>
-                </Button>
                 <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
                     <Share2 className="w-4 h-4" />
                     <span className="text-xs">Share</span>
@@ -450,6 +464,49 @@ const ColorPickerView = () => {
                         </div>
                     </div>
                 ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {isHistoryModalOpen && (
+        <div 
+          className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setIsHistoryModalOpen(false)}
+        >
+          <div
+            className="bg-zinc-800 rounded-3xl shadow-2xl text-white w-full max-w-sm overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <p className="font-mono text-xl tracking-widest text-white/80" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                  {pickedColor.toUpperCase()}
+                </p>
+              </div>
+            </div>
+            <div className="p-8 text-center">
+              <h2 className="text-3xl font-bold tracking-tight">{getColorName(pickedColor)}</h2>
+              <div className="h-12 mt-4 flex items-center justify-center">
+                {isFetchingHistory ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <p className="text-sm text-white/70 italic">
+                    "{colorHistory}"
+                  </p>
+                )}
+              </div>
+              <div className="mt-8 flex flex-col gap-3">
+                 <Button onClick={handleSave} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
+                      <Save className="mr-2 h-5 w-5" />
+                      Save Color
+                  </Button>
+                  <Button onClick={() => router.push('/camera')} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
+                      <RefreshCw className="mr-2 h-5 w-5" />
+                      Retake
+                  </Button>
+              </div>
             </div>
           </div>
         </div>
