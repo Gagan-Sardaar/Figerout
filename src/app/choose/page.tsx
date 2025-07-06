@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -60,7 +59,12 @@ export default function ChoosePage() {
                 <CardHeader className="px-0">
                     <CardTitle className="text-xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
                     <CardDescription className="text-xs sm:text-base text-muted-foreground pt-2 max-w-2xl mx-auto">
-                        Capture a new moment or explore colors from an existing photo.
+                        <span className="sm:hidden">
+                            Capture a new moment<br />or<br />explore colors from an existing photo.
+                        </span>
+                        <span className="hidden sm:inline">
+                            Capture a new moment or explore colors from an existing photo.
+                        </span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
@@ -98,7 +102,14 @@ export default function ChoosePage() {
                     </div>
                 </CardContent>
                 <div className="text-center text-sm text-muted-foreground pt-6">
-                    <p>We only see the colours — your image isn’t stored anywhere.</p>
+                    <p>
+                        <span className="sm:hidden">
+                            We only see the colours<br />your image isn’t stored anywhere.
+                        </span>
+                        <span className="hidden sm:inline">
+                            We only see the colours — your image isn’t stored anywhere.
+                        </span>
+                    </p>
                 </div>
             </Card>
         </div>
