@@ -224,21 +224,46 @@ export default function VisitorDashboardPage() {
 
               <RoleSwitcher />
               
-              <nav className="mt-auto pt-4 space-y-1">
-              {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
+              {/* Desktop Filters */}
+              <nav className="mt-auto pt-4 space-y-1 hidden md:block">
+                {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                   <Button
-                  key={filter}
-                  variant="ghost"
-                  className={cn(
+                    key={filter}
+                    variant="ghost"
+                    className={cn(
                       "w-full justify-start text-lg capitalize px-3 py-2 h-auto",
-                      activeFilter === filter ? "text-white font-semibold" : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
-                  )}
-                  onClick={() => setActiveFilter(filter)}
+                      activeFilter === filter
+                        ? "text-white font-semibold bg-primary-foreground/10"
+                        : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
+                    )}
+                    onClick={() => setActiveFilter(filter)}
                   >
-                  {filter === 'all' ? 'All Time' : filter}
+                    {filter === 'all' ? 'All Time' : filter}
                   </Button>
-              ))}
+                ))}
               </nav>
+
+              {/* Mobile Filters */}
+              <div className="block md:hidden mt-auto pt-4">
+                <div className="flex space-x-2 overflow-x-auto pb-2 -mx-6 px-6">
+                  {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
+                    <Button
+                      key={filter}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "capitalize shrink-0 px-4",
+                        activeFilter === filter
+                          ? "bg-primary-foreground/20 text-white font-semibold"
+                          : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
+                      )}
+                      onClick={() => setActiveFilter(filter)}
+                    >
+                      {filter === 'all' ? 'All Time' : filter}
+                    </Button>
+                  ))}
+                </div>
+              </div>
           </Card>
         </div>
 
