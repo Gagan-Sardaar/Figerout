@@ -493,9 +493,9 @@ const ColorPickerView = () => {
           className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
         >
           <div className="bg-zinc-800 rounded-xl shadow-2xl text-white w-full max-w-sm p-8 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Link Copied!</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Colour Ready to Share</h2>
               <p className="text-white/70 mt-2">
-                  The link is copied and the color has been saved to your dashboard.
+                Boom! ‘{getColorName(pickedColor)} – {pickedColor.toUpperCase()}’ is copied. Share the vibe with your friends!
               </p>
           </div>
         </div>
