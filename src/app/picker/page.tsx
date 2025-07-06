@@ -24,31 +24,35 @@ const BrokenHeartIcon = ({ className }: { className?: string }) => {
     >
       <style>
         {`
+          .picker-heart-left, .picker-heart-right {
+            transform-origin: center bottom;
+            animation-duration: 0.6s;
+            animation-timing-function: ease-out;
+            animation-fill-mode: forwards;
+          }
+          .picker-heart-left {
+            animation-name: picker-break-left;
+          }
+          .picker-heart-right {
+            animation-name: picker-break-right;
+          }
           @keyframes picker-break-left {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-2px, 1px) rotate(-8deg); }
+            0% { transform: translate(0) rotate(0); }
+            100% { transform: translate(-2px, -1px) rotate(-10deg); }
           }
           @keyframes picker-break-right {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(2px, 1px) rotate(8deg); }
-          }
-          .picker-broken-heart-left-anim {
-            transform-origin: center 65%;
-            animation: picker-break-left 0.7s ease-out forwards;
-          }
-          .picker-broken-heart-right-anim {
-            transform-origin: center 65%;
-            animation: picker-break-right 0.7s ease-out forwards;
+            0% { transform: translate(0) rotate(0); }
+            100% { transform: translate(2px, -1px) rotate(10deg); }
           }
         `}
       </style>
       <path
-        className="picker-broken-heart-left-anim"
-        d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09L12 5.18V21.35z"
+        className="picker-heart-left"
+        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09L12 5.18z"
       />
       <path
-        className="picker-broken-heart-right-anim"
-        d="M12 5.18L13.09 3.81C14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35V5.18z"
+        className="picker-heart-right"
+        d="M12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3c-1.74 0-3.41.81-4.5 2.09L12 5.18z"
       />
     </svg>
   );
@@ -664,3 +668,6 @@ const ColorPickerView = () => {
 };
 
 export default ColorPickerView;
+
+
+    
