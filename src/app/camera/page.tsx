@@ -5,10 +5,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon, MousePointer2, Copy } from 'lucide-react';
+import { Camera, Zap, ZapOff, SwitchCamera, Circle, Sun, Moon, MousePointer2, Copy, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from 'next/link';
 
 const CameraView = () => {
   const router = useRouter();
@@ -200,6 +201,17 @@ const CameraView = () => {
 
   return (
     <div className="relative w-full h-svh bg-black flex flex-col items-center justify-center overflow-hidden" style={{ touchAction: 'none' }}>
+       <Link href="/choose" className="absolute top-5 left-5 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-12 w-12 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+      </Link>
+
       <video
         ref={videoRef}
         autoPlay
