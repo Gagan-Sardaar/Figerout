@@ -91,6 +91,9 @@ export default function ChoosePage() {
                     />
                  </div>
             </CardContent>
+            <div className="text-center text-sm text-muted-foreground pt-8">
+                <p>We only see the colours — your image isn’t stored anywhere.</p>
+            </div>
         </Card>
       </div>
       <div className="absolute bottom-0 w-full">
