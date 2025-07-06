@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -11,13 +12,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { MoreHorizontal, FilePenLine, Palette, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { FilePenLine, Palette, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +21,17 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from 'date-fns';
@@ -183,23 +189,32 @@ export default function VisitorDashboardPage() {
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg font-medium">{color.name}</h3>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2 text-muted-foreground">
-                                <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => openNoteDialog(color)}>
-                                    <FilePenLine className="mr-2 h-4 w-4" />
-                                    <span>{color.note ? 'Edit Note' : 'Add Note'}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleDeleteColor(color.hex)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    <span>Delete</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-0 -mt-2 -mr-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openNoteDialog(color)}>
+                                <FilePenLine className="h-4 w-4" />
+                                <span className="sr-only">Add/Edit Note</span>
+                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Delete Color</span>
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will permanently delete the color '{color.name}' ({color.hex}). This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteColor(color.hex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
                     </div>
                     <div className="flex-grow flex items-center">
                         <p className="text-5xl font-light text-foreground">{color.hex.toUpperCase()}</p>
@@ -207,6 +222,11 @@ export default function VisitorDashboardPage() {
                     <p className="text-sm text-muted-foreground mt-2">
                       Saved {formatDistanceToNow(new Date(color.sharedAt), { addSuffix: true })}
                     </p>
+                    {color.note && (
+                        <p className="mt-4 text-sm text-muted-foreground italic border-l-2 border-muted/50 pl-3 line-clamp-3">
+                            {color.note}
+                        </p>
+                    )}
                   </div>
                 </Card>
               ))}
