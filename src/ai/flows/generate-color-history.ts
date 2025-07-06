@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI agent for generating creative historical or futuristic facts about a color.
+ * @fileOverview An AI agent for generating historical or present-day facts about a color.
  *
  * - generateColorHistory - A function that generates a fun fact.
  * - GenerateColorHistoryInput - The input type.
@@ -16,7 +16,7 @@ const GenerateColorHistoryInputSchema = z.object({
 export type GenerateColorHistoryInput = z.infer<typeof GenerateColorHistoryInputSchema>;
 
 const GenerateColorHistoryOutputSchema = z.object({
-  history: z.string().describe('A single, very concise, creative sentence (around 15-20 words) about the color. It can be a historical fact, a futuristic use, or a fantastical story. It must be engaging and surprising.'),
+  history: z.string().describe('A single, very concise, creative sentence (around 15-20 words) about the color. It must be a historical or present-day fact. It must be engaging and surprising.'),
 });
 export type GenerateColorHistoryOutput = z.infer<typeof GenerateColorHistoryOutputSchema>;
 
@@ -28,14 +28,20 @@ const prompt = ai.definePrompt({
   name: 'generateColorHistoryPrompt',
   input: { schema: GenerateColorHistoryInputSchema },
   output: { schema: GenerateColorHistoryOutputSchema },
-  prompt: `You are a creative historian and futurist who finds fascinating stories about colors.
+  prompt: `You are an expert cultural historian with a deep research algorithm for uncovering fascinating details about colors.
 
-Generate ONE fun, single, very concise sentence (around 15-20 words) about the color '{{{colorName}}}' (hex: {{{colorHex}}}). The fact can be historical, futuristic, or purely fantastical. Make it sound specific and intriguing. Do NOT mention the color name or hex code in your response.
+Your task is to generate ONE engaging, concise sentence (around 15-20 words) about the color '{{{colorName}}}' (hex: {{{colorHex}}}).
 
-Examples for the color 'Galactic Indigo':
-- "In 3057, this shade was used for all emergency alerts broadcast by the Interstellar Embassy."
-- "Medieval alchemists believed this color was powdered starlight, captured only on moonless nights."
-- "Ancient cartographers used it to draw the edges of the known world."
+**Instructions:**
+1.  The fact MUST be from the past (historical) or present day.
+2.  **ABSOLUTELY NO futuristic or purely fantastical statements.**
+3.  The fact should sound specific, plausible, and intriguing.
+4.  Do NOT mention the color's name or hex code in your response.
+
+**Good Examples (Past/Present Focus):**
+- "Legend states Viking longboats were stained this deep hue to camouflage with the fjords."
+- "Ancient cartographers used it to draw the edges of the known world on their maps."
+- "In the Victorian era, this exact pigment was notoriously difficult to produce, making it a status symbol."
 
 Color Name: {{{colorName}}}
 Hex Code: {{{colorHex}}}
