@@ -155,7 +155,6 @@ export default function AdminLayout({
                 <span className="hidden group-data-[state=collapsed]:inline">F</span>
               </Link>
             </div>
-            <SidebarTrigger className="md:hidden" />
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -267,7 +266,14 @@ export default function AdminLayout({
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 flex h-16 items-center justify-between gap-4 border-b bg-background px-6 z-10">
-           <SidebarTrigger className="hidden md:flex"/>
+           <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div className="md:hidden">
+                <Link href="/admin" className="font-headline text-lg font-bold">
+                    Figerout
+                </Link>
+              </div>
+           </div>
            <UserNav />
         </header>
         <main className="flex-1">
