@@ -497,7 +497,7 @@ const ColorPickerView = () => {
               <p className="text-white/70 mt-2 mb-8">
                 Boom! ‘{getColorName(pickedColor)} – {pickedColor.toUpperCase()}’ is copied. Share the vibe with your friends!
               </p>
-              <div className="relative w-full h-4">
+              <div className="relative w-full h-6">
                   <div className="absolute inset-0 h-full bg-white/10 rounded-full overflow-hidden">
                       <div className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-primary/50 via-primary to-accent animate-indeterminate-progress"></div>
                   </div>
