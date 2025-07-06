@@ -25,41 +25,29 @@ const BrokenHeartIcon = ({ className }: { className?: string }) => {
     >
       <style>
         {`
-          .picker-heart-left-g, .picker-heart-right-g {
-            transform-origin: center bottom;
-            animation-duration: 0.6s;
-            animation-timing-function: ease-out;
-            animation-fill-mode: forwards;
+          .heart-break-left {
+            transform-origin: center;
+            animation: heart-break-left-anim 0.6s ease-out forwards;
           }
-          .picker-heart-left-g {
-            animation-name: picker-break-left;
+          .heart-break-right {
+            transform-origin: center;
+            animation: heart-break-right-anim 0.6s ease-out forwards;
           }
-          .picker-heart-right-g {
-            animation-name: picker-break-right;
+          @keyframes heart-break-left-anim {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(-2px, -2px) rotate(-10deg); }
           }
-          @keyframes picker-break-left {
-            0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(-3px, -3px) rotate(-15deg); }
-          }
-          @keyframes picker-break-right {
-            0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(3px, -3px) rotate(15deg); }
+          @keyframes heart-break-right-anim {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(2px, -2px) rotate(10deg); }
           }
         `}
       </style>
-      <defs>
-        <clipPath id="clip-left">
-          <rect x="0" y="0" width="12" height="24" />
-        </clipPath>
-        <clipPath id="clip-right">
-          <rect x="12" y="0" width="12" height="24" />
-        </clipPath>
-      </defs>
-      <g className="picker-heart-left-g" clipPath="url(#clip-left)">
-         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      <g className="heart-break-left">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09" />
       </g>
-      <g className="picker-heart-right-g" clipPath="url(#clip-right)">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      <g className="heart-break-right">
+        <path d="M12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3c-1.74 0-3.41.81-4.5 2.09" />
       </g>
     </svg>
   );
@@ -678,9 +666,3 @@ const ColorPickerView = () => {
 };
 
 export default ColorPickerView;
-
-
-    
-
-    
-
