@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -48,7 +49,7 @@ export default function ChoosePage() {
 
   return (
     <div className="flex flex-col min-h-svh bg-muted/40">
-       <header className="p-6 text-center sm:text-left">
+       <header className="bg-background border-b p-6 text-center sm:text-left">
         <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-foreground">
           Figerout
         </Link>
@@ -58,7 +59,7 @@ export default function ChoosePage() {
             <Card className="border-none shadow-none bg-transparent">
                 <CardHeader className="px-0">
                     <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-muted-foreground pt-2 max-w-lg mx-auto">
+                    <CardDescription className="text-sm sm:text-base text-muted-foreground pt-2 max-w-xl mx-auto">
                         Capture a new moment or explore colors from an existing photo.
                     </CardDescription>
                 </CardHeader>
