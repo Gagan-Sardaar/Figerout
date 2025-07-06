@@ -371,16 +371,16 @@ const ColorPickerView = () => {
       
       {showHint && (
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-          <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500">
-            <span>Touch and drag</span>
-            <div className="relative w-5 h-5 flex items-center justify-center">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm animate-in fade-in duration-500 max-w-xs sm:max-w-none">
+            <span className="text-right">Touch and drag</span>
+            <div className="relative w-5 h-5 flex-shrink-0 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full border border-current bg-current/20" />
                 <ChevronUp className="absolute -top-1 w-3 h-3" />
                 <ChevronDown className="absolute -bottom-1 w-3 h-3" />
                 <ChevronLeft className="absolute -left-1 w-3 h-3" />
                 <ChevronRight className="absolute -right-1 w-3 h-3" />
             </div>
-            <span>to find your colour.</span>
+            <span className="text-left">to find your colour.</span>
           </div>
         </div>
       )}
@@ -502,7 +502,7 @@ const ColorPickerView = () => {
               <p className="text-white/70 mt-2 mb-8">
                 Boom! ‘{getColorName(pickedColor)} – {pickedColor.toUpperCase()}’ is copied. Share the vibe with your friends!
               </p>
-              <div className="relative w-full h-6">
+              <div className="relative w-full h-10">
                   <div className="absolute inset-0 h-full bg-white/10 rounded-full overflow-hidden">
                       <div className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-primary/50 via-primary to-accent animate-indeterminate-progress"></div>
                   </div>
