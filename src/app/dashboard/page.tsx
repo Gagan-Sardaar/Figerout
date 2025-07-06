@@ -208,18 +208,18 @@ export default function VisitorDashboardPage() {
   }, [dialogState]);
 
   return (
-    <div className="bg-background text-foreground flex-1">
+    <div className="bg-background text-foreground flex-1 flex flex-col">
       <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
-          <Card className="bg-primary text-primary-foreground p-6 rounded-2xl flex flex-col h-full">
-              <Avatar className="h-16 w-16 mb-4">
-              <AvatarFallback className="text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
+          <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col h-full">
+              <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4">
+              <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
                   F
               </AvatarFallback>
               </Avatar>
               <p className="text-primary-foreground/80">Saved Colors for</p>
-              <h1 className="text-3xl font-bold">{userName}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold truncate">{userName}</h1>
               <p className="text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
 
               <RoleSwitcher />
@@ -245,7 +245,7 @@ export default function VisitorDashboardPage() {
 
               {/* Mobile Filters */}
               <div className="block md:hidden mt-auto pt-4">
-                <div className="flex space-x-2 overflow-x-auto pb-2 -mx-6 px-6">
+                <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
                   {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                     <Button
                       key={filter}
