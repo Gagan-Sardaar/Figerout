@@ -60,7 +60,7 @@ export default function ChoosePage() {
                     <CardTitle className="text-xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
                     <CardDescription className="text-xs sm:text-base text-muted-foreground pt-2 max-w-2xl mx-auto">
                         <span className="sm:hidden">
-                            Capture a new moment<br />or<br />explore colors from an existing photo.
+                            Capture a new moment or<br />explore colors from an existing photo.
                         </span>
                         <span className="hidden sm:inline">
                             Capture a new moment or explore colors from an existing photo.
