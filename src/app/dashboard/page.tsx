@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -29,7 +30,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from 'date-fns';
-import { generateColorShades } from "@/lib/color-utils";
+import { generateColorShades, isColorLight } from "@/lib/color-utils";
 
 type SavedColor = {
     hex: string;
@@ -173,8 +174,12 @@ export default function VisitorDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredColors.map(color => (
                 <Card key={color.hex} className="bg-card text-card-foreground rounded-2xl flex flex-col overflow-hidden shadow-lg transition-transform hover:-translate-y-1">
-                  <div style={{ backgroundColor: color.hex }} className="h-10 relative flex items-center justify-end p-2">
-                      <Palette className="w-8 h-8 text-black opacity-10" />
+                  <div 
+                    style={{ backgroundColor: color.hex }} 
+                    className="h-10 relative flex items-center justify-end p-2 group cursor-pointer"
+                    onClick={() => openShadesDialog(color)}
+                  >
+                      <Palette className="w-8 h-8 text-black opacity-10 group-hover:opacity-20 transition-opacity" />
                   </div>
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
@@ -246,9 +251,9 @@ export default function VisitorDashboardPage() {
                 )}
                 {dialogState.type === 'shades' && dialogState.color && (
                      <div className="py-4 space-y-2 max-h-80 overflow-y-auto">
-                         {[...colorShades.darker, dialogState.color.hex, ...colorShades.lighter].map((shade, index) => (
-                             <div key={index} className="flex items-center gap-4 p-2 rounded-md" style={{ backgroundColor: shade }}>
-                                 <p className="font-mono font-bold" style={{ color: index > 4 ? '#000' : '#fff' }}>{shade.toUpperCase()}</p>
+                         {[...colorShades.darker, dialogState.color.hex, ...colorShades.lighter].map((shade) => (
+                             <div key={shade} className="flex items-center gap-4 p-2 rounded-md" style={{ backgroundColor: shade }}>
+                                 <p className="font-mono font-bold" style={{ color: isColorLight(shade) ? '#000' : '#fff' }}>{shade.toUpperCase()}</p>
                              </div>
                          ))}
                     </div>
