@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2 } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
@@ -247,6 +247,23 @@ const ColorPickerView = () => {
     }
   };
 
+  const handleCopy = () => {
+    const textToCopy = pickedColor.toUpperCase();
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      toast({
+        title: 'Color Copied!',
+        description: `${getColorName(pickedColor)} (${pickedColor.toUpperCase()}) copied to clipboard.`,
+      });
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        variant: 'destructive',
+        title: 'Copy Failed',
+        description: 'Could not copy to clipboard.',
+      });
+    });
+  };
+
   const handleShare = async () => {
     setIsHistoryModalOpen(true);
     setIsFetchingHistory(true);
@@ -476,9 +493,28 @@ const ColorPickerView = () => {
           onClick={() => setIsHistoryModalOpen(false)}
         >
           <div
-            className="bg-zinc-800 rounded-3xl shadow-2xl text-white w-full max-w-sm overflow-hidden"
+            className="bg-zinc-800 rounded-3xl shadow-2xl text-white w-full max-w-sm overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
+             <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSave}
+                className="absolute top-4 left-4 h-8 w-8 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white z-10"
+                aria-label="Save color"
+            >
+                <Save className="h-4 w-4" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white z-10"
+                aria-label="Close"
+            >
+                <X className="h-4 w-4" />
+            </Button>
+            
             <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="font-mono text-4xl font-bold tracking-widest text-white/80" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
@@ -498,9 +534,9 @@ const ColorPickerView = () => {
                 )}
               </div>
               <div className="mt-8 flex flex-col gap-3">
-                 <Button onClick={handleSave} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
-                      <Save className="mr-2 h-5 w-5" />
-                      Save Color
+                 <Button onClick={handleCopy} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
+                      <Copy className="mr-2 h-5 w-5" />
+                      Copy Color
                   </Button>
                   <Button onClick={() => router.push('/camera')} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
                       <RefreshCw className="mr-2 h-5 w-5" />
