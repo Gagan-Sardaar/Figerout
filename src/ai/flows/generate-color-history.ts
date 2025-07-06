@@ -50,8 +50,31 @@ const generateColorHistoryFlow = ai.defineFlow(
     inputSchema: GenerateColorHistoryInputSchema,
     outputSchema: GenerateColorHistoryOutputSchema,
   },
-  async input => {
-    const { output } = await prompt(input);
-    return output!;
+  async (input) => {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const { output } = await prompt(input);
+        if (output) {
+          return output;
+        }
+      } catch (error: any) {
+        lastError = error;
+        console.warn(
+          `Attempt ${i + 1} of ${maxRetries} failed for generateColorHistoryFlow. Retrying in ${i + 1}s...`
+        );
+        if (i < maxRetries - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+        }
+      }
+    }
+
+    if (lastError) {
+        throw lastError;
+    }
+
+    throw new Error('Failed to generate color history after multiple retries.');
   }
 );
