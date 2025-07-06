@@ -32,6 +32,7 @@ const ColorPickerView = () => {
     position: 'absolute',
     pointerEvents: 'none',
   });
+  const [showShareConfirmation, setShowShareConfirmation] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [colorHistory, setColorHistory] = useState('');
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
@@ -265,57 +266,57 @@ const ColorPickerView = () => {
   };
 
   const handleShare = async () => {
-    setIsHistoryModalOpen(true);
-    setIsFetchingHistory(true);
-    setColorHistory('');
-
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
-    let toastDescription = `A shareable link for ${colorName} is ready.`;
 
     if (isUserLoggedIn) {
-        try {
-            const storedColorsRaw = localStorage.getItem('savedColors');
-            const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
-            const newColor = {
-                hex: pickedColor.toUpperCase(),
-                name: colorName,
-                sharedAt: new Date().toISOString()
-            };
-            if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
-                 const updatedColors = [newColor, ...savedColors];
-                 localStorage.setItem('savedColors', JSON.stringify(updatedColors));
-                 toastDescription = `The link is copied and the color has been saved to your dashboard.`
-            }
-        } catch (e) {
-            console.error("Could not save color to localStorage", e);
+      try {
+        const storedColorsRaw = localStorage.getItem('savedColors');
+        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
+        const newColor = {
+          hex: pickedColor.toUpperCase(),
+          name: colorName,
+          sharedAt: new Date().toISOString(),
+        };
+        if (!savedColors.some((c: {hex: string}) => c.hex === newColor.hex)) {
+          const updatedColors = [newColor, ...savedColors];
+          localStorage.setItem('savedColors', JSON.stringify(updatedColors));
         }
+      } catch (e) {
+        console.error('Could not save color to localStorage', e);
+      }
     }
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        toast({
-            title: 'Link Copied!',
-            description: toastDescription,
-        });
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-        toast({
-            variant: 'destructive',
-            title: 'Copy Failed',
-            description: 'Could not copy to clipboard.',
-        });
+    navigator.clipboard.writeText(textToCopy).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        variant: 'destructive',
+        title: 'Copy Failed',
+        description: 'Could not copy to clipboard.',
+      });
     });
 
-    try {
-        const result = await generateColorHistory({ colorHex: pickedColor, colorName });
+    setShowShareConfirmation(true);
+
+    setIsFetchingHistory(true);
+    setColorHistory('');
+    generateColorHistory({colorHex: pickedColor, colorName})
+      .then(result => {
         setColorHistory(result.history);
-    } catch (error) {
-        console.error("Error generating color history:", error);
-        setColorHistory("A truly unique color with a story yet to be written.");
-    } finally {
+      })
+      .catch(error => {
+        console.error('Error generating color history:', error);
+        setColorHistory('A truly unique color with a story yet to be written.');
+      })
+      .finally(() => {
         setIsFetchingHistory(false);
-    }
+      });
+
+    setTimeout(() => {
+      setShowShareConfirmation(false);
+      setIsHistoryModalOpen(true);
+    }, 5000);
   };
 
   const CalloutContent = (
@@ -482,6 +483,20 @@ const ColorPickerView = () => {
                     </div>
                 ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Confirmation Modal */}
+      {showShareConfirmation && (
+        <div 
+          className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <div className="bg-zinc-800 rounded-xl shadow-2xl text-white w-full max-w-sm p-8 text-center">
+              <h2 className="text-2xl font-bold tracking-tight">Link Copied!</h2>
+              <p className="text-white/70 mt-2">
+                  The link is copied and the color has been saved to your dashboard.
+              </p>
           </div>
         </div>
       )}
