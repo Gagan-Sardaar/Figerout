@@ -20,40 +20,47 @@ const BrokenHeartIcon = ({ className }: { className?: string }) => {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
+      stroke="none"
       className={cn(className)}
     >
       <style>
         {`
-          .picker-heart-left, .picker-heart-right {
+          .picker-heart-left-g, .picker-heart-right-g {
             transform-origin: center bottom;
             animation-duration: 0.6s;
             animation-timing-function: ease-out;
             animation-fill-mode: forwards;
           }
-          .picker-heart-left {
+          .picker-heart-left-g {
             animation-name: picker-break-left;
           }
-          .picker-heart-right {
+          .picker-heart-right-g {
             animation-name: picker-break-right;
           }
           @keyframes picker-break-left {
             0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(-2px, -2px) rotate(-10deg); }
+            100% { transform: translate(-3px, -3px) rotate(-15deg); }
           }
           @keyframes picker-break-right {
             0% { transform: translate(0) rotate(0); }
-            100% { transform: translate(2px, -2px) rotate(10deg); }
+            100% { transform: translate(3px, -3px) rotate(15deg); }
           }
         `}
       </style>
-      <path
-        className="picker-heart-left"
-        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09L12 5.09V21.35z"
-      />
-      <path
-        className="picker-heart-right"
-        d="M16.5 3C14.76 3 13.09 3.81 12 5.09v16.26l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z"
-      />
+      <defs>
+        <clipPath id="clip-left">
+          <rect x="0" y="0" width="12" height="24" />
+        </clipPath>
+        <clipPath id="clip-right">
+          <rect x="12" y="0" width="12" height="24" />
+        </clipPath>
+      </defs>
+      <g className="picker-heart-left-g" clipPath="url(#clip-left)">
+         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </g>
+      <g className="picker-heart-right-g" clipPath="url(#clip-right)">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </g>
     </svg>
   );
 };
@@ -652,14 +659,14 @@ const ColorPickerView = () => {
          <Button
             onClick={() => router.push('/choose')}
             className={cn(
-              "h-20 w-20 rounded-full border-4 active:scale-95 transition-all",
+              "h-20 w-20 rounded-full border-4 p-2 active:scale-95 transition-all",
               isAtBoundary 
                 ? "border-red-500 bg-red-500/30 text-red-500 pointer-events-none" 
                 : "border-white bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
             )}
             aria-label="Retake photo"
           >
-            {isAtBoundary ? <BrokenHeartIcon className="h-16 w-16" /> : <RefreshCw className="h-9 w-9" />}
+            {isAtBoundary ? <BrokenHeartIcon className="h-full w-full" /> : <RefreshCw className="h-9 w-9" />}
          </Button>
       </div>
 
