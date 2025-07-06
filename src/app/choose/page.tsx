@@ -55,11 +55,11 @@ export default function ChoosePage() {
         </Link>
       </header>
       <main className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-xl text-center">
+        <div className="w-full max-w-2xl text-center">
             <Card className="border-none shadow-none bg-transparent">
                 <CardHeader className="px-0">
-                    <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-muted-foreground pt-2 max-w-xl mx-auto">
+                    <CardTitle className="text-xl sm:text-3xl font-bold tracking-tight">How would you like to find a color?</CardTitle>
+                    <CardDescription className="text-xs sm:text-base text-muted-foreground pt-2 max-w-2xl mx-auto">
                         Capture a new moment or explore colors from an existing photo.
                     </CardDescription>
                 </CardHeader>
