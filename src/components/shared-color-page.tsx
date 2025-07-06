@@ -59,7 +59,16 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
 
         </div>
       </div>
-      <p className="text-xs text-muted-foreground mt-6">&copy; {new Date().getFullYear()} Figerout</p>
+      <footer className="text-center text-xs text-muted-foreground mt-6 space-y-2">
+        <div className="flex justify-center items-center gap-x-4 gap-y-1 flex-wrap">
+          <Link href="/about" className="hover:text-foreground">About</Link>
+          <Link href="/blog" className="hover:text-foreground">Blog</Link>
+          <Link href="/contact" className="hover:text-foreground">Contact</Link>
+          <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+          <Link href="/terms" className="hover:text-foreground">Terms</Link>
+        </div>
+        <p>&copy; {new Date().getFullYear()} Figerout</p>
+      </footer>
     </div>
   );
 };

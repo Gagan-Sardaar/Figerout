@@ -102,8 +102,6 @@ const WelcomeScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
-  const [isCreditExpanded, setIsCreditExpanded] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -231,81 +229,29 @@ const WelcomeScreen = () => {
           
           {/* Footer left */}
           <div className="absolute bottom-2 left-2 z-20">
-            <div
-              className="relative"
-              onMouseEnter={() => setIsFooterExpanded(true)}
-              onMouseLeave={() => setIsFooterExpanded(false)}
-            >
-              <div className="rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm">
-                <div className="flex cursor-default items-center gap-1">
-                  <ChevronUp
-                    className={cn(
-                      'h-3 w-3 shrink-0 transition-transform duration-300',
-                      isFooterExpanded && 'rotate-180'
-                    )}
-                  />
-                  <span>
-                    &copy; {new Date().getFullYear()} Figerout
-                  </span>
-                </div>
-                <div
-                  className={cn(
-                    'grid grid-rows-[0fr] transition-[grid-template-rows,padding-top,margin-top] duration-300 ease-in-out',
-                    isFooterExpanded && 'grid-rows-[1fr] pt-1 mt-1'
-                  )}
-                >
-                  <div className="overflow-hidden">
-                    <div className="flex flex-col items-start gap-1 border-t border-white/20 pt-1">
-                      <Link href="/about" className="hover:text-white">About Us</Link>
-                      <Link href="/blog" className="hover:text-white">Blog</Link>
-                      <Link href="/contact" className="hover:text-white">Contact Us</Link>
-                      <Link href="/admin" className="hover:text-white">Dashboard</Link>
-                      <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
-                      <Link href="/terms" className="hover:text-white">Terms of Service</Link>
-                      <Link href="/cookies" className="hover:text-white">Cookie Policy</Link>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-x-4 gap-y-1 flex-wrap rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm">
+              <span>&copy; {new Date().getFullYear()} Figerout</span>
+              <div className="hidden items-center gap-x-3 border-l border-white/20 pl-3 sm:flex">
+                <Link href="/about" className="hover:text-white">About</Link>
+                <Link href="/blog" className="hover:text-white">Blog</Link>
+                <Link href="/contact" className="hover:text-white">Contact</Link>
+                <Link href="/privacy" className="hover:text-white">Privacy</Link>
+                <Link href="/terms" className="hover:text-white">Terms</Link>
               </div>
             </div>
           </div>
 
           {/* Footer right */}
-          <div
-            className="absolute bottom-2 right-2 z-20"
-            onMouseEnter={() => setIsCreditExpanded(true)}
-            onMouseLeave={() => setIsCreditExpanded(false)}
-          >
-            <div
-              className="relative flex items-center gap-1 rounded-lg bg-black/20 p-1 text-xs text-white/70 backdrop-blur-sm transition-all duration-300 ease-in-out"
+          <div className="absolute bottom-2 right-2 z-20">
+            <a
+              href={activeSlide.photographerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm transition-colors hover:text-white"
             >
-              <ChevronLeft
-                className={cn(
-                  'h-4 w-4 shrink-0 transition-transform duration-300',
-                  isCreditExpanded && 'rotate-180'
-                )}
-              />
-              <div
-                className={cn(
-                  'grid grid-cols-[0fr] transition-[grid-template-columns] duration-300 ease-in-out',
-                  isCreditExpanded && 'grid-cols-[1fr]'
-                )}
-              >
-                <div className="overflow-hidden whitespace-nowrap pr-1.5">
-                   <a
-                    href={activeSlide.photographerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 hover:text-white"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span>by {activeSlide.photographer}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                </div>
-              </div>
               <User className="h-3 w-3 shrink-0" />
-            </div>
+              <span className="hidden sm:inline">Photo by {activeSlide.photographer}</span>
+            </a>
           </div>
           <CookieBanner />
         </>
