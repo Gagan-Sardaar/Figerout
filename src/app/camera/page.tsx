@@ -17,7 +17,7 @@ const CameraView = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [hasFlash, setHasFlash] = useState(false);
   const [isFlashOn, setIsFlashOn] = useState(false);
@@ -41,11 +41,11 @@ const CameraView = () => {
   }, [instructions.length]);
 
   const cleanupStream = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-  }, [stream]);
+  }, []);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) {
@@ -73,6 +73,9 @@ const CameraView = () => {
   const getCameraStream = useCallback(async (mode: 'environment' | 'user') => {
     cleanupStream();
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported on this browser.');
+      }
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: mode,
@@ -83,7 +86,7 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
       }
-      setStream(newStream);
+      streamRef.current = newStream;
       setHasCameraPermission(true);
 
       const videoTrack = newStream.getVideoTracks()[0];
@@ -100,6 +103,8 @@ const CameraView = () => {
       let message = 'Camera access was denied.';
       if(err instanceof Error && err.name === "NotFoundError") {
         message = `Could not find ${mode} camera.`;
+      } else if (err instanceof Error) {
+        message = err.message;
       }
       toast({
         title: 'Camera Error',
@@ -125,8 +130,8 @@ const CameraView = () => {
     setIsFlashOn(newFlashState);
     
     // Only apply physical torch for back camera.
-    if (hasFlash && stream && facingMode === 'environment') {
-      const videoTrack = stream.getVideoTracks()[0];
+    if (hasFlash && streamRef.current && facingMode === 'environment') {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
       videoTrack.applyConstraints({ advanced: [{ torch: newFlashState }] });
     }
   };
@@ -139,8 +144,8 @@ const CameraView = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     // Turn off physical flash if it's on before navigating away.
-    if (stream && hasFlash && isFlashOn && facingMode === 'environment') {
-      const videoTrack = stream.getVideoTracks()[0];
+    if (streamRef.current && hasFlash && isFlashOn && facingMode === 'environment') {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
       try {
         videoTrack.applyConstraints({ advanced: [{ torch: false }] });
       } catch (e) {
