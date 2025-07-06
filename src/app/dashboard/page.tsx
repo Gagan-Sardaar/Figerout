@@ -209,7 +209,7 @@ export default function VisitorDashboardPage() {
 
   return (
     <div className="bg-background text-foreground flex-1">
-      <div className="flex flex-col md:flex-row gap-8 h-full p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
           <Card className="bg-primary text-primary-foreground p-6 rounded-2xl flex flex-col h-full">
@@ -252,14 +252,15 @@ export default function VisitorDashboardPage() {
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "capitalize shrink-0 px-4",
+                        "shrink-0 px-4",
+                        filter === 'all' ? 'uppercase' : 'capitalize',
                         activeFilter === filter
                           ? "bg-primary-foreground/20 text-white font-semibold"
                           : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
                       )}
                       onClick={() => setActiveFilter(filter)}
                     >
-                      {filter === 'all' ? 'All Time' : filter}
+                      {filter === 'all' ? 'All' : filter}
                     </Button>
                   ))}
                 </div>
