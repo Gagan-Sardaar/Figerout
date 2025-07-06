@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,7 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/user-data";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2 } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -43,7 +44,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
   const router = useRouter();
-  const [backgroundImage, setBackgroundImage] = useState<string>('');
+  const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,9 +54,9 @@ export default function LoginPage() {
 
       if (storedBg) {
         try {
-          const { url, expiry } = JSON.parse(storedBg);
+          const { url, expiry, photographer, photographerUrl } = JSON.parse(storedBg);
           if (now < expiry) {
-            setBackgroundImage(url);
+            setBackgroundDetails({ url, photographer, photographerUrl });
             setIsLoading(false);
             return;
           }
@@ -70,10 +71,14 @@ export default function LoginPage() {
       const imageResult = await searchPexelsImage(randomQuery);
       
       if (imageResult?.dataUri) {
-        const newUrl = imageResult.dataUri;
+        const bgDetails = {
+            url: imageResult.dataUri,
+            photographer: imageResult.photographer,
+            photographerUrl: imageResult.photographerUrl,
+        };
         const newExpiry = now + 24 * 60 * 60 * 1000; // 24 hours
-        localStorage.setItem('loginBackground', JSON.stringify({ url: newUrl, expiry: newExpiry }));
-        setBackgroundImage(newUrl);
+        localStorage.setItem('loginBackground', JSON.stringify({ ...bgDetails, expiry: newExpiry }));
+        setBackgroundDetails(bgDetails);
       }
       setIsLoading(false);
     };
@@ -120,7 +125,7 @@ export default function LoginPage() {
     <div
       className="flex min-h-svh items-center justify-center p-4 bg-background transition-all duration-1000"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: `url(${backgroundDetails?.url || ''})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -196,6 +201,34 @@ export default function LoginPage() {
           </AlertDialog>
         )}
       </div>
+      {backgroundDetails && !isLoading && (
+        <>
+            <div className="absolute bottom-2 left-2 z-20">
+                <div className="flex items-center gap-x-4 gap-y-1 flex-wrap rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm">
+                    <span>&copy; {new Date().getFullYear()} Figerout</span>
+                    <div className="hidden items-center gap-x-3 border-l border-white/20 pl-3 sm:flex">
+                        <Link href="/about" className="hover:text-white">About</Link>
+                        <Link href="/blog" className="hover:text-white">Blog</Link>
+                        <Link href="/contact" className="hover:text-white">Contact</Link>
+                        <Link href="/privacy" className="hover:text-white">Privacy</Link>
+                        <Link href="/terms" className="hover:text-white">Terms</Link>
+                    </div>
+                </div>
+            </div>
+
+            <div className="absolute bottom-2 right-2 z-20">
+                <a
+                href={backgroundDetails.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm transition-colors hover:text-white"
+                >
+                <User className="h-3 w-3 shrink-0" />
+                <span className="hidden sm:inline">Photo by {backgroundDetails.photographer}</span>
+                </a>
+            </div>
+        </>
+      )}
     </div>
   )
 }
