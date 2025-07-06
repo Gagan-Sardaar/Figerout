@@ -384,11 +384,14 @@ const ColorPickerView = () => {
         <div className="flex items-center p-3 gap-2">
             <button 
               onClick={() => setIsPaletteOpen(true)}
-              className="relative w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-800"
+              className={cn(
+                "relative w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-800",
+                isPickedColorLight ? "border-black/20 focus:ring-black" : "border-white/20 focus:ring-white"
+              )}
               style={{ backgroundColor: pickedColor }}
               aria-label="Open color palette"
             >
-              <Palette className="w-4 h-4 text-white opacity-75" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }}/>
+              <Palette className={cn("w-4 h-4 opacity-75", isPickedColorLight ? "text-black" : "text-white")} />
             </button>
             <div className="flex-grow">
                 <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
@@ -659,7 +662,7 @@ const ColorPickerView = () => {
          <Button
             onClick={() => router.push('/choose')}
             className={cn(
-              "h-20 w-20 rounded-full border-4 p-2 active:scale-95 transition-all",
+              "h-16 w-16 rounded-full border-4 p-2 active:scale-95 transition-all",
               isAtBoundary 
                 ? "border-red-500 bg-red-500/30 text-red-500 pointer-events-none" 
                 : "border-white bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
@@ -680,3 +683,4 @@ export default ColorPickerView;
     
 
     
+

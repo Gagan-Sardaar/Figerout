@@ -145,8 +145,8 @@ export default function VisitorDashboardPage() {
     <div className="bg-background text-foreground h-full">
       <div className="flex flex-col md:flex-row gap-8 h-full p-4 sm:p-6 md:p-8">
         
-        <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
-          <Card className="bg-primary text-primary-foreground p-6 rounded-2xl flex flex-col md:h-full">
+        <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
+          <Card className="bg-primary text-primary-foreground p-6 rounded-2xl flex flex-col h-full">
               <Avatar className="h-16 w-16 mb-4">
               <AvatarFallback className="text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
                   F
@@ -184,7 +184,10 @@ export default function VisitorDashboardPage() {
                     className="h-10 relative flex items-center justify-end p-2 group cursor-pointer"
                     onClick={() => openShadesDialog(color)}
                   >
-                      <Palette className="w-8 h-8 text-black opacity-10 group-hover:opacity-20 transition-opacity" />
+                      <Palette className={cn(
+                        "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity",
+                        isColorLight(color.hex) ? "text-black" : "text-white"
+                      )} />
                   </div>
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
