@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
@@ -5,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades } from '@/lib/color-utils';
 
@@ -24,6 +25,7 @@ const ColorPickerView = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [isAtBoundary, setIsAtBoundary] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({
     opacity: 0,
     position: 'absolute',
@@ -37,6 +39,8 @@ const ColorPickerView = () => {
     } else {
       router.push('/camera');
     }
+    const user = localStorage.getItem('loggedInUser');
+    setIsUserLoggedIn(!!user);
   }, [router]);
 
   const shades = React.useMemo(() => generateColorShades(pickedColor, 3), [pickedColor]);
@@ -193,33 +197,44 @@ const ColorPickerView = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
 
+  const handleSaveRedirect = () => {
+    const colorToSave = {
+      hex: pickedColor.toUpperCase(),
+      name: getColorName(pickedColor),
+    };
+    sessionStorage.setItem('colorToSaveAfterLogin', JSON.stringify(colorToSave));
+    router.push('/login');
+  };
+
   const handleShare = () => {
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
     const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
-    
-    // Save to local storage for the dashboard
-    try {
-        const storedColorsRaw = localStorage.getItem('savedColors');
-        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
-        const newColor = {
-            hex: pickedColor.toUpperCase(),
-            name: colorName,
-            sharedAt: new Date().toISOString()
-        };
-        // Avoid duplicates
-        if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
-             const updatedColors = [newColor, ...savedColors];
-             localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+    let toastDescription = `A shareable link for ${colorName} is ready.`;
+
+    if (isUserLoggedIn) {
+        try {
+            const storedColorsRaw = localStorage.getItem('savedColors');
+            const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
+            const newColor = {
+                hex: pickedColor.toUpperCase(),
+                name: colorName,
+                sharedAt: new Date().toISOString()
+            };
+            if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
+                 const updatedColors = [newColor, ...savedColors];
+                 localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+                 toastDescription = `The link is copied and the color has been saved to your dashboard.`
+            }
+        } catch (e) {
+            console.error("Could not save color to localStorage", e);
         }
-    } catch (e) {
-        console.error("Could not save color to localStorage", e);
     }
 
     navigator.clipboard.writeText(textToCopy).then(() => {
         toast({
-            title: 'Color copied & saved!',
-            description: `${colorName} (${pickedColor.toUpperCase()}) is ready to share and has been saved to your dashboard.`,
+            title: 'Link Copied!',
+            description: toastDescription,
         });
     }).catch(err => {
         console.error('Failed to copy text: ', err);
@@ -235,7 +250,7 @@ const ColorPickerView = () => {
     <div 
         className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden"
     >
-        <div className="flex items-center p-3 gap-3">
+        <div className="flex items-center p-3 gap-2">
             <button 
               onClick={() => setIsPaletteOpen(true)}
               className="relative w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-800"
@@ -248,10 +263,18 @@ const ColorPickerView = () => {
                 <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
                 <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
             </div>
-            <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
-                <Share2 className="w-4 h-4" />
-                <span className="text-xs">Share</span>
-            </Button>
+            <div className="flex items-center gap-1">
+                {!isUserLoggedIn && (
+                    <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleSaveRedirect}>
+                        <Save className="w-4 h-4" />
+                        <span className="text-xs">Save</span>
+                    </Button>
+                )}
+                <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
+                    <Share2 className="w-4 h-4" />
+                    <span className="text-xs">Share</span>
+                </Button>
+            </div>
         </div>
     </div>
   );

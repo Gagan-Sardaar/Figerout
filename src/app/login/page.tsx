@@ -101,6 +101,27 @@ export default function LoginPage() {
     if (user) {
       localStorage.setItem('loggedInUser', JSON.stringify(user));
       
+      // Check for a color to save after login
+      const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
+      if (colorToSaveJSON) {
+        try {
+          const colorToSave = JSON.parse(colorToSaveJSON);
+          const storedColorsRaw = localStorage.getItem('savedColors');
+          const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
+          const newColor = {
+            ...colorToSave,
+            sharedAt: new Date().toISOString()
+          };
+          if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
+            const updatedColors = [newColor, ...savedColors];
+            localStorage.setItem('savedColors', JSON.stringify(updatedColors));
+          }
+          sessionStorage.removeItem('colorToSaveAfterLogin');
+        } catch (e) {
+          console.error("Failed to save color after login", e);
+        }
+      }
+      
       toast({
         title: "Login Successful",
         description: `Welcome back, ${user.name}. Redirecting...`,
