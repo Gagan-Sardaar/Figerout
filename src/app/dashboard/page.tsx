@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -12,7 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FilePenLine, Palette, Trash2 } from "lucide-react";
+import { FilePenLine, Palette, Trash2, ChevronsUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from 'date-fns';
 import { generateColorShades, isColorLight } from "@/lib/color-utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { User } from "@/lib/user-data";
 
 type SavedColor = {
     hex: string;
@@ -50,6 +60,62 @@ type DialogState = {
     isOpen: boolean;
     type: 'note' | 'shades' | null;
     color: SavedColor | null;
+}
+
+const RoleSwitcher = () => {
+    const router = useRouter();
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [originalUser, setOriginalUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('loggedInUser');
+        if (storedUser) {
+            setCurrentUser(JSON.parse(storedUser));
+        }
+        const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
+        if (storedOriginalUser) {
+            setOriginalUser(JSON.parse(storedOriginalUser));
+        }
+    }, []);
+
+    const handleSwitchRole = (newRole: 'Admin' | 'Editor' | 'Viewer') => {
+        const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
+        if (!storedOriginalUser) return;
+
+        const userToModify = JSON.parse(storedOriginalUser);
+        userToModify.role = newRole;
+        localStorage.setItem('loggedInUser', JSON.stringify(userToModify));
+
+        if (newRole === 'Viewer') {
+            window.location.reload();
+        } else {
+            router.push('/admin');
+        }
+    };
+
+    if (!currentUser || originalUser?.role !== 'Admin') {
+        return null;
+    }
+
+    return (
+        <div className="mt-4">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-between text-base px-3 py-2 h-auto text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white">
+                        <span>View: {currentUser.role}</span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" side="top">
+                    <DropdownMenuLabel>Switch Dashboard View</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleSwitchRole('Admin')}>Admin</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSwitchRole('Editor')}>Editor</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSwitchRole('Viewer')}>Viewer</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
 }
 
 export default function VisitorDashboardPage() {
@@ -155,8 +221,10 @@ export default function VisitorDashboardPage() {
               <p className="text-primary-foreground/80">Saved Colors for</p>
               <h1 className="text-3xl font-bold">{userName}</h1>
               <p className="text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
+
+              <RoleSwitcher />
               
-              <nav className="mt-8 space-y-1">
+              <nav className="mt-auto pt-4 space-y-1">
               {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                   <Button
                   key={filter}
