@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -194,10 +193,6 @@ export default function VisitorDashboardPage() {
                                 <DropdownMenuItem onSelect={() => openNoteDialog(color)}>
                                     <FilePenLine className="mr-2 h-4 w-4" />
                                     <span>{color.note ? 'Edit Note' : 'Add Note'}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => openShadesDialog(color)}>
-                                    <Palette className="mr-2 h-4 w-4" />
-                                    <span>View Shades</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleDeleteColor(color.hex)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
                                     <Trash2 className="mr-2 h-4 w-4" />
