@@ -494,16 +494,16 @@ const ColorPickerView = () => {
         >
           <div className="bg-zinc-800 rounded-xl shadow-2xl text-white w-full max-w-sm p-8 text-center">
               <h2 className="text-2xl font-bold tracking-tight">Colour Ready to Share</h2>
-              <p className="text-white/70 mt-2 mb-6">
+              <p className="text-white/70 mt-2 mb-8">
                 Boom! ‘{getColorName(pickedColor)} – {pickedColor.toUpperCase()}’ is copied. Share the vibe with your friends!
               </p>
-              <div className="relative w-full h-5">
+              <div className="relative w-full h-4">
                   <div className="absolute inset-0 h-full bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-white/30 animate-progress"></div>
+                      <div className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-primary/50 via-primary to-accent animate-indeterminate-progress"></div>
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-xs font-semibold text-white/90" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                          Getting color historical info...
+                          Fetching your color's history…
                       </p>
                   </div>
               </div>
@@ -541,7 +541,7 @@ const ColorPickerView = () => {
             </Button>
             
             <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
                 <p className="font-mono text-4xl font-bold tracking-widest text-white/80" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
                   {pickedColor.toUpperCase()}
                 </p>
