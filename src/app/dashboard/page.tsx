@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -138,9 +137,9 @@ export default function VisitorDashboardPage() {
 
   return (
     <div className="bg-background text-foreground min-h-screen p-4 sm:p-6 md:p-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
           <Card className="bg-primary text-primary-foreground p-6 rounded-2xl h-full flex flex-col">
             <Avatar className="h-16 w-16 mb-4">
               <AvatarFallback className="text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
@@ -169,9 +168,9 @@ export default function VisitorDashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-3">
+        <div className="md:col-span-2">
           {filteredColors.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredColors.map(color => (
                 <Card key={color.hex} className="bg-card text-card-foreground rounded-2xl flex flex-col overflow-hidden shadow-lg transition-transform hover:-translate-y-1">
                   <div style={{ backgroundColor: color.hex }} className="h-10 relative flex items-center justify-end p-2">
