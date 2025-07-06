@@ -480,8 +480,8 @@ const ColorPickerView = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-48 w-full" style={{ backgroundColor: pickedColor }}>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                <p className="font-mono text-xl tracking-widest text-white/80" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="font-mono text-4xl font-bold tracking-widest text-white/80" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
                   {pickedColor.toUpperCase()}
                 </p>
               </div>
