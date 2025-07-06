@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -46,13 +47,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/user-data";
-
-type SavedColor = {
-    hex: string;
-    name: string;
-    sharedAt: string;
-    note?: string;
-}
+import {
+    getSavedColors,
+    deleteColor,
+    updateColorNote,
+    type SavedColor,
+} from "@/services/color-service";
 
 type FilterType = 'all' | 'daily' | 'weekly' | 'monthly';
 
@@ -140,18 +140,11 @@ export default function VisitorDashboardPage() {
 
   useEffect(() => {
     if (userEmail) {
-      const storageKey = `savedColors_${userEmail}`;
-      const storedColors = localStorage.getItem(storageKey);
-      if (storedColors) {
-        try {
-          setSavedColors(JSON.parse(storedColors));
-        } catch (e) {
-          console.error(e);
-          setSavedColors([]);
-        }
-      } else {
-        setSavedColors([]);
-      }
+        const fetchColors = async () => {
+            const colors = await getSavedColors(userEmail);
+            setSavedColors(colors);
+        };
+        fetchColors();
     }
   }, [userEmail]);
 
@@ -177,15 +170,16 @@ export default function VisitorDashboardPage() {
     }).sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime());
   }, [savedColors, activeFilter]);
 
-  const handleDeleteColor = (hex: string) => {
+  const handleDeleteColor = async (hex: string) => {
     if (!userEmail) return;
-    const storageKey = `savedColors_${userEmail}`;
-    const updatedColors = savedColors.filter(color => color.hex !== hex);
-    setSavedColors(updatedColors);
-    localStorage.setItem(storageKey, JSON.stringify(updatedColors));
+    const colorToDelete = savedColors.find(c => c.hex === hex);
+    if (!colorToDelete) return;
+
+    await deleteColor(userEmail, hex);
+    setSavedColors(prev => prev.filter(color => color.hex !== hex));
     toast({
       title: "Color Removed",
-      description: `The color ${hex} has been removed from your collection.`,
+      description: `The color ${colorToDelete.name} has been removed from your collection.`,
     });
   };
 
@@ -198,17 +192,15 @@ export default function VisitorDashboardPage() {
     setDialogState({ isOpen: true, type: 'shades', color });
   };
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async () => {
     if (!dialogState.color || !userEmail) return;
-    const storageKey = `savedColors_${userEmail}`;
-    const updatedColors = savedColors.map(c => 
+    await updateColorNote(userEmail, dialogState.color.hex, noteContent);
+    setSavedColors(prev => prev.map(c => 
       c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
-    );
-    setSavedColors(updatedColors);
-    localStorage.setItem(storageKey, JSON.stringify(updatedColors));
+    ));
     toast({
       title: "Note Saved",
-      description: `Your note for ${dialogState.color.hex} has been saved.`,
+      description: `Your note for ${dialogState.color.name} has been saved.`,
     });
     setDialogState({ isOpen: false, type: null, color: null });
   };
@@ -349,7 +341,7 @@ export default function VisitorDashboardPage() {
                   You haven't saved any colors for this period.
                 </p>
                 <Button asChild className="mt-4">
-                  <a href="/camera">Find Colors</a>
+                  <Link href="/choose">Find Colors</Link>
                 </Button>
             </div>
           )}

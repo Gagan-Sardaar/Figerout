@@ -10,6 +10,7 @@ import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, C
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades, isColorLight } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
+import { saveColor } from '@/services/color-service';
 
 type Point = { x: number; y: number };
 
@@ -265,33 +266,20 @@ const ColorPickerView = () => {
     router.push('/login');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isUserLoggedIn && user) {
       const colorName = getColorName(pickedColor);
       try {
-        const storageKey = `savedColors_${user.email}`;
-        const storedColorsRaw = localStorage.getItem(storageKey);
-        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
-        const newColor = {
+        await saveColor(user.email, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
-          sharedAt: new Date().toISOString()
-        };
-        if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
-           const updatedColors = [newColor, ...savedColors];
-           localStorage.setItem(storageKey, JSON.stringify(updatedColors));
-           toast({
-              title: 'Color Saved!',
-              description: `${colorName} has been saved to your dashboard.`,
-           });
-        } else {
-           toast({
-              title: 'Color Already Saved',
-              description: `${colorName} is already in your collection.`,
-           });
-        }
+        });
+        toast({
+            title: 'Color Saved!',
+            description: `${colorName} has been saved to your dashboard.`,
+        });
       } catch (e) {
-        console.error("Could not save color to localStorage", e);
+        console.error("Could not save color", e);
         toast({
           variant: 'destructive',
           title: 'Save Failed',
@@ -327,20 +315,12 @@ const ColorPickerView = () => {
 
     if (isUserLoggedIn && user) {
       try {
-        const storageKey = `savedColors_${user.email}`;
-        const storedColorsRaw = localStorage.getItem(storageKey);
-        const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
-        const newColor = {
+        await saveColor(user.email, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
-          sharedAt: new Date().toISOString(),
-        };
-        if (!savedColors.some((c: {hex: string}) => c.hex === newColor.hex)) {
-          const updatedColors = [newColor, ...savedColors];
-          localStorage.setItem(storageKey, JSON.stringify(updatedColors));
-        }
+        });
       } catch (e) {
-        console.error('Could not save color to localStorage', e);
+        console.error('Could not save color', e);
       }
     }
 

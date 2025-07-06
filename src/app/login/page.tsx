@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/user-data";
 import { searchPexelsImage } from "@/app/actions";
 import { Loader2, User } from "lucide-react";
+import { saveColor } from "@/services/color-service";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -86,7 +87,7 @@ export default function LoginPage() {
     fetchAndSetBackground();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email) {
       toast({
         title: "Email required",
@@ -101,22 +102,11 @@ export default function LoginPage() {
     if (user) {
       localStorage.setItem('loggedInUser', JSON.stringify(user));
       
-      // Check for a color to save after login
       const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
       if (colorToSaveJSON) {
         try {
           const colorToSave = JSON.parse(colorToSaveJSON);
-          const storageKey = `savedColors_${user.email}`;
-          const storedColorsRaw = localStorage.getItem(storageKey);
-          const savedColors = storedColorsRaw ? JSON.parse(storedColorsRaw) : [];
-          const newColor = {
-            ...colorToSave,
-            sharedAt: new Date().toISOString()
-          };
-          if (!savedColors.some((c: { hex: string; }) => c.hex === newColor.hex)) {
-            const updatedColors = [newColor, ...savedColors];
-            localStorage.setItem(storageKey, JSON.stringify(updatedColors));
-          }
+          await saveColor(user.email, colorToSave);
           sessionStorage.removeItem('colorToSaveAfterLogin');
         } catch (e) {
           console.error("Failed to save color after login", e);
