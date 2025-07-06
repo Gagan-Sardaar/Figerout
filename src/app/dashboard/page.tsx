@@ -136,8 +136,8 @@ export default function VisitorDashboardPage() {
   }, [dialogState]);
 
   return (
-    <div className="bg-background text-foreground min-h-screen p-4 sm:p-6 md:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="bg-background text-foreground h-full p-4 sm:p-6 md:p-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-full">
         
         <div className="md:col-span-1">
           <Card className="bg-primary text-primary-foreground p-6 rounded-2xl h-full flex flex-col">
@@ -168,7 +168,7 @@ export default function VisitorDashboardPage() {
           </Card>
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 overflow-y-auto">
           {filteredColors.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredColors.map(color => (
