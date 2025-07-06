@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/user-data";
+import { searchPexelsImage } from "@/app/actions";
+import { Loader2 } from "lucide-react";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -40,6 +43,43 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
   const router = useRouter();
+  const [backgroundImage, setBackgroundImage] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAndSetBackground = async () => {
+      const storedBg = localStorage.getItem('loginBackground');
+      const now = new Date().getTime();
+
+      if (storedBg) {
+        try {
+          const { url, expiry } = JSON.parse(storedBg);
+          if (now < expiry) {
+            setBackgroundImage(url);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse login background from localStorage", e);
+        }
+      }
+
+      const queries = ['minimal abstract', 'dark texture', 'gradient wallpaper', 'subtle pattern', 'dark landscape'];
+      const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+      
+      const imageResult = await searchPexelsImage(randomQuery);
+      
+      if (imageResult?.dataUri) {
+        const newUrl = imageResult.dataUri;
+        const newExpiry = now + 24 * 60 * 60 * 1000; // 24 hours
+        localStorage.setItem('loginBackground', JSON.stringify({ url: newUrl, expiry: newExpiry }));
+        setBackgroundImage(newUrl);
+      }
+      setIsLoading(false);
+    };
+
+    fetchAndSetBackground();
+  }, []);
 
   const handleLoginLink = () => {
     if (!email) {
@@ -77,67 +117,85 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-      <AlertDialog>
-        <Card className="mx-auto w-full max-w-sm">
-            <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-                Choose your preferred login method
-            </CardDescription>
-            </CardHeader>
-            <CardContent>
-            <div className="grid gap-4">
-                <Button variant="outline" className="w-full">
-                    <GoogleIcon className="mr-2 h-5 w-5" />
-                    Login with Google
-                </Button>
-                <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+    <div
+      className="flex min-h-svh items-center justify-center p-4 bg-background transition-all duration-1000"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-black/60 z-0" />
+      
+      <div className="relative z-10 w-full">
+        {isLoading ? (
+          <div className="flex justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-white" />
+          </div>
+        ) : (
+          <AlertDialog>
+            <Card className="mx-auto w-full max-w-sm bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
+                <CardHeader>
+                <CardTitle className="text-2xl">Login</CardTitle>
+                <CardDescription>
+                    Choose your preferred login method
+                </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <div className="grid gap-4">
+                    <Button variant="outline" className="w-full">
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Login with Google
+                    </Button>
+                    <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-white/20" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background/0 px-2 text-muted-foreground">
+                        Or continue with
+                        </span>
+                    </div>
+                    </div>
+                    <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                        id="email"
+                        type="email"
+                        placeholder="m@example.com"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-background/50 border-white/20 focus:bg-background/70"
+                    />
+                    </div>
+                    <Button type="button" className="w-full" onClick={handleLoginLink}>
+                        Email me a login link
+                    </Button>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                    </span>
+                <div className="mt-4 text-center text-sm">
+                    Don&apos;t have an account?{" "}
+                    <AlertDialogTrigger asChild>
+                        <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
+                    </AlertDialogTrigger>
                 </div>
-                </div>
-                <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                </div>
-                <Button type="button" className="w-full" onClick={handleLoginLink}>
-                    Email me a login link
-                </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <AlertDialogTrigger asChild>
-                    <Button variant="link" className="underline p-0 h-auto">Sign up</Button>
-                </AlertDialogTrigger>
-            </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
 
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
-            <AlertDialogDescription>
-                We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogAction>OK</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
+                <AlertDialogDescription>
+                    We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogAction>OK</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
     </div>
   )
 }
