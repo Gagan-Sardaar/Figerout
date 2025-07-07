@@ -6,11 +6,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp, ChevronLeft, ChevronRight, User, ExternalLink } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getPexelsImages } from '@/app/actions';
 import { CookieBanner } from '@/components/cookie-banner';
 
 
@@ -26,86 +25,90 @@ type Callout = {
   mobilePosition?: Position;
 };
 
-type SlideConfig = {
-    id: number;
-    callouts: Callout[];
-}
-
 type Slide = {
-  id: number;
   src: string;
-  photographer: string;
-  photographerUrl: string;
   callouts: Callout[];
   hint: string;
 };
 
-const slidesConfig: SlideConfig[] = [
+const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[] }[] = [
     { 
-        id: 32648254, 
+        src: '/images/welcome/slide-1.jpeg',
+        hint: 'reflection woman mirror',
         callouts: [
-            { name: "", hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
+            { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
-        id: 6988665, 
+        src: '/images/welcome/slide-2.jpeg',
+        hint: 'green leaves',
         callouts: [
-            { name: "", hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
+            { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        id: 8367798,
+        src: '/images/welcome/slide-3.jpeg',
+        hint: 'red car',
         callouts: [
-            { name: "", hex: "#6a1910", position: { top: "60%", left: "50%" } }
+            { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        id: 3755021, 
+        src: '/images/welcome/slide-4.jpeg',
+        hint: 'brown concrete building',
         callouts: [
-            { name: "", hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
-            { name: "", hex: "#c3b9b3", position: { top: "65%", left: "55%" }, mobilePosition: { top: "62%", left: "56%" } }
+            { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
+            { hex: "#c3b9b3", position: { top: "65%", left: "55%" }, mobilePosition: { top: "62%", left: "56%" } }
         ] 
     },
     { 
-        id: 6686434, 
+        src: '/images/welcome/slide-5.jpeg',
+        hint: 'modern building facade',
         callouts: [
-            { name: "", hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
+            { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
-        id: 7680203,
+        src: '/images/welcome/slide-6.jpeg',
+        hint: 'flowers bath pink',
         callouts: [
-            { name: "", hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
+            { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        id: 8317652,
+        src: '/images/welcome/slide-7.jpeg',
+        hint: 'woman trench coat',
         callouts: [
-            { name: "", hex: "#a794bb", position: { top: "60%", left: "45%" } }
+            { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        id: 720815,
+        src: '/images/welcome/slide-8.jpeg',
+        hint: 'yellow flowers',
         callouts: [
-            { name: "", hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
+            { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
-        id: 4668556,
+        src: '/images/welcome/slide-9.jpeg',
+        hint: 'glass building',
         callouts: [
-            { name: "", hex: "#596e73", position: { top: "60%", left: "55%" } }
+            { hex: "#596e73", position: { top: "60%", left: "55%" } }
         ] 
     },
 ];
 
+const slides: Slide[] = slidesConfig.map(config => ({
+    ...config,
+    callouts: config.callouts.map(c => ({...c, name: getColorName(c.hex)}))
+}));
+
 const WelcomeScreen = () => {
-  const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const isMobile = useIsMobile();
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
-  const [isAuthorCreditExpanded, setIsAuthorCreditExpanded] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
 
   const footerLinks = [
@@ -129,27 +132,6 @@ const WelcomeScreen = () => {
   }, [footerRef]);
 
   useEffect(() => {
-    const fetchSlides = async () => {
-        const ids = slidesConfig.map(s => s.id);
-        const pexelsData = await getPexelsImages(ids);
-        
-        const populatedSlides = slidesConfig.map(config => {
-            const imageData = pexelsData[config.id];
-            if (!imageData) return null;
-            return {
-                ...config,
-                ...imageData,
-                callouts: config.callouts.map(c => ({...c, name: getColorName(c.hex)}))
-            };
-        }).filter((slide): slide is Slide => slide !== null);
-
-        setSlides(populatedSlides);
-    };
-
-    fetchSlides();
-  }, []);
-
-  useEffect(() => {
     if (slides.length === 0) return;
 
     let loadedCount = 0;
@@ -164,7 +146,7 @@ const WelcomeScreen = () => {
             }
         };
     });
-  }, [slides]);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || slides.length === 0) return;
@@ -174,7 +156,7 @@ const WelcomeScreen = () => {
     return () => clearInterval(timer);
   }, [isLoaded, slides.length]);
 
-  const activeSlide = useMemo(() => slides[currentSlide], [currentSlide, slides]);
+  const activeSlide = useMemo(() => slides[currentSlide], [currentSlide]);
 
   if (!isLoaded) {
     return (
@@ -194,9 +176,9 @@ const WelcomeScreen = () => {
     <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
         <Image
-          key={slide.id}
+          key={slide.src}
           src={slide.src}
-          alt={slide.hint || `Background slide ${slide.id}`}
+          alt={slide.hint || `Background slide ${index + 1}`}
           fill
           className={cn(
             "object-cover transition-opacity duration-1000 ease-in-out",
@@ -302,32 +284,6 @@ const WelcomeScreen = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-          {/* Footer right */}
-           <div
-              className="absolute bottom-2 right-2 z-20"
-              onMouseEnter={() => setIsAuthorCreditExpanded(true)}
-              onMouseLeave={() => setIsAuthorCreditExpanded(false)}
-            >
-              <a
-                href={activeSlide.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative flex items-center gap-1.5 rounded-full bg-black/50 py-1 pl-2 pr-2 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
-              >
-                <User className="h-4 w-4 shrink-0" />
-                <div
-                  className={cn(
-                    'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
-                    isAuthorCreditExpanded && 'ml-1 grid-cols-[1fr]'
-                  )}
-                >
-                  <span className="overflow-hidden whitespace-nowrap">
-                    Photo by {activeSlide.photographer}
-                  </span>
-                </div>
-              </a>
             </div>
           <CookieBanner />
         </>
