@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useCallback } from 'react';
@@ -6,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getColorName, isColorLight } from '@/lib/color-utils';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppFooter } from './footer';
 
@@ -66,8 +65,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
                   </Button>
                   <Button asChild variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
                       <Link href="/choose">
-                        <RefreshCw className="mr-2 h-5 w-5" />
-                        Find Another Color
+                        Find Your Color
                       </Link>
                   </Button>
               </div>
