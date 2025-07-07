@@ -1,10 +1,15 @@
+
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { getColorName } from '@/lib/color-utils';
+import { getColorName, isColorLight } from '@/lib/color-utils';
 import { useToast } from '@/hooks/use-toast';
+import { generateColorHistory } from '@/ai/flows/generate-color-history';
+import { Loader2, Copy, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AppFooter } from './footer';
 
 interface SharedColorPageProps {
   color: string;
@@ -13,13 +18,33 @@ interface SharedColorPageProps {
 const SharedColorPage = ({ color }: SharedColorPageProps) => {
   const { toast } = useToast();
   const colorName = getColorName(color);
+  const [colorHistory, setColorHistory] = useState('');
+  const [isFetchingHistory, setIsFetchingHistory] = useState(true);
+  const isPickedColorLight = isColorLight(color);
 
-  const handleCopy = () => {
-    const textToCopy = color.toUpperCase();
+  useEffect(() => {
+    setIsFetchingHistory(true);
+    generateColorHistory({ colorHex: color, colorName })
+      .then(result => {
+        setColorHistory(result.history);
+      })
+      .catch(error => {
+        console.error('Error generating color history:', error);
+        setColorHistory('A truly unique color with a story yet to be written.');
+      })
+      .finally(() => {
+        setIsFetchingHistory(false);
+      });
+  }, [color, colorName]);
+  
+  const handleCopy = useCallback(() => {
+    const url = `${window.location.origin}/visitor?color=${color.substring(1)}`;
+    const textToCopy = `${colorName}, ${color.toUpperCase()}\n${url}`;
+    
     navigator.clipboard.writeText(textToCopy).then(() => {
       toast({
-        title: 'Color Copied!',
-        description: `${colorName} (${color.toUpperCase()}) copied to clipboard.`,
+        title: 'Share Info Copied!',
+        description: `Color name, hex, and a shareable link have been copied.`,
       });
     }).catch(err => {
       console.error('Failed to copy text: ', err);
@@ -29,46 +54,57 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
         description: 'Could not copy to clipboard.',
       });
     });
-  };
+  }, [color, colorName, toast]);
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-svh w-full bg-background p-4"
+      className="flex flex-col items-center justify-center min-h-svh w-full p-4"
+      style={{
+        backgroundColor: color,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1))`
+      }}
     >
-      <div className="w-full max-w-sm">
-        <div className="relative bg-zinc-800 rounded-3xl shadow-2xl text-white p-8 flex flex-col items-center text-center">
-          
-          <div className="w-28 h-28 rounded-full mb-6 shadow-lg" style={{ backgroundColor: color }} />
-          
-          <h1 className="text-4xl font-bold tracking-tight">{colorName}</h1>
-
-          <div
-            onClick={handleCopy}
-            className="cursor-pointer mt-2 inline-flex items-center justify-center rounded-full bg-zinc-700 px-4 py-2 text-sm font-mono text-white/80"
+        <div
+            className="bg-zinc-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative animate-in fade-in zoom-in-95"
           >
-            {color.toUpperCase()}
-          </div>
-          
-          <div className="w-full h-px bg-white/20 my-8" />
-          
-          <Button asChild size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
-            <Link href="/">
-              Find Your Perfect Color
-            </Link>
-          </Button>
-
+            <div className="relative h-48 w-full" style={{ backgroundColor: color }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                <p className={cn("font-mono text-4xl font-bold tracking-widest", isPickedColorLight ? "text-zinc-900" : "text-white")} style={{ textShadow: isPickedColorLight ? '0 1px 1px rgba(255,255,255,0.7)' : '0 2px 4px rgba(0,0,0,0.5)' }}>
+                  {color.toUpperCase()}
+                </p>
+                <p className={cn("text-lg uppercase", isPickedColorLight ? "text-zinc-900/80" : "text-white/80")} style={{ textShadow: isPickedColorLight ? '0 1px 1px rgba(255,255,255,0.7)' : '0 1px 2px rgba(0,0,0,0.5)' }}>
+                    {colorName}
+                </p>
+              </div>
+            </div>
+            <div className="p-8 text-center bg-zinc-800 text-white">
+              <h2 className="text-2xl font-bold tracking-tight">Color Time-Machine</h2>
+              <div className="h-12 mt-4 flex items-center justify-center">
+                {isFetchingHistory ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <p className="text-sm text-white/70 italic">
+                    "{colorHistory}"
+                  </p>
+                )}
+              </div>
+              <div className="mt-8 flex flex-col gap-3">
+                 <Button onClick={handleCopy} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
+                      <Copy className="mr-2 h-5 w-5" />
+                      Copy Color
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
+                      <Link href="/choose">
+                        <RefreshCw className="mr-2 h-5 w-5" />
+                        Find Another Color
+                      </Link>
+                  </Button>
+              </div>
+            </div>
         </div>
-      </div>
-      <footer className="text-center text-xs text-muted-foreground mt-6 space-y-2">
-        <div className="flex justify-center items-center gap-x-4 gap-y-1 flex-wrap">
-          <Link href="/about" className="hover:text-foreground">About</Link>
-          <Link href="/blog" className="hover:text-foreground">Blog</Link>
-          <Link href="/contact" className="hover:text-foreground">Contact</Link>
-          <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-          <Link href="/terms" className="hover:text-foreground">Terms</Link>
+        <div className="pt-8">
+            <AppFooter />
         </div>
-        <p>&copy; {new Date().getFullYear()} Figerout</p>
-      </footer>
     </div>
   );
 };

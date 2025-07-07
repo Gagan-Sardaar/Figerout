@@ -291,12 +291,15 @@ const ColorPickerView = () => {
     }
   };
 
-  const handleCopy = () => {
-    const textToCopy = pickedColor.toUpperCase();
+  const copyShareableColor = useCallback(() => {
+    const colorName = getColorName(pickedColor);
+    const url = `${window.location.origin}/visitor?color=${pickedColor.substring(1)}`;
+    const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
+
     navigator.clipboard.writeText(textToCopy).then(() => {
       toast({
-        title: 'Color Copied!',
-        description: `${getColorName(pickedColor)} (${pickedColor.toUpperCase()}) copied to clipboard.`,
+        title: 'Share Info Copied!',
+        description: `Color name, hex, and a shareable link have been copied.`,
       });
     }).catch(err => {
       console.error('Failed to copy text: ', err);
@@ -306,13 +309,10 @@ const ColorPickerView = () => {
         description: 'Could not copy to clipboard.',
       });
     });
-  };
+  }, [pickedColor, toast]);
 
   const handleShare = async () => {
     const colorName = getColorName(pickedColor);
-    const url = `${window.location.origin}/?color=${pickedColor.substring(1)}`;
-    const textToCopy = `${colorName}, ${pickedColor.toUpperCase()}\n${url}`;
-
     if (isUserLoggedIn && user) {
       try {
         await saveColor(user.email, {
@@ -324,14 +324,7 @@ const ColorPickerView = () => {
       }
     }
 
-    navigator.clipboard.writeText(textToCopy).catch(err => {
-      console.error('Failed to copy text: ', err);
-      toast({
-        variant: 'destructive',
-        title: 'Copy Failed',
-        description: 'Could not copy to clipboard.',
-      });
-    });
+    copyShareableColor();
 
     setShowShareConfirmation(true);
 
@@ -617,7 +610,7 @@ const ColorPickerView = () => {
                 )}
               </div>
               <div className="mt-8 flex flex-col gap-3">
-                 <Button onClick={handleCopy} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
+                 <Button onClick={copyShareableColor} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
                       <Copy className="mr-2 h-5 w-5" />
                       Copy Color
                   </Button>
