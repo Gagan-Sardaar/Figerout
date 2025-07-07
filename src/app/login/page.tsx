@@ -25,12 +25,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { users } from "@/lib/user-data";
 import { searchPexelsImage } from "@/app/actions";
 import { Loader2, User } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { getUser } from "@/services/user-service";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -105,10 +105,10 @@ export default function LoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const mockUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const userProfile = await getUser(userCredential.user.uid);
 
-      if (mockUser) {
-        localStorage.setItem('loggedInUser', JSON.stringify({ ...mockUser, uid: userCredential.user.uid }));
+      if (userProfile) {
+        localStorage.setItem('loggedInUser', JSON.stringify(userProfile));
         
         const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
         if (colorToSaveJSON) {
@@ -123,16 +123,16 @@ export default function LoginPage() {
         
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${mockUser.name}. Redirecting...`,
+          description: `Welcome back, ${userProfile.name}. Redirecting...`,
         });
         
-        if (mockUser.role === 'Admin' || mockUser.role === 'Editor') {
+        if (userProfile.role === 'Admin' || userProfile.role === 'Editor') {
           router.push('/admin');
         } else {
           router.push('/dashboard');
         }
       } else {
-        throw new Error("User authenticated but not found in mock data.");
+        throw new Error("User authenticated but profile not found in database.");
       }
     } catch (error: any) {
       let description = "An unexpected error occurred.";
@@ -146,7 +146,9 @@ export default function LoginPage() {
           description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
           break;
         default:
-          description = error.message;
+          description = error.message === "User authenticated but profile not found in database."
+            ? "Your user profile could not be loaded. Please contact support."
+            : error.message;
       }
       toast({
         title: "Login Failed",

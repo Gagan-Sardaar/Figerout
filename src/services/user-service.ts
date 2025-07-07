@@ -9,6 +9,7 @@ import {
   query,
   getDocs,
   doc,
+  getDoc,
   updateDoc,
 } from "firebase/firestore";
 
@@ -19,6 +20,30 @@ export interface FirestoreUser {
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
   status: 'active' | 'inactive' | 'invited';
+}
+
+/**
+ * Fetches a single user from the 'users' collection in Firestore.
+ * @param userId The user's UID.
+ */
+export async function getUser(userId: string): Promise<FirestoreUser | null> {
+    try {
+        const docRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return {
+                id: docSnap.id,
+                ...docSnap.data()
+            } as FirestoreUser;
+        } else {
+            console.log("No such user document!");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        return null;
+    }
 }
 
 /**
