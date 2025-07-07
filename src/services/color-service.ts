@@ -1,6 +1,3 @@
-
-'use server';
-
 /**
  * @fileOverview A service for managing user-saved colors.
  *
