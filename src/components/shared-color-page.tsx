@@ -20,13 +20,12 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
   const isPickedColorLight = isColorLight(color);
 
   const handleCopy = useCallback(() => {
-    const url = `${window.location.origin}/visitor?color=${color.substring(1)}`;
-    const textToCopy = `${colorName}, ${color.toUpperCase()}\n${url}`;
+    const textToCopy = color.toUpperCase();
     
     navigator.clipboard.writeText(textToCopy).then(() => {
       toast({
-        title: 'Share Info Copied!',
-        description: `Color name, hex, and a shareable link have been copied.`,
+        title: 'Hex Code Copied!',
+        description: `${textToCopy} has been copied to your clipboard.`,
       });
     }).catch(err => {
       console.error('Failed to copy text: ', err);
@@ -36,7 +35,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
         description: 'Could not copy to clipboard.',
       });
     });
-  }, [color, colorName, toast]);
+  }, [color, toast]);
 
   return (
     <div
