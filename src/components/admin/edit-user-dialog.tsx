@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -33,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { FirestoreUser } from "@/services/user-service";
+import { Eye, EyeOff } from "lucide-react";
 
 const editUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -55,6 +55,8 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
@@ -168,7 +170,17 @@ export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) 
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Leave blank to keep current" {...field} />
+                    <div className="relative">
+                      <Input type={showPassword ? "text" : "password"} placeholder="Leave blank to keep current" {...field} className="pr-10" />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -181,7 +193,17 @@ export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) 
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Confirm new password" {...field} />
+                    <div className="relative">
+                      <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm new password" {...field} className="pr-10" />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

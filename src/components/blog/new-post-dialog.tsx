@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,6 +55,8 @@ import {
   Lightbulb,
   X,
   Send,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { extractImageKeywords } from "@/ai/flows/extract-image-keywords";
@@ -110,6 +111,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const [imageCursorPos, setImageCursorPos] = useState(0);
   const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPostPassword, setShowPostPassword] = useState(false);
   const isEditing = !!post;
 
   const form = useForm<FormValues>({
@@ -638,7 +640,17 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
                         <FormItem>
                           <FormLabel>Post Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Enter post password" {...field} />
+                            <div className="relative">
+                              <Input type={showPostPassword ? "text" : "password"} placeholder="Enter post password" {...field} className="pr-10" />
+                              <button
+                                type="button"
+                                onClick={() => setShowPostPassword(!showPostPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                                tabIndex={-1}
+                              >
+                                {showPostPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

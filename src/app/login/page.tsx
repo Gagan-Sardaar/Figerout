@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, Eye, EyeOff } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -35,6 +35,7 @@ import { getUser } from "@/services/user-service";
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -202,14 +203,24 @@ export default function LoginPage() {
                           Forgot your password?
                         </Link>
                       </div>
-                      <Input 
-                        id="password" 
-                        type="password" 
-                        required 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-background/50 border-white/20 focus:bg-background/70"
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="password" 
+                          type={showPassword ? "text" : "password"}
+                          required 
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                     <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
                       {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
