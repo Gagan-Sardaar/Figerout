@@ -125,20 +125,25 @@ const ColorPickerView = () => {
   const updatePickerPosition = useCallback((e: PointerEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const boundaryPadding = 1;
+    
+    // Define percentage-based boundaries
+    const leftBoundary = rect.width * 0.05;
+    const rightBoundary = rect.width * 0.95;
+    const topBoundary = rect.height * 0.05;
+    const bottomBoundary = rect.height * 0.80;
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     const atBoundary =
-        x <= boundaryPadding ||
-        x >= rect.width - boundaryPadding ||
-        y <= boundaryPadding ||
-        y >= rect.height - boundaryPadding;
+      x <= leftBoundary ||
+      x >= rightBoundary ||
+      y <= topBoundary ||
+      y >= bottomBoundary;
     setIsAtBoundary(atBoundary);
-    
-    const clampedX = Math.max(0, Math.min(x, rect.width));
-    const clampedY = Math.max(0, Math.min(y, rect.height));
+
+    const clampedX = Math.max(leftBoundary, Math.min(x, rightBoundary));
+    const clampedY = Math.max(topBoundary, Math.min(y, bottomBoundary));
 
     setPickerPos({ x: clampedX, y: clampedY });
     updateColor(clampedX, clampedY);
