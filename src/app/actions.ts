@@ -9,6 +9,7 @@ const PexelsSearchSchema = z.object({
       portrait: z.string(),
       large: z.string(),
       landscape: z.string(),
+      medium: z.string(),
     }),
     photographer: z.string(),
     photographer_url: z.string(),
@@ -45,7 +46,7 @@ export async function searchPexelsImage(query: string): Promise<PexelsSearchImag
 
     if (validatedData.success && validatedData.data.photos.length > 0) {
       const photo = validatedData.data.photos[0];
-      const imageUrl = photo.src.landscape;
+      const imageUrl = photo.src.medium;
       
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CookieBanner } from '@/components/cookie-banner';
+import { searchPexelsImage } from '@/app/actions';
 
 
 type Position = {
@@ -31,30 +32,26 @@ type Slide = {
   hint: string;
 };
 
-const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[] }[] = [
+const slidesConfig: { hint: string; callouts: Omit<Callout, 'name'>[] }[] = [
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'woman mirror',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'green leaves',
         callouts: [
             { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'red car',
         callouts: [
             { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'concrete building',
         callouts: [
             { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
@@ -62,35 +59,30 @@ const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'modern building',
         callouts: [
             { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'pink flowers',
         callouts: [
             { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'woman coat',
         callouts: [
             { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'yellow flowers',
         callouts: [
             { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
-        src: 'https://placehold.co/1920x1080.png',
         hint: 'glass building',
         callouts: [
             { hex: "#596e73", position: { top: "60%", left: "55%" } }
@@ -98,12 +90,8 @@ const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[
     },
 ];
 
-const slides: Slide[] = slidesConfig.map(config => ({
-    ...config,
-    callouts: config.callouts.map(c => ({...c, name: getColorName(c.hex)}))
-}));
-
 const WelcomeScreen = () => {
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -132,30 +120,33 @@ const WelcomeScreen = () => {
   }, [footerRef]);
 
   useEffect(() => {
-    if (slides.length === 0) {
-      setIsLoaded(true);
-      return;
-    }
-
-    let loadedCount = 0;
-    const totalSlides = slides.length;
-
-    const handleLoadOrError = () => {
-      loadedCount++;
-      setLoadingProgress((loadedCount / totalSlides) * 100);
-      if (loadedCount === totalSlides) {
-        setTimeout(() => setIsLoaded(true), 500);
+    const fetchImages = async () => {
+      if (slidesConfig.length === 0) {
+        setIsLoaded(true);
+        return;
       }
+
+      const imagePromises = slidesConfig.map(config => searchPexelsImage(config.hint));
+      
+      const fetchedImages = await Promise.all(imagePromises);
+
+      const newSlides = slidesConfig.map((config, index) => {
+        const imageResult = fetchedImages[index];
+        return {
+          ...config,
+          src: imageResult?.dataUri || `https://placehold.co/800x600.png`,
+          hint: imageResult?.alt || config.hint,
+          callouts: config.callouts.map(c => ({ ...c, name: getColorName(c.hex) })),
+        };
+      });
+
+      setLoadingProgress(100);
+      setSlides(newSlides);
+      
+      setTimeout(() => setIsLoaded(true), 500);
     };
 
-    slides.forEach((slide) => {
-      const img = new window.Image();
-      img.src = slide.src;
-      img.onload = handleLoadOrError;
-      img.onerror = () => {
-        handleLoadOrError(); // Treat as loaded to not get stuck
-      };
-    });
+    fetchImages();
   }, []);
 
   useEffect(() => {
@@ -164,9 +155,9 @@ const WelcomeScreen = () => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [isLoaded]);
+  }, [isLoaded, slides.length]);
 
-  const activeSlide = useMemo(() => slides[currentSlide], [currentSlide]);
+  const activeSlide = useMemo(() => slides[currentSlide], [currentSlide, slides]);
 
   if (!isLoaded) {
     return (
@@ -186,7 +177,7 @@ const WelcomeScreen = () => {
     <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
         <Image
-          key={index}
+          key={`${slide.src}-${index}`}
           src={slide.src}
           alt={slide.hint || `Background slide ${index + 1}`}
           fill
