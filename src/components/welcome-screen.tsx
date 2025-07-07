@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp, ExternalLink } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -33,28 +33,28 @@ type Slide = {
 
 const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[] }[] = [
     { 
-        src: '/images/welcome/slide-1.jpg',
+        src: '/images/welcome/slide-1.jpeg',
         hint: 'reflection woman mirror',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-2.jpg',
+        src: '/images/welcome/slide-2.jpeg',
         hint: 'green leaves',
         callouts: [
             { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-3.jpg',
+        src: '/images/welcome/slide-3.jpeg',
         hint: 'red car',
         callouts: [
             { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-4.jpg',
+        src: '/images/welcome/slide-4.jpeg',
         hint: 'brown concrete building',
         callouts: [
             { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
@@ -62,35 +62,35 @@ const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[
         ] 
     },
     { 
-        src: '/images/welcome/slide-5.jpg',
+        src: '/images/welcome/slide-5.jpeg',
         hint: 'modern building facade',
         callouts: [
             { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-6.jpg',
+        src: '/images/welcome/slide-6.jpeg',
         hint: 'flowers bath pink',
         callouts: [
             { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-7.jpg',
+        src: '/images/welcome/slide-7.jpeg',
         hint: 'woman trench coat',
         callouts: [
             { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-8.jpg',
+        src: '/images/welcome/slide-8.jpeg',
         hint: 'yellow flowers',
         callouts: [
             { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-9.jpg',
+        src: '/images/welcome/slide-9.jpeg',
         hint: 'glass building',
         callouts: [
             { hex: "#596e73", position: { top: "60%", left: "55%" } }
@@ -153,7 +153,6 @@ const WelcomeScreen = () => {
       img.src = slide.src;
       img.onload = handleLoadOrError;
       img.onerror = () => {
-        console.error(`Failed to load image: ${slide.src}`);
         handleLoadOrError(); // Treat as loaded to not get stuck
       };
     });
