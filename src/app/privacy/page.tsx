@@ -2,22 +2,37 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { generatePageContent } from "@/ai/flows/generate-page-content";
+import { getPageContent } from '@/services/page-content-service';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Metadata } from 'next';
 import { AppFooter } from "@/components/footer";
 import { unstable_cache as cache } from 'next/cache';
 
-const getCachedPageContent = cache(
+const getPageData = cache(
     async () => {
-        return generatePageContent({ pageTopic: "Privacy Policy", appName: "Figerout" });
+        const slug = 'privacy-policy';
+        let content = await getPageContent(slug);
+
+        if (!content) {
+            const generated = await generatePageContent({ pageTopic: "Privacy Policy", appName: "Figerout" });
+            return {
+                ...generated,
+                lastUpdated: new Date().toISOString()
+            };
+        }
+
+        return {
+            ...content,
+            lastUpdated: content.lastUpdated.toISOString()
+        };
     },
-    ['page-content-privacy'],
+    ['page-data-privacy'],
     { revalidate: 3600 }
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-    const content = await getCachedPageContent();
+    const content = await getPageData();
     return {
         title: content.metaTitle,
         description: content.metaDescription,
@@ -26,8 +41,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPolicyPage() {
-  const content = await getCachedPageContent();
-  const lastUpdated = "July 3, 2024";
+  const content = await getPageData();
+  const lastUpdated = new Date(content.lastUpdated).toLocaleDateString("en-US", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+  });
 
   return (
     <div className="min-h-svh bg-background flex flex-col">

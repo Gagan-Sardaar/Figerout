@@ -1,22 +1,44 @@
 
 import { generatePageContent } from '@/ai/flows/generate-page-content';
+import { getPageContent } from '@/services/page-content-service';
 import type { Metadata } from 'next';
 import { AppFooter } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { unstable_cache as cache } from 'next/cache';
 import { Mail } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-const getCachedPageContent = cache(
+const getPageData = cache(
     async () => {
-        return generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+        const slug = 'contact-us';
+        let content = await getPageContent(slug);
+
+        if (!content) {
+            const generated = await generatePageContent({ pageTopic: "Contact Us", appName: "Figerout" });
+            return {
+                pageTitle: generated.pageTitle,
+                description: "The best way to reach us is by email. We'd love to hear from you and will do our best to respond as soon as possible.",
+                metaTitle: generated.metaTitle,
+                metaDescription: generated.metaDescription,
+                focusKeywords: generated.focusKeywords,
+            };
+        }
+
+        return {
+            pageTitle: content.pageTitle,
+            description: content.pageContent,
+            metaTitle: content.metaTitle,
+            metaDescription: content.metaDescription,
+            focusKeywords: content.focusKeywords,
+        };
     },
-    ['page-content-contact'],
+    ['page-data-contact'],
     { revalidate: 3600 }
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-    const content = await getCachedPageContent();
+    const content = await getPageData();
     return {
         title: content.metaTitle,
         description: content.metaDescription,
@@ -25,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactUsPage() {
-    const content = await getCachedPageContent();
+    const content = await getPageData();
 
     return (
         <div className="min-h-svh bg-background flex flex-col">
@@ -45,9 +67,9 @@ export default async function ContactUsPage() {
                 <div className="relative bg-muted/40">
                     <div className="container mx-auto px-4 py-16 text-center">
                          <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">{content.pageTitle}</h2>
-                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                           The best way to reach us is by email. We'd love to hear from you and will do our best to respond as soon as possible.
-                        </p>
+                        <div className="text-lg text-muted-foreground max-w-2xl mx-auto prose dark:prose-invert">
+                           <ReactMarkdown>{content.description}</ReactMarkdown>
+                        </div>
                     </div>
                 </div>
                 <div className="container mx-auto px-4 py-16">

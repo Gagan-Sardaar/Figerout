@@ -44,8 +44,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ImageToolbarDialog } from "@/components/image-toolbar-dialog";
+import {
+  savePageContent,
+  getPageContent,
+} from '@/services/page-content-service';
+import { Skeleton } from "@/components/ui/skeleton";
 
-type PageTopic = "About Us" | "Contact Us" | "Privacy Policy" | "Terms of Service" | "Cookie Policy";
+type PageTopicSlug = "about-us" | "contact-us" | "privacy-policy" | "terms-of-service" | "cookie-policy";
 
 const pageContentSchema = z.object({
   pageTitle: z.string().min(1, "Page title is required."),
@@ -57,9 +62,11 @@ const pageContentSchema = z.object({
 
 type PageContentFormValues = z.infer<typeof pageContentSchema>;
 
-function PageEditor({ topic }: { topic: PageTopic }) {
+function PageEditor({ topicSlug, topicName }: { topicSlug: PageTopicSlug, topicName: string }) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -88,19 +95,56 @@ function PageEditor({ topic }: { topic: PageTopic }) {
   const metaDescription = form.watch("metaDescription");
   const pageContent = form.watch("pageContent");
 
+  useEffect(() => {
+    const loadPageData = async () => {
+      setIsFetching(true);
+      form.reset();
+      setSeoResult(null);
+      setLastSaved(null);
+
+      const savedData = await getPageContent(topicSlug);
+      if (savedData) {
+        form.reset({
+          pageTitle: savedData.pageTitle,
+          metaTitle: savedData.metaTitle,
+          metaDescription: savedData.metaDescription,
+          pageContent: savedData.pageContent,
+          focusKeywords: savedData.focusKeywords.map(kw => ({ value: kw })),
+        });
+        setLastSaved(savedData.lastUpdated);
+      }
+      setIsFetching(false);
+    };
+
+    loadPageData();
+  }, [topicSlug, form]);
+
   const handleGenerateContent = useCallback(async () => {
     setIsGenerating(true);
-    sessionStorage.removeItem(`page-content-${topic}`);
-    form.reset();
-    setLastSaved(null);
     setSeoResult(null);
     try {
-      const result = await generatePageContent({ pageTopic: topic, appName: "Figerout" });
-      form.setValue("pageTitle", result.pageTitle);
-      form.setValue("metaTitle", result.metaTitle);
-      form.setValue("metaDescription", result.metaDescription);
-      form.setValue("pageContent", result.pageContent);
-      form.setValue("focusKeywords", result.focusKeywords.map(kw => ({ value: kw })));
+      const result = await generatePageContent({ pageTopic: topicName, appName: "Figerout" });
+      const pageData = {
+          pageTitle: result.pageTitle,
+          metaTitle: result.metaTitle,
+          metaDescription: result.metaDescription,
+          pageContent: result.pageContent,
+          focusKeywords: result.focusKeywords,
+      };
+      
+      await savePageContent(topicSlug, pageData);
+
+      form.reset({
+        ...pageData,
+        focusKeywords: pageData.focusKeywords.map(kw => ({ value: kw }))
+      });
+      setLastSaved(new Date());
+
+      toast({
+          title: "Content Generated & Saved",
+          description: `New content for "${topicName}" has been successfully saved.`
+      });
+
     } catch (error) {
       console.error(error);
       toast({
@@ -111,35 +155,8 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     } finally {
       setIsGenerating(false);
     }
-  }, [form, topic, toast]);
-
-  useEffect(() => {
-    // Reset form to a blank state when the topic changes.
-    form.reset({
-      pageTitle: "",
-      metaTitle: "",
-      metaDescription: "",
-      focusKeywords: [],
-      pageContent: "",
-    });
-    setSeoResult(null);
-    setLastSaved(null);
-
-    // Then, try to load any saved data for the new topic.
-    const savedData = sessionStorage.getItem(`page-content-${topic}`);
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        form.reset(parsedData);
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error("Failed to parse saved content", error);
-        sessionStorage.removeItem(`page-content-${topic}`);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic]);
-
+  }, [form, topicSlug, topicName, toast]);
+  
   const handleImageInsert = (markdown: string) => {
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
@@ -260,23 +277,48 @@ function PageEditor({ topic }: { topic: PageTopic }) {
     }
   };
 
-  const onSubmit = (data: PageContentFormValues) => {
+  const onSubmit = async (data: PageContentFormValues) => {
+    setIsSaving(true);
     try {
-      sessionStorage.setItem(`page-content-${topic}`, JSON.stringify(data));
+      await savePageContent(topicSlug, {
+        pageTitle: data.pageTitle,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        pageContent: data.pageContent,
+        focusKeywords: data.focusKeywords.map(kw => kw.value),
+      });
       toast({
         title: "Changes Saved!",
-        description: `Content for "${topic}" has been updated for this session.`,
+        description: `Content for "${topicName}" has been updated.`,
       });
       setLastSaved(new Date());
     } catch (error) {
-      console.error("Failed to save to session storage:", error);
+      console.error("Failed to save to database:", error);
       toast({
         title: "Save Failed",
-        description: "Could not save your changes.",
+        description: "Could not save your changes to the database.",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   }
+
+  const PageSkeleton = () => (
+    <div className="space-y-6">
+      <div className="flex justify-end gap-2">
+        <Skeleton className="h-10 w-44" />
+        <Skeleton className="h-10 w-36" />
+      </div>
+      <Skeleton className="h-10 w-1/3" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <Skeleton className="h-8 w-1/4" />
+      <Skeleton className="h-[450px] w-full" />
+    </div>
+  );
 
   return (
     <Card>
@@ -286,7 +328,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
         onInsertImage={handleImageInsert}
       />
       <CardHeader>
-        <CardTitle>Editing: {topic}</CardTitle>
+        <CardTitle>Editing: {topicName}</CardTitle>
         <CardDescription>
           Manage the content and SEO settings for this page. Use the AI generator for a quick start.
         </CardDescription>
@@ -294,129 +336,131 @@ function PageEditor({ topic }: { topic: PageTopic }) {
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex justify-end gap-2 items-center">
-                  {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
-                  <Button type="button" variant="outline" onClick={handleGenerateContent} disabled={isGenerating}>
-                    {isGenerating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Generate Content
-                  </Button>
-                  <Button type="submit">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </Button>
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="pageTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Page Title (H1)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="The main title displayed on the page" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="metaTitle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Title for search engine results" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="metaDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Description</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Description for search engine results" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Focus Keywords</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {fields.map((field, index) => (
-                      <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
-                        {form.watch(`focusKeywords.${index}.value`)}
-                        <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                    <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add
+            {isFetching ? <PageSkeleton /> : (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="flex justify-end gap-2 items-center">
+                    {lastSaved && <p className="text-xs text-muted-foreground mr-auto">Last saved: {lastSaved.toLocaleString()}</p>}
+                    <Button type="button" variant="outline" onClick={handleGenerateContent} disabled={isGenerating || isSaving}>
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Generate Content
+                    </Button>
+                    <Button type="submit" disabled={isSaving || isGenerating}>
+                      {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                      Save Changes
                     </Button>
                   </div>
-                  {form.formState.errors.focusKeywords && (
-                      <p className="text-sm font-medium text-destructive mt-2">
-                        {form.formState.errors.focusKeywords.message}
-                      </p>
+                  
+                  <FormField
+                    control={form.control}
+                    name="pageTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Page Title (H1)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="The main title displayed on the page" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                </div>
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="pageContent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Page Content (Markdown)</FormLabel>
-                      <div className="flex items-center gap-1 border border-input rounded-t-md p-1 bg-background flex-wrap">
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('bold')}><Bold/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('italic')}><Italic/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('link')}><LinkIcon/></Button>
-                        <Separator orientation="vertical" className="h-6 mx-1" />
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h2')}><Heading2/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h3')}><Heading3/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h4')}><Heading4/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h5')}><Heading5/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h6')}><Heading6/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('quote')}><Quote/></Button>
-                        <Separator orientation="vertical" className="h-6 mx-1" />
-                        <Button type="button" variant="ghost" size="sm" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
-                      </div>
-                      <FormControl>
-                        <Textarea
-                          ref={(e) => {
-                            field.ref(e);
-                            if(e) {
-                              contentTextareaRef.current = e;
-                            }
-                          }}
-                          placeholder="The main content of the page..."
-                          className="min-h-[400px] font-mono text-sm rounded-t-none focus-visible:ring-0"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="metaTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Title for search engine results" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="metaDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Description</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Description for search engine results" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Focus Keywords</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {fields.map((field, index) => (
+                        <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
+                          {form.watch(`focusKeywords.${index}.value`)}
+                          <button type="button" onClick={() => remove(index)} className="rounded-full hover:bg-muted-foreground/20">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      <Button type="button" size="sm" variant="ghost" onClick={() => append({ value: "" })}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add
+                      </Button>
+                    </div>
+                    {form.formState.errors.focusKeywords && (
+                        <p className="text-sm font-medium text-destructive mt-2">
+                          {form.formState.errors.focusKeywords.message}
+                        </p>
+                      )}
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="pageContent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Page Content (Markdown)</FormLabel>
+                        <div className="flex items-center gap-1 border border-input rounded-t-md p-1 bg-background flex-wrap">
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('bold')}><Bold/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('italic')}><Italic/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('link')}><LinkIcon/></Button>
+                          <Separator orientation="vertical" className="h-6 mx-1" />
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h2')}><Heading2/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h3')}><Heading3/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h4')}><Heading4/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h5')}><Heading5/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('h6')}><Heading6/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('p')}><Pilcrow/></Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('quote')}><Quote/></Button>
+                          <Separator orientation="vertical" className="h-6 mx-1" />
+                          <Button type="button" variant="ghost" size="sm" onMouseDown={handleToolbarMouseDown} onClick={() => handleMarkdownAction('image')}><ImagePlus className="mr-2"/> Add Image</Button>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            ref={(e) => {
+                              field.ref(e);
+                              if(e) {
+                                contentTextareaRef.current = e;
+                              }
+                            }}
+                            placeholder="The main content of the page..."
+                            className="min-h-[400px] font-mono text-sm rounded-t-none focus-visible:ring-0"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
+            )}
           </div>
           <div className="lg:col-span-1">
             <div className="sticky top-24">
@@ -429,7 +473,7 @@ function PageEditor({ topic }: { topic: PageTopic }) {
                   <CardDescription>Click to analyze your content's SEO performance.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !pageTitle || !pageContent} className="w-full">
+                  <Button onClick={handleAnalyzeSeo} disabled={isAnalyzingSeo || !pageTitle || !pageContent || isFetching} className="w-full">
                     {isAnalyzingSeo ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
@@ -501,12 +545,12 @@ export default function PagesPage() {
     );
   }
 
-  const pages: PageTopic[] = [
-    "About Us",
-    "Contact Us",
-    "Privacy Policy",
-    "Terms of Service",
-    "Cookie Policy",
+  const pages: { slug: PageTopicSlug, name: string }[] = [
+    { slug: "about-us", name: "About Us" },
+    { slug: "contact-us", name: "Contact Us" },
+    { slug: "privacy-policy", name: "Privacy Policy" },
+    { slug: "terms-of-service", name: "Terms of Service" },
+    { slug: "cookie-policy", name: "Cookie Policy" },
   ];
 
   return (
@@ -515,17 +559,17 @@ export default function PagesPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Page Management</h1>
       </div>
 
-      <Tabs defaultValue={pages[0]} className="w-full">
+      <Tabs defaultValue={pages[0].slug} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
           {pages.map((page) => (
-            <TabsTrigger key={page} value={page} className="text-xs md:text-sm">
-              {page}
+            <TabsTrigger key={page.slug} value={page.slug} className="text-xs md:text-sm">
+              {page.name}
             </TabsTrigger>
           ))}
         </TabsList>
         {pages.map((page) => (
-          <TabsContent key={page} value={page}>
-            <PageEditor topic={page} />
+          <TabsContent key={page.slug} value={page.slug}>
+            <PageEditor topicSlug={page.slug} topicName={page.name} />
           </TabsContent>
         ))}
       </Tabs>
