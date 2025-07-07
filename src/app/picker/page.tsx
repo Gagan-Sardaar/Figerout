@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X, HeartCrack } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades, isColorLight } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
@@ -38,6 +38,7 @@ const ColorPickerView = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [colorHistory, setColorHistory] = useState('');
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+  const [isAtBoundary, setIsAtBoundary] = useState(false);
 
   const isPickedColorLight = React.useMemo(() => {
     if (!pickedColor) return false;
@@ -113,23 +114,34 @@ const ColorPickerView = () => {
     
     setCalloutStyle({ 
       position: 'absolute', 
-      pointerEvents: 'auto', 
+      pointerEvents: isDragging ? 'none' : 'auto', 
       willChange: 'top, left',
       top: `${top}px`,
       left: `${left}px`,
       opacity: 1,
     });
-  }, [pickerPos, isPaletteOpen]);
+  }, [pickerPos, isPaletteOpen, isDragging, isAtBoundary]);
 
   const updatePickerPosition = useCallback((e: PointerEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
+    const boundaryPadding = 1;
 
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const atBoundary =
+        x <= boundaryPadding ||
+        x >= rect.width - boundaryPadding ||
+        y <= boundaryPadding ||
+        y >= rect.height - boundaryPadding;
+    setIsAtBoundary(atBoundary);
     
-    setPickerPos({ x, y });
-    updateColor(x, y);
+    const clampedX = Math.max(0, Math.min(x, rect.width));
+    const clampedY = Math.max(0, Math.min(y, rect.height));
+
+    setPickerPos({ x: clampedX, y: clampedY });
+    updateColor(clampedX, clampedY);
   }, [updateColor]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -151,6 +163,7 @@ const ColorPickerView = () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
       setIsDragging(false);
+      setIsAtBoundary(false);
     };
     
     window.addEventListener('pointermove', handlePointerMove);
@@ -311,31 +324,44 @@ const ColorPickerView = () => {
 
   const CalloutContent = (
     <div 
-        className="bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden"
+        className={cn(
+            "backdrop-blur-md rounded-xl shadow-2xl text-white transition-all duration-200 overflow-hidden",
+            isAtBoundary && isDragging ? "bg-destructive/80" : "bg-neutral-800/80"
+        )}
     >
-        <div className="flex items-center p-3 gap-2">
-            <button 
-              onClick={() => setIsPaletteOpen(true)}
-              className={cn(
-                "relative w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-800",
-                isPickedColorLight ? "border-black/20 focus:ring-black" : "border-white/20 focus:ring-white"
-              )}
-              style={{ backgroundColor: pickedColor }}
-              aria-label="Open color palette"
-            >
-              <Palette className={cn("w-4 h-4 opacity-75", isPickedColorLight ? "text-black" : "text-white")} />
-            </button>
-            <div className="flex-grow">
-                <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
-                <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
+        {isAtBoundary && isDragging ? (
+             <div className="flex items-center p-3 gap-2">
+                <HeartCrack className="w-5 h-5 flex-shrink-0" />
+                <div>
+                    <p className="font-bold text-base">Oops!</p>
+                    <p className="text-xs text-white/70">You've reached the edge.</p>
+                </div>
             </div>
-            <div className="flex items-center gap-1">
-                <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
-                    <Share2 className="w-4 h-4" />
-                    <span className="text-xs">Share</span>
-                </Button>
+        ) : (
+            <div className="flex items-center p-3 gap-2">
+                <button 
+                  onClick={() => setIsPaletteOpen(true)}
+                  className={cn(
+                    "relative w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-800",
+                    isPickedColorLight ? "border-black/20 focus:ring-black" : "border-white/20 focus:ring-white"
+                  )}
+                  style={{ backgroundColor: pickedColor }}
+                  aria-label="Open color palette"
+                >
+                  <Palette className={cn("w-4 h-4 opacity-75", isPickedColorLight ? "text-black" : "text-white")} />
+                </button>
+                <div className="flex-grow">
+                    <p className="font-bold font-code text-base tracking-wider">{pickedColor.toUpperCase()}</p>
+                    <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
+                        <Share2 className="w-4 h-4" />
+                        <span className="text-xs">Share</span>
+                    </Button>
+                </div>
             </div>
-        </div>
+        )}
     </div>
   );
 
