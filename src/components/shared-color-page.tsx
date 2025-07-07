@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useCallback } from 'react';
@@ -64,7 +65,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
                       Copy Color
                   </Button>
                   <Button asChild variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
-                      <Link href="/choose">
+                      <Link href="/">
                         Find Your Color
                       </Link>
                   </Button>
