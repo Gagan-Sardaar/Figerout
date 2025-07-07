@@ -1,70 +1,75 @@
 /**
- * @fileOverview A service for managing user-saved colors.
- *
- * This is a placeholder service. In a real application, you would replace
- * the localStorage logic with calls to a database like Firestore to enable
- * cross-device syncing. The functions are async to mimic database calls.
+ * @fileOverview A service for managing user-saved colors using Firebase Firestore.
  */
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  query,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 
 export type SavedColor = {
+    id?: string; // Firestore document ID
     hex: string;
     name: string;
-    sharedAt: string;
+    sharedAt: string; // Storing as ISO string on the client
     note?: string;
 }
 
-function getStorageKey(userEmail: string): string {
-    return `savedColors_${userEmail}`;
-}
-
-// NOTE: The following functions interact with localStorage and will only work on the client.
+// Get the collection reference for a user's colors
+const colorsCollectionRef = (userEmail: string) => collection(db, 'users', userEmail, 'colors');
 
 export async function getSavedColors(userEmail: string): Promise<SavedColor[]> {
-    if (typeof window === 'undefined') return [];
+    if (!userEmail) return [];
+    
     try {
-        const storageKey = getStorageKey(userEmail);
-        const storedColors = window.localStorage.getItem(storageKey);
-        return storedColors ? (JSON.parse(storedColors) as SavedColor[]) : [];
-    } catch (e) {
-        console.error("Failed to parse saved colors from localStorage", e);
+        const q = query(colorsCollectionRef(userEmail), orderBy("sharedAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const sharedAtTimestamp = data.sharedAt as Timestamp;
+            return {
+                id: doc.id,
+                hex: data.hex,
+                name: data.name,
+                sharedAt: sharedAtTimestamp?.toDate ? sharedAtTimestamp.toDate().toISOString() : new Date().toISOString(),
+                note: data.note,
+            };
+        });
+    } catch (error) {
+        console.error("Error fetching saved colors:", error);
         return [];
     }
 }
 
-export async function saveColor(userEmail: string, color: Omit<SavedColor, 'sharedAt' | 'note'>): Promise<SavedColor> {
-    if (typeof window === 'undefined') {
-        throw new Error("Cannot save color on the server");
-    }
-    const storageKey = getStorageKey(userEmail);
-    const existingColors = await getSavedColors(userEmail);
+export async function saveColor(userEmail: string, color: Omit<SavedColor, 'sharedAt' | 'id'>): Promise<SavedColor> {
+    // Firestore will use the hex code as the document ID for easy lookup and to prevent duplicates
+    const docRef = doc(colorsCollectionRef(userEmail), color.hex.toUpperCase());
     
-    const newColor: SavedColor = {
+    const newColorData = {
         ...color,
-        sharedAt: new Date().toISOString()
+        sharedAt: serverTimestamp(),
     };
 
-    if (!existingColors.some(c => c.hex.toUpperCase() === newColor.hex.toUpperCase())) {
-        const updatedColors = [newColor, ...existingColors];
-        window.localStorage.setItem(storageKey, JSON.stringify(updatedColors));
-    }
-    
-    return newColor;
+    await setDoc(docRef, newColorData, { merge: true });
+
+    return { ...color, sharedAt: new Date().toISOString(), id: docRef.id };
 }
 
 export async function deleteColor(userEmail: string, colorHex: string): Promise<void> {
-    if (typeof window === 'undefined') return;
-    const storageKey = getStorageKey(userEmail);
-    const existingColors = await getSavedColors(userEmail);
-    const updatedColors = existingColors.filter(c => c.hex.toUpperCase() !== colorHex.toUpperCase());
-    window.localStorage.setItem(storageKey, JSON.stringify(updatedColors));
+    const docRef = doc(colorsCollectionRef(userEmail), colorHex.toUpperCase());
+    await deleteDoc(docRef);
 }
 
 export async function updateColorNote(userEmail: string, colorHex: string, note: string): Promise<void> {
-    if (typeof window === 'undefined') return;
-    const storageKey = getStorageKey(userEmail);
-    const existingColors = await getSavedColors(userEmail);
-    const updatedColors = existingColors.map(c =>
-        c.hex.toUpperCase() === colorHex.toUpperCase() ? { ...c, note: note } : c
-    );
-    window.localStorage.setItem(storageKey, JSON.stringify(updatedColors));
+    const docRef = doc(colorsCollectionRef(userEmail), colorHex.toUpperCase());
+    await updateDoc(docRef, { note });
 }
