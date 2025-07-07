@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CookieBanner } from '@/components/cookie-banner';
-import { searchPexelsImage } from '@/app/actions';
 
 
 type Position = {
@@ -30,28 +29,33 @@ type Slide = {
   src: string;
   callouts: Callout[];
   hint: string;
+  photoId: string;
 };
 
-const slidesConfig: { hint: string; callouts: Omit<Callout, 'name'>[] }[] = [
+const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'name'>[] }[] = [
     { 
+        photoId: '32648254',
         hint: 'woman mirror',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
+        photoId: '6988665',
         hint: 'green leaves',
         callouts: [
             { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
+        photoId: '8367798',
         hint: 'red car',
         callouts: [
             { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
+        photoId: '3755021',
         hint: 'concrete building',
         callouts: [
             { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
@@ -59,30 +63,35 @@ const slidesConfig: { hint: string; callouts: Omit<Callout, 'name'>[] }[] = [
         ] 
     },
     { 
+        photoId: '6686434',
         hint: 'modern building',
         callouts: [
             { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
+        photoId: '7680203',
         hint: 'pink flowers',
         callouts: [
             { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
+        photoId: '8317652',
         hint: 'woman coat',
         callouts: [
             { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
+        photoId: '720815',
         hint: 'yellow flowers',
         callouts: [
             { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
+        photoId: '4668556',
         hint: 'glass building',
         callouts: [
             { hex: "#596e73", position: { top: "60%", left: "55%" } }
@@ -120,33 +129,53 @@ const WelcomeScreen = () => {
   }, [footerRef]);
 
   useEffect(() => {
-    const fetchImages = async () => {
-      if (slidesConfig.length === 0) {
-        setIsLoaded(true);
-        return;
-      }
+    if (slidesConfig.length === 0) {
+      setIsLoaded(true);
+      return;
+    }
 
-      const imagePromises = slidesConfig.map(config => searchPexelsImage(config.hint));
-      
-      const fetchedImages = await Promise.all(imagePromises);
+    const imageSizeParams = "w=1920&h=1080&fit=crop";
 
-      const newSlides = slidesConfig.map((config, index) => {
-        const imageResult = fetchedImages[index];
-        return {
-          ...config,
-          src: imageResult?.dataUri || `https://placehold.co/800x600.png`,
-          hint: imageResult?.alt || config.hint,
-          callouts: config.callouts.map(c => ({ ...c, name: getColorName(c.hex) })),
-        };
-      });
+    const newSlides: Slide[] = slidesConfig.map(config => ({
+      ...config,
+      src: `https://images.pexels.com/photos/${config.photoId}/pexels-photo-${config.photoId}.jpeg?auto=compress&cs=tinysrgb&${imageSizeParams}`,
+      callouts: config.callouts.map(c => ({ ...c, name: getColorName(c.hex) })),
+    }));
 
+    setSlides(newSlides);
+
+    // Preload images to calculate loading progress
+    let loadedCount = 0;
+    const totalImages = newSlides.length;
+
+    if (totalImages === 0) {
+      setIsLoaded(true);
       setLoadingProgress(100);
-      setSlides(newSlides);
-      
-      setTimeout(() => setIsLoaded(true), 500);
-    };
+      return;
+    }
 
-    fetchImages();
+    newSlides.forEach(slide => {
+      const img = new window.Image();
+      img.src = slide.src;
+      img.onload = () => {
+        loadedCount++;
+        const progress = (loadedCount / totalImages) * 100;
+        setLoadingProgress(progress);
+        if (loadedCount === totalImages) {
+          setTimeout(() => setIsLoaded(true), 500);
+        }
+      };
+      img.onerror = () => {
+        // Still count it as "loaded" to not block the UI
+        loadedCount++;
+        const progress = (loadedCount / totalImages) * 100;
+        setLoadingProgress(progress);
+        if (loadedCount === totalImages) {
+          setTimeout(() => setIsLoaded(true), 500);
+        }
+      };
+    });
+
   }, []);
 
   useEffect(() => {
@@ -177,7 +206,7 @@ const WelcomeScreen = () => {
     <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
         <Image
-          key={`${slide.src}-${index}`}
+          key={`${slide.photoId}-${index}`}
           src={slide.src}
           alt={slide.hint || `Background slide ${index + 1}`}
           fill
