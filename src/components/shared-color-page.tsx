@@ -77,7 +77,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
               </div>
             </div>
             <div className="p-8 text-center bg-zinc-800 text-white">
-              <h2 className="text-2xl font-bold tracking-tight">Color Time-Machine</h2>
+              <h2 className="font-headline text-3xl font-bold tracking-tight text-white">Figerout</h2>
               <div className="h-12 mt-4 flex items-center justify-center">
                 {isFetchingHistory ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
