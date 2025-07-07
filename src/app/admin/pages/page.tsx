@@ -33,6 +33,7 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
+import { improveSeo } from "@/ai/flows/improve-seo";
 import {
   Form,
   FormControl,
@@ -69,6 +70,7 @@ function PageEditor({ topicSlug, topicName }: { topicSlug: PageTopicSlug, topicN
   const [isSaving, setIsSaving] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
+  const [isImprovingSeo, setIsImprovingSeo] = useState(false);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
@@ -93,6 +95,7 @@ function PageEditor({ topicSlug, topicName }: { topicSlug: PageTopicSlug, topicN
   const pageTitle = form.watch("pageTitle");
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
+  const focusKeywords = form.watch("focusKeywords");
   const pageContent = form.watch("pageContent");
 
   useEffect(() => {
@@ -274,6 +277,50 @@ function PageEditor({ topicSlug, topicName }: { topicSlug: PageTopicSlug, topicN
       });
     } finally {
       setIsAnalyzingSeo(false);
+    }
+  };
+  
+  const handleImproveSeo = async () => {
+    if (!seoResult) return;
+    setIsImprovingSeo(true);
+    try {
+      const result = await improveSeo({
+        title: pageTitle,
+        content: pageContent,
+        metaTitle,
+        metaDescription,
+        focusKeywords: focusKeywords.map(kw => kw.value),
+        feedback: seoResult.feedback,
+        isBlogPost: false,
+      });
+
+      if (result.improvedContent) {
+        form.setValue('pageContent', result.improvedContent, { shouldDirty: true, shouldValidate: true });
+      }
+      if (result.improvedMetaTitle) {
+        form.setValue('metaTitle', result.improvedMetaTitle, { shouldDirty: true, shouldValidate: true });
+      }
+      if (result.improvedMetaDescription) {
+        form.setValue('metaDescription', result.improvedMetaDescription, { shouldDirty: true, shouldValidate: true });
+      }
+      
+      // Re-analyze SEO after improvements
+      handleAnalyzeSeo();
+      
+      toast({
+        title: "Content Improved!",
+        description: "The AI has rewritten your content for better SEO.",
+      });
+
+    } catch (error) {
+      console.error("Error improving SEO:", error);
+      toast({
+        title: "Improvement Failed",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImprovingSeo(false);
     }
   };
 
@@ -503,6 +550,10 @@ function PageEditor({ topicSlug, topicName }: { topicSlug: PageTopicSlug, topicN
                           </p>
                         </CardContent>
                       </Card>
+                       <Button type="button" onClick={handleImproveSeo} disabled={isImprovingSeo} className="w-full mt-2">
+                        {isImprovingSeo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        Improve with AI
+                      </Button>
                     </div>
                   )}
                 </CardContent>

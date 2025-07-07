@@ -65,6 +65,7 @@ import {
   generateSeoScore,
   GenerateSeoScoreOutput,
 } from "@/ai/flows/generate-seo-score";
+import { improveSeo } from "@/ai/flows/improve-seo";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -106,6 +107,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [seoResult, setSeoResult] = useState<GenerateSeoScoreOutput | null>(null);
   const [isAnalyzingSeo, setIsAnalyzingSeo] = useState(false);
+  const [isImprovingSeo, setIsImprovingSeo] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageCursorPos, setImageCursorPos] = useState(0);
@@ -157,6 +159,7 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
   const content = form.watch("content");
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
+  const focusKeywords = form.watch("focusKeywords");
   const scheduleDate = form.watch("scheduleDate");
   const status = form.watch("status");
 
@@ -189,6 +192,49 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
       });
     } finally {
       setIsAnalyzingSeo(false);
+    }
+  };
+  
+  const handleImproveSeo = async () => {
+    if (!seoResult) return;
+    setIsImprovingSeo(true);
+    try {
+      const result = await improveSeo({
+        title: title,
+        content: content,
+        metaTitle: metaTitle,
+        metaDescription: metaDescription,
+        focusKeywords: focusKeywords?.map(kw => kw.value) || [],
+        feedback: seoResult.feedback,
+        isBlogPost: true,
+      });
+
+      if (result.improvedContent) {
+        form.setValue('content', result.improvedContent, { shouldDirty: true, shouldValidate: true });
+      }
+      if (result.improvedMetaTitle) {
+        form.setValue('metaTitle', result.improvedMetaTitle, { shouldDirty: true, shouldValidate: true });
+      }
+      if (result.improvedMetaDescription) {
+        form.setValue('metaDescription', result.improvedMetaDescription, { shouldDirty: true, shouldValidate: true });
+      }
+      
+      handleAnalyzeSeo();
+      
+      toast({
+        title: "Content Improved!",
+        description: "The AI has rewritten your content for better SEO.",
+      });
+
+    } catch (error) {
+      console.error("Error improving SEO:", error);
+      toast({
+        title: "Improvement Failed",
+        description: "Could not connect to the AI service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImprovingSeo(false);
     }
   };
 
@@ -692,6 +738,10 @@ function NewPostForm({ post, onSave, onExit }: { post?: BlogPost, onSave?: (data
                         </p>
                       </CardContent>
                     </Card>
+                     <Button type="button" onClick={handleImproveSeo} disabled={isImprovingSeo} className="w-full mt-2">
+                        {isImprovingSeo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        Improve with AI
+                      </Button>
                   </div>
                 )}
               </CardContent>

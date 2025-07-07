@@ -10,3 +10,4 @@ import '@/ai/flows/generate-seo-score.ts';
 import '@/ai/flows/generate-page-content.ts';
 import '@/ai/flows/suggest-seo-improvements.ts';
 import '@/ai/flows/generate-color-history.ts';
+import '@/ai/flows/improve-seo.ts';
