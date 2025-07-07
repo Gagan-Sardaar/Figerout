@@ -607,7 +607,7 @@ const ColorPickerView = () => {
       {/* Retake/Boundary Button */}
       <div className={cn(
         "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300",
-        isDragging || isPaletteOpen ? "opacity-0" : "opacity-100"
+        isPaletteOpen || (isDragging && !isAtBoundary) ? 'opacity-0' : 'opacity-100'
         )}>
          {isAtBoundary ? (
             <Button
