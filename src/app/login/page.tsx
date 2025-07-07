@@ -113,7 +113,7 @@ export default function LoginPage() {
         if (colorToSaveJSON) {
           try {
             const colorToSave = JSON.parse(colorToSaveJSON);
-            await saveColor(authUser.uid, colorToSave);
+            await saveColor(userProfile.id, colorToSave);
             sessionStorage.removeItem('colorToSaveAfterLogin');
           } catch (e) {
             console.error("Failed to save color after login", e);
@@ -138,7 +138,9 @@ export default function LoginPage() {
       let description = "An unexpected error occurred. Please try again.";
       
       if (error.message === "User authenticated but profile not found in database.") {
-          description = `Login successful, but profile not found for user ID: ${authUser?.uid}. Please check your Firestore 'users' collection.`;
+          description = `Login successful, but your user profile was not found. This is usually a configuration issue. Please verify:
+1.  **Firestore Data:** A user document exists with the ID: ${authUser?.uid}
+2.  **Project Config:** Your app's Firebase Project ID is correct.`;
       } else {
         switch (error.code) {
             case 'auth/user-not-found':
@@ -159,6 +161,7 @@ export default function LoginPage() {
         title: "Login Failed",
         description: description,
         variant: "destructive",
+        duration: 9000,
       });
     } finally {
       setIsLoggingIn(false);
