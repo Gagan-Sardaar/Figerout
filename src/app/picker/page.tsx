@@ -291,6 +291,24 @@ const ColorPickerView = () => {
     }
   };
 
+  const copyHexCodeOnly = useCallback(() => {
+    const textToCopy = pickedColor.toUpperCase();
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      toast({
+        title: 'Hex Code Copied!',
+        description: `${textToCopy} has been copied to your clipboard.`,
+      });
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        variant: 'destructive',
+        title: 'Copy Failed',
+        description: 'Could not copy to clipboard.',
+      });
+    });
+  }, [pickedColor, toast]);
+
   const copyShareableColor = useCallback(() => {
     const colorName = getColorName(pickedColor);
     const url = `${window.location.origin}/visitor?color=${pickedColor.substring(1)}`;
@@ -610,9 +628,13 @@ const ColorPickerView = () => {
                 )}
               </div>
               <div className="mt-8 flex flex-col gap-3">
-                 <Button onClick={copyShareableColor} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
+                 <Button onClick={copyHexCodeOnly} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
                       <Copy className="mr-2 h-5 w-5" />
                       Copy Color
+                  </Button>
+                  <Button onClick={copyShareableColor} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
+                      <Share2 className="mr-2 h-5 w-5" />
+                      Copy Share Link
                   </Button>
                   <Button onClick={() => router.push('/choose')} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
                       <RefreshCw className="mr-2 h-5 w-5" />
