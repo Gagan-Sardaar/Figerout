@@ -1,13 +1,12 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getColorName, isColorLight } from '@/lib/color-utils';
 import { useToast } from '@/hooks/use-toast';
-import { generateColorHistory } from '@/ai/flows/generate-color-history';
-import { Loader2, Copy, RefreshCw } from 'lucide-react';
+import { Copy, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppFooter } from './footer';
 
@@ -18,25 +17,8 @@ interface SharedColorPageProps {
 const SharedColorPage = ({ color }: SharedColorPageProps) => {
   const { toast } = useToast();
   const colorName = getColorName(color);
-  const [colorHistory, setColorHistory] = useState('');
-  const [isFetchingHistory, setIsFetchingHistory] = useState(true);
   const isPickedColorLight = isColorLight(color);
 
-  useEffect(() => {
-    setIsFetchingHistory(true);
-    generateColorHistory({ colorHex: color, colorName })
-      .then(result => {
-        setColorHistory(result.history);
-      })
-      .catch(error => {
-        console.error('Error generating color history:', error);
-        setColorHistory('A truly unique color with a story yet to be written.');
-      })
-      .finally(() => {
-        setIsFetchingHistory(false);
-      });
-  }, [color, colorName]);
-  
   const handleCopy = useCallback(() => {
     const url = `${window.location.origin}/visitor?color=${color.substring(1)}`;
     const textToCopy = `${colorName}, ${color.toUpperCase()}\n${url}`;
@@ -78,15 +60,6 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
             </div>
             <div className="p-8 text-center bg-zinc-800 text-white">
               <h2 className="font-headline text-3xl font-bold tracking-tight text-white">Figerout</h2>
-              <div className="h-12 mt-4 flex items-center justify-center">
-                {isFetchingHistory ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  <p className="text-sm text-white/70 italic">
-                    "{colorHistory}"
-                  </p>
-                )}
-              </div>
               <div className="mt-8 flex flex-col gap-3">
                  <Button onClick={handleCopy} size="lg" className="w-full rounded-full h-12 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
                       <Copy className="mr-2 h-5 w-5" />
