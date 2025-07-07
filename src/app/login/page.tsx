@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -95,6 +96,7 @@ export default function LoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Successfully authenticated. Looking for profile with UID:', userCredential.user.uid);
       const userProfile = await getUser(userCredential.user.uid);
 
       if (userProfile) {
