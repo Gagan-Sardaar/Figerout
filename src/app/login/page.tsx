@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
 import { Loader2, User, Eye, EyeOff } from "lucide-react";
 import { saveColor } from "@/services/color-service";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
 import { getUser } from "@/services/user-service";
 
@@ -131,21 +131,29 @@ export default function LoginPage() {
           router.push('/dashboard');
         }
       } else {
-        // This is the specific error case we need to handle.
         throw new Error("User authenticated but profile not found in database.");
       }
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
-      
+      const projectId = db.app.options.projectId;
+
       if (error.message === "User authenticated but profile not found in database.") {
-          description = `Login successful, but your user profile was not found. This is usually a configuration issue. Please verify:
-1.  **Firestore Data:** A user document exists with the ID: ${authUser?.uid}
-2.  **Project Config:** Your app's Firebase Project ID is correct.`;
+        description = `Login successful, but your user profile was not found in the Firestore database.
+
+Please verify your configuration:
+
+1.  **Firestore Data:** A user document must exist in the \`users\` collection with the ID:
+    **${authUser?.uid}**
+
+2.  **Project Config:** Your app is configured to use the Firebase Project ID:
+    **${projectId || 'Not Found'}**
+
+Please ensure this Project ID matches the one you are viewing in the Firebase Console.`;
       } else {
         switch (error.code) {
             case 'auth/user-not-found':
             case 'auth/wrong-password':
-            case 'auth/invalid-credential':
+            case 'invalid-credential':
               description = "Invalid email or password. Please try again.";
               break;
             case 'auth/too-many-requests':
@@ -300,3 +308,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+    
