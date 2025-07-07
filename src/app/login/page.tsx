@@ -29,6 +29,8 @@ import { users } from "@/lib/user-data";
 import { searchPexelsImage } from "@/app/actions";
 import { Loader2, User } from "lucide-react";
 import { saveColor } from "@/services/color-service";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -43,6 +45,8 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
@@ -88,48 +92,69 @@ export default function LoginPage() {
   }, []);
 
   const handleLogin = async () => {
-    if (!email) {
+    if (!email || !password) {
       toast({
-        title: "Email required",
-        description: "Please enter your email address.",
+        title: "Email and password required",
+        description: "Please enter your email and password.",
         variant: "destructive",
       });
       return;
     }
 
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    setIsLoggingIn(true);
 
-    if (user) {
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
-      
-      const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
-      if (colorToSaveJSON) {
-        try {
-          const colorToSave = JSON.parse(colorToSaveJSON);
-          await saveColor(user.email, colorToSave);
-          sessionStorage.removeItem('colorToSaveAfterLogin');
-        } catch (e) {
-          console.error("Failed to save color after login", e);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const mockUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+      if (mockUser) {
+        localStorage.setItem('loggedInUser', JSON.stringify({ ...mockUser, uid: userCredential.user.uid }));
+        
+        const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
+        if (colorToSaveJSON) {
+          try {
+            const colorToSave = JSON.parse(colorToSaveJSON);
+            await saveColor(userCredential.user.uid, colorToSave);
+            sessionStorage.removeItem('colorToSaveAfterLogin');
+          } catch (e) {
+            console.error("Failed to save color after login", e);
+          }
         }
-      }
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.name}. Redirecting...`,
-      });
-      
-      if (user.role === 'Admin' || user.role === 'Editor') {
-        router.push('/admin');
+        
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${mockUser.name}. Redirecting...`,
+        });
+        
+        if (mockUser.role === 'Admin' || mockUser.role === 'Editor') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
-        router.push('/dashboard');
+        throw new Error("User authenticated but not found in mock data.");
       }
-
-    } else {
+    } catch (error: any) {
+      let description = "An unexpected error occurred.";
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          description = "Invalid email or password. Please try again.";
+          break;
+        case 'auth/too-many-requests':
+          description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+          break;
+        default:
+          description = error.message;
+      }
       toast({
-        title: "User not found",
-        description: "This email is not registered. Please check the email or contact an admin.",
+        title: "Login Failed",
+        description: description,
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -158,7 +183,7 @@ export default function LoginPage() {
                     </Link>
                     <CardTitle className="text-2xl">Login</CardTitle>
                     <CardDescription>
-                        Choose your preferred login method
+                        Enter your credentials to access your account
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -173,29 +198,47 @@ export default function LoginPage() {
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                         <span className="bg-background/0 px-2 text-muted-foreground">
-                        Or continue with email
+                        Or continue with
                         </span>
                     </div>
                     </div>
                     
                     <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter a test email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                          id="email"
+                          type="email"
+                          placeholder="m@example.com"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-background/50 border-white/20 focus:bg-background/70"
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="password">Password</Label>
+                        <Link
+                          href="/forgot-password"
+                          className="ml-auto inline-block text-sm underline"
+                        >
+                          Forgot your password?
+                        </Link>
+                      </div>
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        required 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="bg-background/50 border-white/20 focus:bg-background/70"
-                    />
+                      />
                     </div>
-                    <Button type="button" className="w-full" onClick={handleLogin}>
-                        Login / Continue
+                    <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
+                      {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Login
                     </Button>
-                     <div className="text-center text-xs text-muted-foreground">
-                        Use <code className="bg-muted px-1 py-0.5 rounded">admin@figerout.com</code>, <code className="bg-muted px-1 py-0.5 rounded">editor@figerout.com</code>, or <code className="bg-muted px-1 py-0.5 rounded">visitor@figerout.com</code> to log in.
-                    </div>
                 </div>
                 <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{" "}

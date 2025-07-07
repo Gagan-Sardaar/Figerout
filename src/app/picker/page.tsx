@@ -11,49 +11,9 @@ import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades, isColorLight } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
 import { saveColor } from '@/services/color-service';
+import type { User } from '@/lib/user-data';
 
 type Point = { x: number; y: number };
-
-// New Icon Component
-const BrokenHeartIcon = ({ className }: { className?: string }) => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="none"
-      className={cn(className)}
-    >
-      <style>
-        {`
-          .heart-break-left {
-            transform-origin: center;
-            animation: heart-break-left-anim 0.6s ease-out forwards;
-          }
-          .heart-break-right {
-            transform-origin: center;
-            animation: heart-break-right-anim 0.6s ease-out forwards;
-          }
-          @keyframes heart-break-left-anim {
-            from { transform: translate(0, 0) rotate(0deg); }
-            to { transform: translate(-2px, -2px) rotate(-10deg); }
-          }
-          @keyframes heart-break-right-anim {
-            from { transform: translate(0, 0) rotate(0deg); }
-            to { transform: translate(2px, -2px) rotate(10deg); }
-          }
-        `}
-      </style>
-      <g className="heart-break-left">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09" />
-      </g>
-      <g className="heart-break-right">
-        <path d="M12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3c-1.74 0-3.41.81-4.5 2.09" />
-      </g>
-    </svg>
-  );
-};
-
 
 const ColorPickerView = () => {
   const router = useRouter();
@@ -67,9 +27,8 @@ const ColorPickerView = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
-  const [isAtBoundary, setIsAtBoundary] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<(User & { uid: string }) | null>(null);
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({
     opacity: 0,
     position: 'absolute',
@@ -160,30 +119,14 @@ const ColorPickerView = () => {
       left: `${left}px`,
       opacity: 1,
     });
-  }, [pickerPos, isPaletteOpen, isAtBoundary]);
+  }, [pickerPos, isPaletteOpen]);
 
   const updatePickerPosition = useCallback((e: PointerEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
-    const boundaryTop = rect.height * 0.05;
-    const boundaryLeft = rect.width * 0.05;
-    const boundaryRight = rect.width * 0.95;
-    const boundaryBottom = rect.height * 0.80;
-
-    const rawX = e.clientX - rect.left;
-    const rawY = e.clientY - rect.top;
-    
-    const atBoundary = 
-      rawY <= boundaryTop || 
-      rawY >= boundaryBottom || 
-      rawX <= boundaryLeft || 
-      rawX >= boundaryRight;
-      
-    setIsAtBoundary(atBoundary);
-    
-    const x = Math.max(boundaryLeft, Math.min(rawX, boundaryRight));
-    const y = Math.max(boundaryTop, Math.min(rawY, boundaryBottom));
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
     
     setPickerPos({ x, y });
     updateColor(x, y);
@@ -267,10 +210,10 @@ const ColorPickerView = () => {
   };
 
   const handleSave = async () => {
-    if (isUserLoggedIn && user) {
+    if (isUserLoggedIn && user?.uid) {
       const colorName = getColorName(pickedColor);
       try {
-        await saveColor(user.email, {
+        await saveColor(user.uid, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
         });
@@ -331,9 +274,9 @@ const ColorPickerView = () => {
 
   const handleShare = async () => {
     const colorName = getColorName(pickedColor);
-    if (isUserLoggedIn && user) {
+    if (isUserLoggedIn && user?.uid) {
       try {
-        await saveColor(user.email, {
+        await saveColor(user.uid, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
         });
@@ -396,15 +339,6 @@ const ColorPickerView = () => {
     </div>
   );
 
-  const BoundaryAlertMessage = (
-    <div
-      className="bg-white text-black rounded-xl shadow-2xl text-center font-sans p-3 max-w-40"
-      onClick={(e) => e.stopPropagation()}
-    >
-      Whoa! Almost crossed the line 😅
-    </div>
-  );
-
   return (
     <div
       ref={containerRef}
@@ -443,17 +377,9 @@ const ColorPickerView = () => {
                 }}
             >
                 <div
-                className={cn(
-                    'relative w-16 h-16 flex items-center justify-center transition-colors',
-                    isAtBoundary ? 'text-red-500' : 'text-white'
-                )}
+                className='relative w-16 h-16 flex items-center justify-center transition-colors text-white'
                 >
-                    <div className={cn(
-                        "w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm",
-                        isAtBoundary && "animate-pulse"
-                    )} />
-                {!isAtBoundary && (
-                    <>
+                    <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
                     <ChevronUp
                         className="absolute -top-1 w-6 h-6"
                         style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
@@ -470,18 +396,15 @@ const ColorPickerView = () => {
                         className="absolute -right-1 w-6 h-6"
                         style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
                     />
-                    </>
-                )}
                 </div>
             </div>
             
-            {/* Color Callout or Boundary Alert */}
             <div
                 ref={calloutRef}
                 style={calloutStyle}
                 onPointerDown={(e) => e.stopPropagation()}
             >
-                {isAtBoundary ? BoundaryAlertMessage : CalloutContent}
+              {CalloutContent}
             </div>
         </>
       )}
@@ -632,7 +555,7 @@ const ColorPickerView = () => {
                       <Copy className="mr-2 h-5 w-5" />
                       Copy Color
                   </Button>
-                  <Button onClick={copyShareableColor} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white">
+                  <Button onClick={copyShareableColor} variant="outline" size="lg" className="w-full rounded-full h-12 font-semibold border-white/30 text-white/80 hover:bg-white/10 hover:text-white bg-black">
                       <Share2 className="mr-2 h-5 w-5" />
                       Copy Share Link
                   </Button>
@@ -642,26 +565,19 @@ const ColorPickerView = () => {
         </div>
       )}
 
-
       {/* Retake Button */}
       <div className={cn(
-        "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300 pointer-events-none",
-        (isDragging && !isAtBoundary) || isPaletteOpen ? "opacity-0" : "opacity-100"
+        "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300",
+        isDragging || isPaletteOpen ? "opacity-0" : "opacity-100"
         )}>
          <Button
             onClick={() => router.push('/choose')}
-            className={cn(
-              "h-16 w-16 rounded-full border-4 p-2 active:scale-95 transition-all",
-              isAtBoundary 
-                ? "border-red-500 bg-red-500/30 text-red-500 pointer-events-none" 
-                : "border-white bg-white/30 hover:bg-white/50 text-white pointer-events-auto"
-            )}
+            className="h-16 w-16 rounded-full border-4 border-white bg-white/30 p-2 text-white transition-transform active:scale-95 hover:bg-white/50"
             aria-label="Retake photo"
           >
-            {isAtBoundary ? <BrokenHeartIcon className="h-full w-full" /> : <RefreshCw className="h-9 w-9" />}
+            <RefreshCw className="h-9 w-9" />
          </Button>
       </div>
-
     </div>
   );
 };

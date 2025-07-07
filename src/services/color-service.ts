@@ -24,13 +24,13 @@ export type SavedColor = {
 }
 
 // Get the collection reference for a user's colors
-const colorsCollectionRef = (userEmail: string) => collection(db, 'users', userEmail, 'colors');
+const colorsCollectionRef = (userId: string) => collection(db, 'users', userId, 'colors');
 
-export async function getSavedColors(userEmail: string): Promise<SavedColor[]> {
-    if (!userEmail) return [];
+export async function getSavedColors(userId: string): Promise<SavedColor[]> {
+    if (!userId) return [];
     
     try {
-        const q = query(colorsCollectionRef(userEmail), orderBy("sharedAt", "desc"));
+        const q = query(colorsCollectionRef(userId), orderBy("sharedAt", "desc"));
         const querySnapshot = await getDocs(q);
         
         return querySnapshot.docs.map(doc => {
@@ -50,9 +50,9 @@ export async function getSavedColors(userEmail: string): Promise<SavedColor[]> {
     }
 }
 
-export async function saveColor(userEmail: string, color: Omit<SavedColor, 'sharedAt' | 'id'>): Promise<SavedColor> {
+export async function saveColor(userId: string, color: Omit<SavedColor, 'sharedAt' | 'id'>): Promise<SavedColor> {
     // Firestore will use the hex code as the document ID for easy lookup and to prevent duplicates
-    const docRef = doc(colorsCollectionRef(userEmail), color.hex.toUpperCase());
+    const docRef = doc(colorsCollectionRef(userId), color.hex.toUpperCase());
     
     const newColorData = {
         ...color,
@@ -64,12 +64,12 @@ export async function saveColor(userEmail: string, color: Omit<SavedColor, 'shar
     return { ...color, sharedAt: new Date().toISOString(), id: docRef.id };
 }
 
-export async function deleteColor(userEmail: string, colorHex: string): Promise<void> {
-    const docRef = doc(colorsCollectionRef(userEmail), colorHex.toUpperCase());
+export async function deleteColor(userId: string, colorHex: string): Promise<void> {
+    const docRef = doc(colorsCollectionRef(userId), colorHex.toUpperCase());
     await deleteDoc(docRef);
 }
 
-export async function updateColorNote(userEmail: string, colorHex: string, note: string): Promise<void> {
-    const docRef = doc(colorsCollectionRef(userEmail), colorHex.toUpperCase());
+export async function updateColorNote(userId: string, colorHex: string, note: string): Promise<void> {
+    const docRef = doc(colorsCollectionRef(userId), colorHex.toUpperCase());
     await updateDoc(docRef, { note });
 }

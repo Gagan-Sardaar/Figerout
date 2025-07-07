@@ -118,10 +118,12 @@ const RoleSwitcher = () => {
     );
 }
 
+type LoggedInUser = User & { uid: string };
+
 export default function VisitorDashboardPage() {
   const { toast } = useToast();
   const [userName, setUserName] = useState("Visitor");
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<LoggedInUser | null>(null);
   const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, color: null });
@@ -131,22 +133,22 @@ export default function VisitorDashboardPage() {
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
         try {
-            const user = JSON.parse(storedUser);
-            setUserName(user.name);
-            setUserEmail(user.email);
+            const userData = JSON.parse(storedUser);
+            setUserName(userData.name);
+            setUser(userData);
         } catch (e) { console.error(e) }
     }
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
+    if (user?.uid) {
         const fetchColors = async () => {
-            const colors = await getSavedColors(userEmail);
+            const colors = await getSavedColors(user.uid);
             setSavedColors(colors);
         };
         fetchColors();
     }
-  }, [userEmail]);
+  }, [user]);
 
   const filteredColors = useMemo(() => {
     const now = new Date();
@@ -171,11 +173,11 @@ export default function VisitorDashboardPage() {
   }, [savedColors, activeFilter]);
 
   const handleDeleteColor = async (hex: string) => {
-    if (!userEmail) return;
+    if (!user?.uid) return;
     const colorToDelete = savedColors.find(c => c.hex === hex);
     if (!colorToDelete) return;
 
-    await deleteColor(userEmail, hex);
+    await deleteColor(user.uid, hex);
     setSavedColors(prev => prev.filter(color => color.hex !== hex));
     toast({
       title: "Color Removed",
@@ -193,8 +195,8 @@ export default function VisitorDashboardPage() {
   };
 
   const handleSaveNote = async () => {
-    if (!dialogState.color || !userEmail) return;
-    await updateColorNote(userEmail, dialogState.color.hex, noteContent);
+    if (!dialogState.color || !user?.uid) return;
+    await updateColorNote(user.uid, dialogState.color.hex, noteContent);
     setSavedColors(prev => prev.map(c => 
       c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
     ));
@@ -225,7 +227,7 @@ export default function VisitorDashboardPage() {
               </Avatar>
               <p className="text-primary-foreground/80 text-sm md:text-base">Saved Colors for</p>
               <h1 className="text-xl md:text-3xl font-bold truncate">{userName}</h1>
-              <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{userEmail}</p>
+              <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
               <RoleSwitcher />
               
