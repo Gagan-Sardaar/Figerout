@@ -33,28 +33,28 @@ type Slide = {
 
 const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[] }[] = [
     { 
-        src: '/images/welcome/slide-1.jpeg',
+        src: '/images/welcome/slide-1.jpg',
         hint: 'reflection woman mirror',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-2.jpeg',
+        src: '/images/welcome/slide-2.jpg',
         hint: 'green leaves',
         callouts: [
             { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-3.jpeg',
+        src: '/images/welcome/slide-3.jpg',
         hint: 'red car',
         callouts: [
             { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-4.jpeg',
+        src: '/images/welcome/slide-4.jpg',
         hint: 'brown concrete building',
         callouts: [
             { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
@@ -62,35 +62,35 @@ const slidesConfig: Omit<Slide, 'callouts'> & { callouts: Omit<Callout, 'name'>[
         ] 
     },
     { 
-        src: '/images/welcome/slide-5.jpeg',
+        src: '/images/welcome/slide-5.jpg',
         hint: 'modern building facade',
         callouts: [
             { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-6.jpeg',
+        src: '/images/welcome/slide-6.jpg',
         hint: 'flowers bath pink',
         callouts: [
             { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-7.jpeg',
+        src: '/images/welcome/slide-7.jpg',
         hint: 'woman trench coat',
         callouts: [
             { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-8.jpeg',
+        src: '/images/welcome/slide-8.jpg',
         hint: 'yellow flowers',
         callouts: [
             { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
     },
     { 
-        src: '/images/welcome/slide-9.jpeg',
+        src: '/images/welcome/slide-9.jpg',
         hint: 'glass building',
         callouts: [
             { hex: "#596e73", position: { top: "60%", left: "55%" } }
@@ -304,5 +304,3 @@ const WelcomeScreen = () => {
 };
 
 export default WelcomeScreen;
-
-    
