@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import type { User, DisplayUser } from "@/lib/user-data";
+import type { FirestoreUser } from "@/services/user-service";
 
 const editUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -48,15 +48,14 @@ const editUserSchema = z.object({
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 interface EditUserDialogProps {
-  user: DisplayUser;
-  onSave: (updatedUser: Omit<User, 'lastLogin'>) => void;
+  user: FirestoreUser;
+  onSave: (updatedUser: Partial<FirestoreUser>) => void;
   children: React.ReactNode;
 }
 
 export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { toast } = useToast();
-
+  
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
@@ -68,19 +67,21 @@ export function EditUserDialog({ user, onSave, children }: EditUserDialogProps) 
     },
   });
 
+  // Reset form when the dialog is opened with a new user
+  if (isOpen && form.getValues('name') !== user.name) {
+    form.reset({
+      name: user.name,
+      role: user.role,
+      status: user.status,
+    });
+  }
+
   const onSubmit = (data: EditUserFormValues) => {
     onSave({
       id: user.id,
       name: data.name,
-      email: user.email,
-      initials: user.initials,
       role: data.role,
       status: data.status,
-    });
-    
-    toast({
-      title: "User Updated",
-      description: `${data.name}'s details have been updated successfully.`,
     });
     setIsOpen(false);
   };

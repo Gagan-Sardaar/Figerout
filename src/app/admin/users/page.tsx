@@ -14,7 +14,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { users as staticUsers, User, DisplayUser } from "@/lib/user-data";
 import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,9 +25,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { EditUserDialog } from "@/components/admin/edit-user-dialog";
 import { NewUserDialog } from "@/components/admin/new-user-dialog";
+import { getUsers, updateUser, FirestoreUser } from "@/services/user-service";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<DisplayUser[]>([]);
+  const [users, setUsers] = useState<FirestoreUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [signedInUser, setSignedInUser] = useState<{ email: string; role: 'Admin' | 'Editor' | 'Viewer' } | null>(null);
   const router = useRouter();
@@ -46,33 +48,15 @@ export default function UsersPage() {
       router.replace('/login');
       return;
     }
-    
-    // This effect runs only on the client, after hydration.
-    // To prevent hydration errors, we process dates and set the initial state here.
-    const processedUsers = staticUsers.map(user => {
-      if (user.status === 'invited') {
-        return { ...user, lastLogin: "Never" };
-      }
-      const date = new Date();
-      date.setDate(date.getDate() - user.lastLogin.days);
-      date.setHours(date.getHours() - (user.lastLogin.hours || 0));
-      date.setMinutes(date.getMinutes() - (user.lastLogin.minutes || 0));
-      
-      const lastLoginString = date.toLocaleString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric', 
-          hour: 'numeric', 
-          minute: '2-digit' 
-      });
 
-      return {
-        ...user,
-        lastLogin: lastLoginString,
-      };
-    });
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        const firestoreUsers = await getUsers();
+        setUsers(firestoreUsers);
+        setIsLoading(false);
+    };
     
-    setUsers(processedUsers);
+    fetchUsers();
   }, [router]);
 
   if (!signedInUser) {
@@ -83,42 +67,36 @@ export default function UsersPage() {
     );
   }
 
-  const handleSaveUser = (updatedUser: Omit<User, 'lastLogin'>) => {
+  const handleSaveUser = async (updatedUser: Partial<FirestoreUser>) => {
+    if (!updatedUser.id) return;
+
+    // Optimistically update the UI
     setUsers(prevUsers => 
       prevUsers.map(user => 
         user.id === updatedUser.id ? { ...user, ...updatedUser } : user
       )
     );
+
+    try {
+        await updateUser(updatedUser.id, updatedUser);
+        toast({
+            title: "User Updated",
+            description: `${updatedUser.name}'s details have been updated successfully.`,
+        });
+    } catch(e) {
+        console.error(e);
+        toast({
+            title: "Update Failed",
+            description: `Could not update ${updatedUser.name}'s details.`,
+            variant: "destructive"
+        });
+        // Revert UI if update fails
+        const firestoreUsers = await getUsers();
+        setUsers(firestoreUsers);
+    }
   };
 
-  const handleCreateUser = (newUserData: Omit<User, 'id' | 'lastLogin' | 'initials' | 'status'>) => {
-    const newUser: DisplayUser = {
-      id: `usr_${Math.random().toString(36).substr(2, 9)}`, // Create a pseudo-random ID
-      name: newUserData.name,
-      email: newUserData.email,
-      initials: newUserData.name.split(' ').map(n => n[0]).join('').toUpperCase(),
-      role: newUserData.role,
-      lastLogin: 'Never',
-      status: 'invited',
-    };
-
-    setUsers(prevUsers => [newUser, ...prevUsers]);
-  };
-
-  const handleDelete = (userId: string) => {
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-    toast({
-      title: "User Deleted",
-      description: "The user has been removed from the list.",
-      variant: "destructive",
-    });
-  };
-
-  // During SSR and initial client render, use a version of the data without dates to avoid mismatch.
-  const usersToRender = users.length > 0 
-    ? users 
-    : staticUsers.map(u => ({ ...u, lastLogin: '' }));
-
+  const usersToRender = users;
 
   return (
     <div className="flex flex-col flex-1 gap-6 p-6">
@@ -130,12 +108,22 @@ export default function UsersPage() {
             </p>
         </div>
         {signedInUser.role === 'Admin' && (
-          <NewUserDialog onSave={handleCreateUser}>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New User
-            </Button>
-          </NewUserDialog>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        {/* The NewUserDialog is temporarily disabled. */}
+                        <div tabIndex={0}>
+                           <Button disabled>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              New User
+                            </Button>
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Creating users requires a secure server function. Coming soon!</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         )}
       </div>
 
@@ -152,7 +140,13 @@ export default function UsersPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {usersToRender.map((user) => (
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-24 text-center">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+              </TableCell>
+            </TableRow>
+          ) : usersToRender.map((user) => (
             <TableRow key={user.id}>
               <TableCell>
                 <div className="flex items-center gap-4">
@@ -173,8 +167,8 @@ export default function UsersPage() {
                   {user.status}
                 </Badge>
               </TableCell>
-              <TableCell className="hidden md:table-cell">
-                {user.lastLogin || <span className="text-muted-foreground">Loading...</span>}
+              <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
+                N/A
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -192,13 +186,9 @@ export default function UsersPage() {
                       </DropdownMenuItem>
                     </EditUserDialog>
                     {/* Admins can delete any user except themselves */}
-                    {signedInUser.role === 'Admin' && signedInUser.email !== user.email ? (
-                        <DropdownMenuItem onSelect={() => handleDelete(user.id)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                        Delete
-                        </DropdownMenuItem>
-                    ) : (
-                        <DropdownMenuItem disabled>Delete</DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem disabled className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+                      Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
