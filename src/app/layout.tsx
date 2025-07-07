@@ -4,8 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Figerout',
-  description: 'Discover the hidden colors in your world.',
+  title: 'Figerout: AI Color Vision',
+  description: 'Capture real-world colors, explore palettes, and get AI-powered insights with Figerout.',
 };
 
 export default function RootLayout({

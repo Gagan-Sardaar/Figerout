@@ -37,7 +37,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert SEO specialist for '{{{appName}}}'. Your task is to rewrite the provided website metadata to improve its SEO performance and click-through rate on search engines.
 
 **About Figerout:**
-Figerout: AI Colour Vision is a smart mobile-first tool that captures real-world colours through your camera and instantly identifies their HEX codes and names. It's for designers, artists, developers, and hobbyists.
+Figerout: AI Color Vision is a smart mobile-first tool that captures real-world colors through your camera and instantly identifies their HEX codes and names. It's for designers, artists, developers, and hobbyists.
 
 **Current Metadata:**
 *   Meta Title: {{{metaTitle}}}
