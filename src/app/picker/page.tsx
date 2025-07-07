@@ -28,7 +28,7 @@ const ColorPickerView = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-  const [user, setUser] = useState<(User & { uid: string }) | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [calloutStyle, setCalloutStyle] = useState<React.CSSProperties>({
     opacity: 0,
     position: 'absolute',
@@ -210,10 +210,10 @@ const ColorPickerView = () => {
   };
 
   const handleSave = async () => {
-    if (isUserLoggedIn && user?.uid) {
+    if (isUserLoggedIn && user?.id) {
       const colorName = getColorName(pickedColor);
       try {
-        await saveColor(user.uid, {
+        await saveColor(user.id, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
         });
@@ -274,9 +274,9 @@ const ColorPickerView = () => {
 
   const handleShare = async () => {
     const colorName = getColorName(pickedColor);
-    if (isUserLoggedIn && user?.uid) {
+    if (isUserLoggedIn && user?.id) {
       try {
-        await saveColor(user.uid, {
+        await saveColor(user.id, {
           hex: pickedColor.toUpperCase(),
           name: colorName,
         });

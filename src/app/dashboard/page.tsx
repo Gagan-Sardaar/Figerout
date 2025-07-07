@@ -118,12 +118,10 @@ const RoleSwitcher = () => {
     );
 }
 
-type LoggedInUser = User & { uid: string };
-
 export default function VisitorDashboardPage() {
   const { toast } = useToast();
   const [userName, setUserName] = useState("Visitor");
-  const [user, setUser] = useState<LoggedInUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, color: null });
@@ -141,9 +139,9 @@ export default function VisitorDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
         const fetchColors = async () => {
-            const colors = await getSavedColors(user.uid);
+            const colors = await getSavedColors(user.id);
             setSavedColors(colors);
         };
         fetchColors();
@@ -173,11 +171,11 @@ export default function VisitorDashboardPage() {
   }, [savedColors, activeFilter]);
 
   const handleDeleteColor = async (hex: string) => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
     const colorToDelete = savedColors.find(c => c.hex === hex);
     if (!colorToDelete) return;
 
-    await deleteColor(user.uid, hex);
+    await deleteColor(user.id, hex);
     setSavedColors(prev => prev.filter(color => color.hex !== hex));
     toast({
       title: "Color Removed",
@@ -195,8 +193,8 @@ export default function VisitorDashboardPage() {
   };
 
   const handleSaveNote = async () => {
-    if (!dialogState.color || !user?.uid) return;
-    await updateColorNote(user.uid, dialogState.color.hex, noteContent);
+    if (!dialogState.color || !user?.id) return;
+    await updateColorNote(user.id, dialogState.color.hex, noteContent);
     setSavedColors(prev => prev.map(c => 
       c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
     ));
