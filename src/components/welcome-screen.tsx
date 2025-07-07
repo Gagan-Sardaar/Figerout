@@ -176,6 +176,20 @@ const WelcomeScreen = () => {
 
   const activeSlide = useMemo(() => slides[currentSlide], [currentSlide, slides]);
 
+  if (!isLoaded) {
+    return (
+      <div className="flex h-svh w-full flex-col items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
+          <p className="mt-4 text-xs md:text-sm animate-pulse">Loading inspiration...</p>
+        </div>
+        <div className="fixed bottom-10 w-full max-w-xs px-4">
+          <Progress value={loadingProgress} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-accent" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
@@ -196,10 +210,10 @@ const WelcomeScreen = () => {
       <div className="absolute inset-0 bg-black/5" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
       
-      {isLoaded && activeSlide && (
+      {activeSlide && (
         <>
           {/* Top Center Content */}
-          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center">
+          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center animate-in fade-in duration-1000">
             <div className="max-w-md mx-auto">
               <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter">Figerout</h1>
               <p className="mt-4 text-xs md:text-sm whitespace-nowrap">Discover the hidden colors in your world.</p>
@@ -207,7 +221,7 @@ const WelcomeScreen = () => {
           </div>
 
           {/* Bottom Center Content */}
-          <div className="absolute bottom-0 inset-x-0 pb-8 z-10 flex flex-col items-center text-white text-center">
+          <div className="absolute bottom-0 inset-x-0 pb-8 z-10 flex flex-col items-center text-white text-center animate-in fade-in duration-1000">
             <Button
               asChild
               size="lg"
@@ -232,7 +246,7 @@ const WelcomeScreen = () => {
           {activeSlide.callouts.map((callout, index) => (
             <div 
               key={index} 
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out" 
+              className="absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out animate-in fade-in" 
               style={isMobile && callout.mobilePosition ? callout.mobilePosition : callout.position}
             >
               <div className="flex items-center gap-2 rounded-full bg-black/50 py-1 pl-1 pr-3 text-white shadow-lg backdrop-blur-md md:gap-3 md:py-2 md:pl-2 md:pr-4">
