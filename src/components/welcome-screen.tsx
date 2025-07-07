@@ -132,19 +132,30 @@ const WelcomeScreen = () => {
   }, [footerRef]);
 
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length === 0) {
+      setIsLoaded(true);
+      return;
+    }
 
     let loadedCount = 0;
+    const totalSlides = slides.length;
+
+    const handleLoadOrError = () => {
+      loadedCount++;
+      setLoadingProgress((loadedCount / totalSlides) * 100);
+      if (loadedCount === totalSlides) {
+        setTimeout(() => setIsLoaded(true), 500);
+      }
+    };
+
     slides.forEach((slide) => {
-        const img = new window.Image();
-        img.src = slide.src;
-        img.onload = () => {
-            loadedCount++;
-            setLoadingProgress((loadedCount / slides.length) * 100);
-            if (loadedCount === slides.length) {
-                setTimeout(() => setIsLoaded(true), 500);
-            }
-        };
+      const img = new window.Image();
+      img.src = slide.src;
+      img.onload = handleLoadOrError;
+      img.onerror = () => {
+        console.error(`Failed to load image: ${slide.src}`);
+        handleLoadOrError(); // Treat as loaded to not get stuck
+      };
     });
   }, []);
 
@@ -154,7 +165,7 @@ const WelcomeScreen = () => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [isLoaded, slides.length]);
+  }, [isLoaded]);
 
   const activeSlide = useMemo(() => slides[currentSlide], [currentSlide]);
 
@@ -293,3 +304,5 @@ const WelcomeScreen = () => {
 };
 
 export default WelcomeScreen;
+
+    
