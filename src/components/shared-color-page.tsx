@@ -60,8 +60,7 @@ const SharedColorPage = ({ color }: SharedColorPageProps) => {
     <div
       className="flex flex-col items-center justify-center min-h-svh w-full p-4"
       style={{
-        backgroundColor: color,
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1))`
+        backgroundColor: '#09090b',
       }}
     >
         <div
