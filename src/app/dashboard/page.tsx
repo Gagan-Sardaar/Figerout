@@ -368,8 +368,8 @@ export default function VisitorDashboardPage() {
                 )}
                 {dialogState.type === 'shades' && dialogState.color && (
                      <div className="py-4 space-y-2 max-h-80 overflow-y-auto">
-                         {[...colorShades.darker, dialogState.color.hex, ...colorShades.lighter].map((shade) => (
-                             <div key={shade} className="flex items-center gap-4 p-2 rounded-md" style={{ backgroundColor: shade }}>
+                         {[...colorShades.darker, dialogState.color.hex, ...colorShades.lighter].map((shade, index) => (
+                             <div key={`${shade}-${index}`} className="flex items-center gap-4 p-2 rounded-md" style={{ backgroundColor: shade }}>
                                  <p className="font-mono font-bold" style={{ color: isColorLight(shade) ? '#000' : '#fff' }}>{shade.toUpperCase()}</p>
                              </div>
                          ))}
