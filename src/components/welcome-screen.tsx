@@ -186,7 +186,7 @@ const WelcomeScreen = () => {
     <div className="relative w-full h-svh overflow-hidden bg-black">
       {slides.length > 0 && slides.map((slide, index) => (
         <Image
-          key={slide.src}
+          key={index}
           src={slide.src}
           alt={slide.hint || `Background slide ${index + 1}`}
           fill
