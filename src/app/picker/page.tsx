@@ -336,7 +336,6 @@ const ColorPickerView = () => {
     >
         {isAtBoundary && isDragging ? (
              <div className="flex items-center p-3 gap-2">
-                <HeartCrack className="w-5 h-5 flex-shrink-0" />
                 <div>
                     <p className="font-bold text-base">Oops!</p>
                     <p className="text-xs text-white/70">You've reached the edge.</p>
@@ -408,25 +407,34 @@ const ColorPickerView = () => {
                 }}
             >
                 <div
-                className='relative w-16 h-16 flex items-center justify-center transition-colors text-white'
+                    className={cn(
+                        'relative w-16 h-16 flex items-center justify-center transition-all duration-300 text-white'
+                    )}
                 >
-                    <div className="w-5 h-5 rounded-full border-2 border-current bg-current/20 backdrop-blur-sm" />
-                    <ChevronUp
-                        className="absolute -top-1 w-6 h-6"
-                        style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
-                    />
-                    <ChevronDown
-                        className="absolute -bottom-1 w-6 h-6"
-                        style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
-                    />
-                    <ChevronLeft
-                        className="absolute -left-1 w-6 h-6"
-                        style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
-                    />
-                    <ChevronRight
-                        className="absolute -right-1 w-6 h-6"
-                        style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
-                    />
+                    <div className={cn(
+                        "w-5 h-5 rounded-full border-2 bg-transparent backdrop-blur-sm transition-all duration-300",
+                        isAtBoundary ? "border-destructive shadow-[0_0_15px_3px_hsl(var(--destructive))] bg-destructive/20" : "border-current bg-current/20"
+                    )} />
+                    {!isAtBoundary && (
+                        <>
+                            <ChevronUp
+                                className="absolute -top-1 w-6 h-6 transition-opacity"
+                                style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                            />
+                            <ChevronDown
+                                className="absolute -bottom-1 w-6 h-6 transition-opacity"
+                                style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                            />
+                            <ChevronLeft
+                                className="absolute -left-1 w-6 h-6 transition-opacity"
+                                style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                            />
+                            <ChevronRight
+                                className="absolute -right-1 w-6 h-6 transition-opacity"
+                                style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
             
@@ -596,18 +604,28 @@ const ColorPickerView = () => {
         </div>
       )}
 
-      {/* Retake Button */}
+      {/* Retake/Boundary Button */}
       <div className={cn(
         "absolute bottom-5 inset-x-0 z-20 flex justify-center transition-opacity duration-300",
         isDragging || isPaletteOpen ? "opacity-0" : "opacity-100"
         )}>
-         <Button
-            onClick={() => router.push('/choose')}
-            className="h-16 w-16 rounded-full border-4 border-white bg-white/30 p-2 text-white transition-transform active:scale-95 hover:bg-white/50"
-            aria-label="Retake photo"
-          >
-            <RefreshCw className="h-9 w-9" />
-         </Button>
+         {isAtBoundary ? (
+            <Button
+                variant="destructive"
+                className="h-16 w-16 rounded-full border-4 border-destructive-foreground/50 p-2 text-destructive-foreground transition-transform active:scale-95 animate-pulse"
+                aria-label="Boundary limit reached"
+            >
+                <HeartCrack className="h-9 w-9" />
+            </Button>
+         ) : (
+            <Button
+                onClick={() => router.push('/choose')}
+                className="h-16 w-16 rounded-full border-4 border-white bg-white/30 p-2 text-white transition-transform active:scale-95 hover:bg-white/50"
+                aria-label="Retake photo"
+            >
+                <RefreshCw className="h-9 w-9" />
+            </Button>
+         )}
       </div>
     </div>
   );
