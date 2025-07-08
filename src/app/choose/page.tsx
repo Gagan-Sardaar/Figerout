@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -13,7 +14,40 @@ export default function ChoosePage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const resizeImage = (dataUrl: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+          const img = new window.Image();
+          img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_DIMENSION = 1280;
+              let { width, height } = img;
+              const aspectRatio = width / height;
+
+              if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                  if (aspectRatio > 1) { // Landscape
+                      width = MAX_DIMENSION;
+                      height = MAX_DIMENSION / aspectRatio;
+                  } else { // Portrait
+                      height = MAX_DIMENSION;
+                      width = MAX_DIMENSION * aspectRatio;
+                  }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                  return reject(new Error('Could not get canvas context'));
+              }
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.9)); // Use JPEG for compression
+          };
+          img.onerror = reject;
+          img.src = dataUrl;
+      });
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -26,10 +60,20 @@ export default function ChoosePage() {
       }
 
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        sessionStorage.setItem('capturedImage', dataUrl);
-        router.push('/picker');
+      reader.onloadend = async () => {
+        try {
+            const dataUrl = reader.result as string;
+            const resizedDataUrl = await resizeImage(dataUrl);
+            sessionStorage.setItem('capturedImage', resizedDataUrl);
+            router.push('/picker');
+        } catch(error) {
+            console.error(error);
+            toast({
+                title: 'Error processing image',
+                description: 'The image could not be loaded or resized.',
+                variant: 'destructive',
+            });
+        }
       };
       reader.onerror = () => {
         toast({

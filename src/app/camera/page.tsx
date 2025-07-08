@@ -156,8 +156,27 @@ const CameraView = () => {
     
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    
+    // --- Image Resizing Logic ---
+    const MAX_DIMENSION = 1280;
+    const { videoWidth, videoHeight } = video;
+    let drawWidth = videoWidth;
+    let drawHeight = videoHeight;
+    const aspectRatio = videoWidth / videoHeight;
+
+    if (drawWidth > MAX_DIMENSION || drawHeight > MAX_DIMENSION) {
+        if (aspectRatio > 1) { // Landscape
+            drawWidth = MAX_DIMENSION;
+            drawHeight = MAX_DIMENSION / aspectRatio;
+        } else { // Portrait
+            drawHeight = MAX_DIMENSION;
+            drawWidth = MAX_DIMENSION * aspectRatio;
+        }
+    }
+    // --- End Resizing Logic ---
+
+    canvas.width = drawWidth;
+    canvas.height = drawHeight;
     const context = canvas.getContext('2d');
     if (context) {
       if (facingMode === 'user' || !isMobile) {
@@ -165,9 +184,18 @@ const CameraView = () => {
         context.scale(-1, 1);
       }
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      sessionStorage.setItem('capturedImage', dataUrl);
-      router.push('/picker');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9); // Use JPEG for better compression
+      try {
+        sessionStorage.setItem('capturedImage', dataUrl);
+        router.push('/picker');
+      } catch (error) {
+          console.error(error);
+          toast({
+              title: "Image is Too Large",
+              description: "The captured image is too large to process, even after resizing. Please try again.",
+              variant: "destructive"
+          });
+      }
     }
   };
 
