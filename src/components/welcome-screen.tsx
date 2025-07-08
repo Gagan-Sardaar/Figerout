@@ -107,6 +107,16 @@ const WelcomeScreen = () => {
   const isMobile = useIsMobile();
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+        setIsLoggedIn(true);
+    }
+  }, []);
 
   const footerLinks = [
     { href: "/about", label: "About Us" },
@@ -224,6 +234,19 @@ const WelcomeScreen = () => {
       
       {activeSlide && (
         <>
+          <div className="absolute top-6 right-6 z-20">
+            {isMounted && (
+                isLoggedIn ? (
+                    <Button asChild variant="outline" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
+                        <Link href="/dashboard">Dashboard</Link>
+                    </Button>
+                ) : (
+                    <Button asChild variant="outline" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
+                        <Link href="/login">Login</Link>
+                    </Button>
+                )
+            )}
+          </div>
           {/* Top Center Content */}
           <div className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 w-full px-4 text-white text-center animate-in fade-in duration-1000">
             <div className="max-w-md mx-auto">
