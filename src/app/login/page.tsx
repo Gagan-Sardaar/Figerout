@@ -238,94 +238,98 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
             <Loader2 className="h-10 w-10 animate-spin text-white" />
           </div>
         ) : (
-          <AlertDialog>
-            <Card className="mx-auto w-full max-w-sm bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
-                <CardHeader className="items-center text-center">
-                    <Link href="/" className="font-headline text-3xl font-bold tracking-tight text-foreground mb-2">
-                        Figerout
-                    </Link>
-                    <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>
-                        Enter your credentials to access your account
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                          id="email"
-                          type="email"
-                          placeholder="m@example.com"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="bg-background/50 border-white/20 focus:bg-background/70"
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password">Password</Label>
-                        <Link
-                          href="/forgot-password"
-                          className="ml-auto inline-block text-sm underline"
-                        >
-                          Forgot your password?
-                        </Link>
-                      </div>
-                      <div className="relative">
-                        <Input 
-                          id="password" 
-                          type={showPassword ? "text" : "password"}
-                          required 
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
-                          className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+          <div className="mx-auto w-full max-w-sm">
+            <div className="text-center mb-6">
+                <Link href="/" className="font-headline text-5xl font-extrabold tracking-tighter text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                    Figerout
+                </Link>
+            </div>
+            <AlertDialog>
+              <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
+                  <CardHeader className="items-center text-center">
+                      <CardTitle className="text-2xl">Login</CardTitle>
+                      <CardDescription>
+                          Enter your credentials to access your account
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                  <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="bg-background/50 border-white/20 focus:bg-background/70"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
                       </div>
-                    </div>
-                    <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
-                      {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Login
-                    </Button>
-                     <Button variant="ghost" className="w-full" asChild>
-                        <Link href="/">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Home
-                        </Link>
-                    </Button>
-                </div>
-                <div className="mt-4 text-center text-sm">
-                    Don&apos;t have an account?{" "}
-                    <AlertDialogTrigger asChild>
-                        <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
-                    </AlertDialogTrigger>
-                </div>
-                </CardContent>
-            </Card>
 
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
-                <AlertDialogDescription>
-                    We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                <AlertDialogAction>OK</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                      <div className="grid gap-2">
+                        <div className="flex items-center">
+                          <Label htmlFor="password">Password</Label>
+                          <Link
+                            href="/forgot-password"
+                            className="ml-auto inline-block text-sm underline"
+                          >
+                            Forgot your password?
+                          </Link>
+                        </div>
+                        <div className="relative">
+                          <Input 
+                            id="password" 
+                            type={showPassword ? "text" : "password"}
+                            required 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
+                            className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
+                        {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Login
+                      </Button>
+                       <Button variant="ghost" className="w-full" asChild>
+                          <Link href="/">
+                              <ArrowLeft className="mr-2 h-4 w-4" />
+                              Back to Home
+                          </Link>
+                      </Button>
+                  </div>
+                  <div className="mt-4 text-center text-sm">
+                      Don&apos;t have an account?{" "}
+                      <AlertDialogTrigger asChild>
+                          <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
+                      </AlertDialogTrigger>
+                  </div>
+                  </CardContent>
+              </Card>
+
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                  <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
+                  </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                  <AlertDialogAction>OK</AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
       {backgroundDetails && !isLoading && (
