@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -115,6 +114,24 @@ export default function LoginPage() {
 
       if (userDocSnap.exists()) {
         const userProfile = { id: userDocSnap.id, ...userDocSnap.data() } as FirestoreUser;
+
+        if (userProfile.status === 'inactive' || userProfile.status === 'pending_deletion') {
+            let title = 'Account Inactive';
+            let description = 'Your account is currently inactive. Please contact support.';
+            if (userProfile.status === 'pending_deletion') {
+                title = 'Account Deletion Pending';
+                description = 'This account is scheduled for deletion and can no longer be accessed.';
+            }
+            toast({
+                title,
+                description,
+                variant: "destructive",
+                duration: 9000,
+            });
+            auth.signOut();
+            setIsLoggingIn(false);
+            return;
+        }
         
         await addLogEntry(
           'user_login',

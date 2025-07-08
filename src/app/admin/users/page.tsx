@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,6 +26,7 @@ import { EditUserDialog } from "@/components/admin/edit-user-dialog";
 import { NewUserDialog } from "@/components/admin/new-user-dialog";
 import { getUsers, updateUser, FirestoreUser } from "@/services/user-service";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatDistanceToNow, addDays, format } from 'date-fns';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<FirestoreUser[]>([]);
@@ -133,7 +133,7 @@ export default function UsersPage() {
             <TableHead>User</TableHead>
             <TableHead className="hidden sm:table-cell">Role</TableHead>
             <TableHead className="hidden sm:table-cell">Status</TableHead>
-            <TableHead className="hidden md:table-cell">Last Login</TableHead>
+            <TableHead className="hidden md:table-cell">Details</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -163,12 +163,34 @@ export default function UsersPage() {
                 <Badge variant="outline">{user.role}</Badge>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <Badge variant={user.status === 'active' ? 'secondary' : user.status === 'invited' ? 'default' : 'outline'} className="capitalize">
-                  {user.status}
+                <Badge
+                  variant={
+                    user.status === 'active' ? 'secondary'
+                    : user.status === 'invited' ? 'default'
+                    : user.status === 'pending_deletion' ? 'destructive'
+                    : 'outline'
+                  }
+                  className="capitalize"
+                >
+                  {user.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
-                N/A
+                {user.status === 'pending_deletion' && user.deletionScheduledAt ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span className="text-destructive font-medium">Deletes on {format(addDays(user.deletionScheduledAt.toDate(), 30), 'MMM d, yyyy')}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>User marked for deletion {formatDistanceToNow(user.deletionScheduledAt.toDate(), { addSuffix: true })}.</p>
+                        <p>Data will be purged in 30 days.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <span>Last Login: N/A</span>
+                )}
               </TableCell>
               <TableCell>
                 <DropdownMenu>

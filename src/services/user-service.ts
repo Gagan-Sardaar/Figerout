@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview A service for managing user data in Firebase Firestore.
  */
@@ -18,8 +17,9 @@ export interface FirestoreUser {
   email: string;
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
-  status: 'active' | 'inactive' | 'invited';
+  status: 'active' | 'inactive' | 'invited' | 'pending_deletion';
   phoneNumber?: string;
+  deletionScheduledAt?: any; // To allow passing serverTimestamp()
 }
 
 /**

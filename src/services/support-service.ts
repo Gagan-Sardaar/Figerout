@@ -1,6 +1,7 @@
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
+import { updateUser } from './user-service';
 
 export interface SupportTicket {
     id: string;
@@ -54,4 +55,23 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
         `Support ticket ${ticketId} was ${status}.`,
         { ticketId, status }
     );
+
+    if (status === 'approved') {
+        const ticketDoc = await getDoc(ticketRef);
+        if (ticketDoc.exists()) {
+            const ticketData = ticketDoc.data();
+            const userId = ticketData.userId;
+            if (userId) {
+                await updateUser(userId, { 
+                    status: 'pending_deletion', 
+                    deletionScheduledAt: serverTimestamp()
+                });
+                await addLogEntry(
+                    'user_marked_for_deletion',
+                    `User account ${userId} marked for deletion following support request approval.`,
+                    { userId, ticketId }
+                );
+            }
+        }
+    }
 }
