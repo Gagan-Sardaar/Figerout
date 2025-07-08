@@ -292,7 +292,7 @@ export default function VisitorDashboardPage() {
       <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
-          <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col">
+          <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col flex-grow">
               <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4">
               <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
                   F
@@ -302,72 +302,13 @@ export default function VisitorDashboardPage() {
               <h1 className="text-xl md:text-3xl font-bold truncate">{userName}</h1>
               <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
-              <RoleSwitcher />
-              
-              {/* Desktop Filters */}
-              <nav className="pt-4 space-y-1 hidden md:block">
-                {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
-                  <Button
-                    key={filter}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start text-lg capitalize px-3 py-2 h-auto",
-                      activeFilter === filter
-                        ? "text-white font-semibold bg-primary-foreground/10"
-                        : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
-                    )}
-                    onClick={() => setActiveFilter(filter)}
-                  >
-                    {filter === 'all' ? 'All Time' : filter}
-                  </Button>
-                ))}
-              </nav>
-
-              {/* Mobile Filters */}
-              <div className="block md:hidden pt-4">
-                <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
-                  {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
-                    <Button
-                      key={filter}
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "shrink-0 px-4",
-                        filter === 'all' ? 'uppercase' : 'capitalize',
-                        activeFilter === filter
-                          ? "bg-primary-foreground/20 text-white font-semibold"
-                          : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
-                      )}
-                      onClick={() => setActiveFilter(filter)}
-                    >
-                      {filter === 'all' ? 'ALL' : filter}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-          </Card>
-        </div>
-
-        <div className="flex-1 min-h-0 flex flex-col">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <Link href="/camera" className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
-                    <Camera className="w-6 h-6" />
-                </div>
-                <div className="ml-4 text-left">
-                    <h3 className="text-lg font-semibold text-foreground">Live Capture</h3>
-                    <p className="text-sm text-muted-foreground">Use your camera.</p>
-                </div>
-            </Link>
-
-            <div onClick={handleUploadClick} className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
-                    <ImageIcon className="w-6 h-6" />
-                </div>
-                <div className="ml-4 text-left">
-                    <h3 className="text-lg font-semibold text-foreground">Upload Image</h3>
-                    <p className="text-sm text-muted-foreground">Pick from library.</p>
-                </div>
+              <div className="space-y-2 pt-6">
+                <Button variant="ghost" asChild className="w-full justify-start text-base px-3 py-2 h-auto text-primary-foreground/90 hover:bg-primary-foreground/10 hover:text-white">
+                  <Link href="/choose" className="flex items-center gap-3">
+                    <Camera className="w-4 h-4" />
+                    <span>Find New Color</span>
+                  </Link>
+                </Button>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -375,9 +316,31 @@ export default function VisitorDashboardPage() {
                     accept="image/*"
                     className="hidden"
                 />
-            </div>
+              </div>
+
+              <div className="mt-auto">
+                <RoleSwitcher />
+              </div>
+          </Card>
+        </div>
+
+        <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex items-center gap-2 mb-6 flex-wrap">
+              {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
+                <Button
+                  key={filter}
+                  variant={activeFilter === filter ? "secondary" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    'capitalize'
+                  )}
+                  onClick={() => setActiveFilter(filter)}
+                >
+                  {filter === 'all' ? 'All Time' : filter}
+                </Button>
+              ))}
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2">
             {filteredColors.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filteredColors.map(color => (
@@ -490,3 +453,5 @@ export default function VisitorDashboardPage() {
     </div>
   );
 }
+
+    
