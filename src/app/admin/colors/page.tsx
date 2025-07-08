@@ -22,8 +22,8 @@ type DialogState = {
 };
 
 export default function AdminColorsPage() {
-    const [adminColors, setAdminColors] = useState<SavedColor[]>([]);
-    const [adminId, setAdminId] = useState<string | null>(null);
+    const [myColors, setMyColors] = useState<SavedColor[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const { toast } = useToast();
@@ -34,19 +34,19 @@ export default function AdminColorsPage() {
         const storedUser = localStorage.getItem('loggedInUser');
         if (storedUser) {
             const user = JSON.parse(storedUser);
-            if (user.role !== 'Admin') {
+            if (user.role !== 'Admin' && user.role !== 'Editor') {
                 router.replace('/admin');
                 return;
             }
-            setAdminId(user.id);
+            setUserId(user.id);
 
-            const fetchAdminColors = async () => {
+            const fetchMyColors = async () => {
                 setIsLoading(true);
                 try {
                     const colors = await getSavedColors(user.id);
-                    setAdminColors(colors.sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime()));
+                    setMyColors(colors.sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime()));
                 } catch (error) {
-                    console.error("Failed to fetch admin color data:", error);
+                    console.error("Failed to fetch user color data:", error);
                     toast({
                         title: "Error",
                         description: "Could not fetch your saved colors.",
@@ -56,7 +56,7 @@ export default function AdminColorsPage() {
                     setIsLoading(false);
                 }
             };
-            fetchAdminColors();
+            fetchMyColors();
         } else {
             router.replace('/login');
             return;
@@ -64,13 +64,13 @@ export default function AdminColorsPage() {
     }, [router, toast]);
 
     const handleDeleteColor = async (hex: string) => {
-        if (!adminId) return;
+        if (!userId) return;
 
-        const colorToDelete = adminColors.find(c => c.hex === hex);
+        const colorToDelete = myColors.find(c => c.hex === hex);
         if (!colorToDelete) return;
 
-        await deleteColor(adminId, hex);
-        setAdminColors(prev => prev.filter(c => c.hex !== hex));
+        await deleteColor(userId, hex);
+        setMyColors(prev => prev.filter(c => c.hex !== hex));
         
         toast({
           title: "Color Removed",
@@ -88,11 +88,11 @@ export default function AdminColorsPage() {
     };
 
     const handleSaveNote = async () => {
-        if (!dialogState.color || !adminId) return;
+        if (!dialogState.color || !userId) return;
         
-        await updateColorNote(adminId, dialogState.color.hex, noteContent);
+        await updateColorNote(userId, dialogState.color.hex, noteContent);
         
-        setAdminColors(prev => prev.map(c => 
+        setMyColors(prev => prev.map(c => 
             c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
         ));
 
@@ -119,7 +119,7 @@ export default function AdminColorsPage() {
         );
     }
 
-    if (adminColors.length === 0) {
+    if (myColors.length === 0) {
         return (
              <div className="flex flex-col items-center justify-center h-full rounded-2xl border-2 border-dashed border-muted-foreground/20 p-12 text-center text-muted-foreground m-8">
                 <Brush className="w-16 h-16 mb-4" />
@@ -139,7 +139,7 @@ export default function AdminColorsPage() {
             <p className="text-muted-foreground">Browse all colors saved to your personal collection.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pt-4">
-                {adminColors.map(color => (
+                {myColors.map(color => (
                     <Card key={color.hex} className="bg-card text-card-foreground rounded-xl flex flex-col overflow-hidden shadow-md transition-transform hover:-translate-y-1">
                         <div 
                             style={{ backgroundColor: color.hex }} 
