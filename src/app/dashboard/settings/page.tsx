@@ -6,23 +6,19 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { deleteAllColors } from "@/services/color-service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, Trash2, ShieldQuestion, Mail, ShieldAlert } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { createDeletionRequest } from "@/services/support-service";
+import { Loader2, Trash2, ShieldQuestion, Mail, ShieldAlert, XCircle } from "lucide-react";
+import { updateUser } from "@/services/user-service";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletionReason, setDeletionReason] = useState("");
-  const [isDeleteRequestDialogOpen, setIsDeleteRequestDialogOpen] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -69,38 +65,31 @@ export default function SettingsPage() {
       });
     }
   };
-  
-  const handleRequestDeletion = async () => {
-      if (!userId || !userEmail) {
-        toast({ title: "Error", description: "Could not identify user. Please try again.", variant: "destructive" });
-        return;
-      }
-      if (!deletionReason) {
-        toast({ title: "Reason Required", description: "Please provide a reason for deleting your account.", variant: "destructive" });
-        return;
-      }
-      setIsSubmitting(true);
-      
-      try {
-        await createDeletionRequest(userId, userEmail, deletionReason);
-        toast({
-            title: "Deletion Request Sent",
-            description: "Your account deletion request has been submitted for review. An admin will process it shortly.",
-        });
-        setIsDeleteRequestDialogOpen(false);
-        setDeletionReason("");
-      } catch (error) {
-        console.error("Failed to submit deletion request:", error);
-        toast({
-            title: "Request Failed",
-            description: "Could not submit your request. Please try again later.",
-            variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-  };
 
+  const handleDeactivateAccount = async () => {
+    if (!userId) return;
+    setIsDeactivating(true);
+    try {
+      await updateUser(userId, { status: 'inactive' });
+      toast({
+        title: "Account Deactivated",
+        description: "Your account has been successfully deactivated. You have been logged out.",
+      });
+      await auth.signOut();
+      localStorage.removeItem('loggedInUser');
+      localStorage.removeItem('originalLoggedInUser');
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Deactivation Failed",
+        description: "Could not deactivate your account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeactivating(false);
+    }
+  };
 
   if (!userEmail) {
     return (
@@ -168,41 +157,32 @@ export default function SettingsPage() {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-destructive/20 p-4">
                 <div className="space-y-0.5 mb-4 sm:mb-0">
-                    <p className="text-sm font-medium">Delete Your Account</p>
+                    <p className="text-sm font-medium">Deactivate Account</p>
                     <p className="text-xs text-muted-foreground">
-                        Request permanent deletion of your account and all associated data.
+                        Temporarily deactivate your account. You will be logged out.
                     </p>
                 </div>
-                <AlertDialog open={isDeleteRequestDialogOpen} onOpenChange={setIsDeleteRequestDialogOpen}>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive">
-                             <Trash2 className="mr-2 h-4 w-4" /> Delete Account
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Account deletion is final. Once your request is processed, all data will be removed after a 30-day grace period. Please tell us why you are leaving so we can improve.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="grid w-full gap-2">
-                           <Label htmlFor="deletion-reason">Reason for leaving</Label>
-                           <Textarea
-                                id="deletion-reason"
-                                placeholder="Your feedback is valuable to us..."
-                                value={deletionReason}
-                                onChange={(e) => setDeletionReason(e.target.value)}
-                            />
-                        </div>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeletionReason("")}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleRequestDeletion} disabled={isSubmitting || !deletionReason} className="bg-destructive hover:bg-destructive/90">
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Submit Deletion Request
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <XCircle className="mr-2 h-4 w-4" /> Deactivate Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure you want to deactivate?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You will be logged out and will not be able to log back in until your account is reactivated by support. Your data will not be deleted.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeactivateAccount} disabled={isDeactivating} className="bg-destructive hover:bg-destructive/90">
+                        {isDeactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Deactivate
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
                 </AlertDialog>
             </div>
         </CardContent>

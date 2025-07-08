@@ -75,7 +75,7 @@ function UserNav({ user }: { user: User | null }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/contact">
+                <Link href="/dashboard/support">
                     <LifeBuoy className="mr-2 h-4 w-4" />
                     <span>Support</span>
                 </Link>
