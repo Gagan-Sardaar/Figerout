@@ -211,82 +211,6 @@ export default function VisitorDashboardPage() {
       return { lighter: [], darker: [] };
   }, [dialogState]);
 
-  const resizeImage = (dataUrl: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-          const img = new window.Image();
-          img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const MAX_DIMENSION = 1280;
-              let { width, height } = img;
-              const aspectRatio = width / height;
-
-              if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-                  if (aspectRatio > 1) { // Landscape
-                      width = MAX_DIMENSION;
-                      height = MAX_DIMENSION / aspectRatio;
-                  } else { // Portrait
-                      height = MAX_DIMENSION;
-                      width = MAX_DIMENSION * aspectRatio;
-                  }
-              }
-
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) {
-                  return reject(new Error('Could not get canvas context'));
-              }
-              ctx.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', 0.9)); // Use JPEG for compression
-          };
-          img.onerror = reject;
-          img.src = dataUrl;
-      });
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Invalid File Type',
-          description: 'Please select an image file.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-            const dataUrl = reader.result as string;
-            const resizedDataUrl = await resizeImage(dataUrl);
-            sessionStorage.setItem('capturedImage', resizedDataUrl);
-            router.push('/picker');
-        } catch(error) {
-            console.error(error);
-            toast({
-                title: 'Error processing image',
-                description: 'The image could not be loaded or resized.',
-                variant: 'destructive',
-            });
-        }
-      };
-      reader.onerror = () => {
-        toast({
-            title: 'Error reading file',
-            description: 'Something went wrong while trying to load your image.',
-            variant: 'destructive',
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
     <div className="bg-background text-foreground flex-1 flex flex-col">
       <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
@@ -309,13 +233,6 @@ export default function VisitorDashboardPage() {
                     <span>Find New Color</span>
                   </Link>
                 </Button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                />
               </div>
 
               <div className="mt-auto">
@@ -336,7 +253,7 @@ export default function VisitorDashboardPage() {
                   )}
                   onClick={() => setActiveFilter(filter)}
                 >
-                  {filter === 'all' ? 'All Time' : filter}
+                  {filter === 'all' ? 'ALL' : filter}
                 </Button>
               ))}
           </div>
