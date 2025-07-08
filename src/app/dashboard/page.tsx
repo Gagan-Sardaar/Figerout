@@ -329,7 +329,7 @@ export default function VisitorDashboardPage() {
                           </div>
                       </div>
                       <div className="flex-grow flex items-center">
-                          <p className="text-5xl font-light text-foreground">{color.hex.toUpperCase()}</p>
+                          <p className="text-4xl font-light text-foreground">{color.hex.toUpperCase()}</p>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
                         Saved {formatDistanceToNow(new Date(color.sharedAt), { addSuffix: true })}
