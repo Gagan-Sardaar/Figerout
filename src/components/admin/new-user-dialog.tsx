@@ -34,9 +34,23 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/lib/user-data";
 
+// List of blocked domains
+const blockedDomains = [
+    "mailinator.com",
+    "tempmail.com",
+    "temp-mail.org",
+    "10minutemail.com",
+    "guerrillamail.com",
+];
+
 const newUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  email: z.string().email("Please enter a valid email address."),
+  email: z.string().email("Please enter a valid email address.").refine(email => {
+    const domain = email.split('@')[1];
+    return !blockedDomains.includes(domain?.toLowerCase());
+  }, {
+    message: "This email provider is not allowed. Please use a permanent email address."
+  }),
   role: z.enum(["Admin", "Editor", "Viewer"]),
 });
 
@@ -128,7 +142,7 @@ export function NewUserDialog({ onSave, children }: NewUserDialogProps) {
                     <SelectContent>
                       <SelectItem value="Admin">Admin</SelectItem>
                       <SelectItem value="Editor">Editor</SelectItem>
-                      <SelectItem value="Viewer">Viewer</SelectItem>
+                      <SelectItem value="Viewer">Visitor</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
