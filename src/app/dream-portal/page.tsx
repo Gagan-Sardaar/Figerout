@@ -26,10 +26,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
-import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
+import { signInWithEmailAndPassword, User as FirebaseUser, sendSignInLinkToEmail } from "firebase/auth";
 import { doc, getDoc, Timestamp } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
@@ -49,6 +49,9 @@ export default function DreamPortalPage() {
   const [lockoutInfo, setLockoutInfo] = useState<{until: number, message: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [lockoutExpired, setLockoutExpired] = useState(false);
+  const [isSendingLink, setIsSendingLink] = useState(false);
+
 
   useEffect(() => {
     if (localStorage.getItem("loggedInUser")) {
@@ -131,8 +134,7 @@ export default function DreamPortalPage() {
       if (distance < 0) {
         clearInterval(timer);
         setTimeLeft("You can now try again.");
-        setLockoutInfo(null);
-        setLoginStep('email');
+        setLockoutExpired(true);
         return;
       }
 
@@ -293,6 +295,30 @@ export default function DreamPortalPage() {
     }
   }
 
+  const handleSendLoginLink = async () => {
+    setIsSendingLink(true);
+    const actionCodeSettings = {
+        url: `${window.location.origin}/finish-login`,
+        handleCodeInApp: true,
+    };
+    try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem('emailForSignIn', email);
+        toast({
+            title: 'Login Link Sent',
+            description: `A login link has been sent to ${email}. Please check your inbox.`,
+        });
+        setLockoutInfo(null);
+        setLockoutExpired(false);
+        setLoginStep('email');
+    } catch (error) {
+        console.error(error);
+        toast({ title: 'Error', description: 'Could not send login link. Please try again.', variant: 'destructive' });
+    } finally {
+        setIsSendingLink(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (loginStep === 'email') {
@@ -320,8 +346,29 @@ export default function DreamPortalPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        <p className="text-sm text-muted-foreground">Time remaining:</p>
-        <p className="text-4xl font-mono font-bold tracking-widest">{timeLeft}</p>
+        {lockoutExpired ? (
+            <div className="space-y-4">
+                <p className="font-semibold text-lg">You can now try again</p>
+                <div className="flex flex-col gap-2">
+                    <Button onClick={() => {
+                        setLoginStep('password');
+                        setLockoutInfo(null);
+                        setLockoutExpired(false);
+                    }}>
+                        Try Again with Password
+                    </Button>
+                    <Button variant="secondary" onClick={handleSendLoginLink} disabled={isSendingLink}>
+                        {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                        Send Login Link
+                    </Button>
+                </div>
+            </div>
+        ) : (
+            <>
+                <p className="text-sm text-muted-foreground">Time remaining:</p>
+                <p className="text-4xl font-mono font-bold tracking-widest">{timeLeft}</p>
+            </>
+        )}
       </CardContent>
     </Card>
   );
