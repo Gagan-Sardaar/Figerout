@@ -292,17 +292,7 @@ const ColorPickerView = () => {
 
   const handleShare = async () => {
     const colorName = getColorName(pickedColor);
-    if (isUserLoggedIn && user?.id) {
-      try {
-        await saveColor(user.id, {
-          hex: pickedColor.toUpperCase(),
-          name: colorName,
-        });
-      } catch (e) {
-        console.error('Could not save color', e);
-      }
-    }
-
+    
     copyShareableColor();
 
     setShowShareConfirmation(true);
