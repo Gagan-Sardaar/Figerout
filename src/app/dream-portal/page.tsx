@@ -45,6 +45,7 @@ export default function DreamPortalPage() {
   const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [loginStep, setLoginStep] = useState<'email' | 'password'>('email');
 
   useEffect(() => {
     if (localStorage.getItem("loggedInUser")) {
@@ -109,7 +110,32 @@ export default function DreamPortalPage() {
     }
   }, [toast, authChecked]);
 
-  const handleLogin = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (loginStep === 'email') {
+        if (!email) {
+            toast({
+                title: "Email required",
+                description: "Please enter your email address.",
+                variant: "destructive",
+            });
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            toast({
+                title: "Invalid Email",
+                description: "Please enter a valid email address.",
+                variant: "destructive"
+            });
+            return;
+        }
+        // A real app might check if the user exists first.
+        setLoginStep('password');
+        return;
+    }
+    
+    // Login Step
     if (!email || !password) {
       toast({
         title: "Email and password required",
@@ -268,16 +294,17 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
             <AlertDialog>
               <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
                   <CardHeader className="items-center text-center">
-                      <CardTitle className="text-2xl">Login</CardTitle>
+                      <CardTitle className="text-2xl">{loginStep === 'email' ? 'Login' : 'Enter Password'}</CardTitle>
                       <CardDescription>
-                          Enter your credentials to access your account
+                          {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
                       </CardDescription>
                   </CardHeader>
                   <CardContent>
-                  <div className="grid gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
+                    <form onSubmit={handleSubmit} className="grid gap-4">
+                      {loginStep === 'email' ? (
+                        <div className="grid gap-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
                             id="email"
                             type="email"
                             placeholder="m@example.com"
@@ -285,56 +312,73 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="bg-background/50 border-white/20 focus:bg-background/70"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <div className="flex items-center">
-                          <Label htmlFor="password">Password</Label>
-                          <Link
-                            href="/forgot-password"
-                            className="ml-auto inline-block text-sm underline"
-                          >
-                            Forgot your password?
-                          </Link>
-                        </div>
-                        <div className="relative">
-                          <Input 
-                            id="password" 
-                            type={showPassword ? "text" : "password"}
-                            required 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
-                            className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+                            autoFocus
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
                         </div>
-                      </div>
-                      <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
+                      ) : (
+                        <>
+                          <div className="grid gap-2">
+                            <Label htmlFor="email-display">Email</Label>
+                            <div className="flex items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+                              <span className="truncate">{email}</span>
+                              <Button variant="link" size="sm" type="button" className="h-auto p-0 text-primary" onClick={() => {
+                                setLoginStep('email');
+                                setPassword('');
+                              }}>
+                                Change
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="grid gap-2">
+                            <div className="flex items-center">
+                              <Label htmlFor="password">Password</Label>
+                              <Link
+                                href="/forgot-password"
+                                className="ml-auto inline-block text-sm underline"
+                              >
+                                Forgot your password?
+                              </Link>
+                            </div>
+                            <div className="relative">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+                                autoFocus
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <Button type="submit" className="w-full" disabled={isLoggingIn}>
                         {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Login
+                        {loginStep === 'email' ? 'Continue' : 'Login'}
                       </Button>
-                       <Button variant="ghost" className="w-full" asChild>
+                      <Button variant="ghost" className="w-full" asChild>
                           <Link href="/">
                               <ArrowLeft className="mr-2 h-4 w-4" />
                               Back to Home
                           </Link>
                       </Button>
-                  </div>
-                  <div className="mt-4 text-center text-sm">
-                      Don&apos;t have an account?{" "}
-                      <AlertDialogTrigger asChild>
-                          <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
-                      </AlertDialogTrigger>
-                  </div>
+                    </form>
+                    <div className="mt-4 text-center text-sm">
+                        Don&apos;t have an account?{" "}
+                        <AlertDialogTrigger asChild>
+                            <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
+                        </AlertDialogTrigger>
+                    </div>
                   </CardContent>
               </Card>
 
@@ -384,5 +428,3 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
     </div>
   )
 }
-
-    
