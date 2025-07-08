@@ -59,6 +59,8 @@ function UserNav({ user }: { user: User }) {
   if (!user) {
     return null;
   }
+  
+  const dashboardPath = (user.role === 'Admin' || user.role === 'Editor') ? '/admin' : '/dashboard';
 
   return (
     <div className="flex items-center gap-2">
@@ -81,7 +83,7 @@ function UserNav({ user }: { user: User }) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/admin">
+                <Link href={dashboardPath}>
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
@@ -369,7 +371,3 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
-
-    
-
-    
