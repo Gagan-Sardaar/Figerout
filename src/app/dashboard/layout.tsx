@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { LogOut, User as UserIcon, Settings, LifeBuoy, LayoutDashboard } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, LifeBuoy, LayoutDashboard, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/footer";
 import {
@@ -18,6 +18,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { User } from "@/lib/user-data";
 import { NotificationsPopover } from "@/components/dashboard/notifications-popover";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getOpenDeletionRequestForUser, SupportTicket } from '@/services/support-service';
 
 function UserNav({ user }: { user: User | null }) {
   const router = useRouter();
@@ -97,6 +99,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(null);
+  const [openDeletionRequest, setOpenDeletionRequest] = useState<SupportTicket | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('loggedInUser');
@@ -104,6 +107,15 @@ export default function DashboardLayout({
         try {
             const userData = JSON.parse(storedUser);
             setUser(userData);
+            
+            const checkDeletionStatus = async () => {
+                if (userData.status !== 'pending_deletion') {
+                    const request = await getOpenDeletionRequestForUser(userData.id);
+                    setOpenDeletionRequest(request);
+                }
+            };
+            checkDeletionStatus();
+
         } catch (e) { console.error(e) }
     }
   }, []);
@@ -117,6 +129,22 @@ export default function DashboardLayout({
            <UserNav user={user} />
         </header>
         <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8">
+          {(user?.status === 'pending_deletion' || openDeletionRequest) && (
+              <Alert variant="destructive" className="mb-6 flex items-start gap-4">
+                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+                <div className="flex-grow">
+                  <AlertTitle>Account Deletion In Progress</AlertTitle>
+                  <AlertDescription>
+                    A request to delete your account is currently being processed.&nbsp;
+                    <Button asChild variant="link" className="p-0 h-auto font-bold text-current underline">
+                        <Link href="/dashboard/support">
+                            View details or cancel.
+                        </Link>
+                    </Button>
+                  </AlertDescription>
+                </div>
+              </Alert>
+          )}
           {children}
         </main>
         <AppFooter />
