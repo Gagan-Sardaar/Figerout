@@ -30,7 +30,8 @@ import { Loader2, User, Eye, EyeOff } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
-import { getUser } from "@/services/user-service";
+import { doc, getDoc } from "firebase/firestore";
+import type { FirestoreUser } from "@/services/user-service";
 
 
 export default function LoginPage() {
@@ -107,9 +108,13 @@ export default function LoginPage() {
       }
 
       console.log('Successfully authenticated. Looking for profile with UID:', authUser.uid);
-      const userProfile = await getUser(authUser.uid);
+      
+      const userDocRef = doc(db, "users", authUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (userProfile) {
+      if (userDocSnap.exists()) {
+        const userProfile = { id: userDocSnap.id, ...userDocSnap.data() } as FirestoreUser;
+        
         localStorage.setItem('loggedInUser', JSON.stringify(userProfile));
         
         const colorToSaveJSON = sessionStorage.getItem('colorToSaveAfterLogin');
