@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2, User, Eye, EyeOff } from "lucide-react";
+import { Loader2, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
@@ -297,6 +297,12 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
                     <Button type="button" className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
                       {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Login
+                    </Button>
+                     <Button variant="ghost" className="w-full" asChild>
+                        <Link href="/">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Home
+                        </Link>
                     </Button>
                 </div>
                 <div className="mt-4 text-center text-sm">
