@@ -40,6 +40,8 @@ function UserNav({ user }: { user: User | null }) {
     )
   }
 
+  const dashboardPath = (user.role === 'Admin' || user.role === 'Editor') ? '/admin' : '/dashboard';
+
   return (
     <div className="flex items-center gap-2">
       <NotificationsPopover user={user} />
@@ -60,7 +62,7 @@ function UserNav({ user }: { user: User | null }) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">
+                <Link href={dashboardPath}>
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
@@ -178,3 +180,5 @@ export default function DashboardLayout({
     </div>
   );
 }
+
+    
