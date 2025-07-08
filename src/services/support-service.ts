@@ -143,27 +143,36 @@ export async function cancelDeletionRequest(userId: string): Promise<void> {
 export async function getOpenDeletionRequestForUser(userId: string): Promise<SupportTicket | null> {
     if (!userId) return null;
     try {
+        // Query without the orderBy clause to avoid needing a composite index.
         const q = query(
-            supportCollectionRef, 
-            where("userId", "==", userId), 
-            where("status", "in", ["open", "approved"]),
-            orderBy("createdAt", "desc"),
-            limit(1)
+            supportCollectionRef,
+            where("userId", "==", userId),
+            where("status", "in", ["open", "approved"])
         );
         const querySnapshot = await getDocs(q);
+
         if (querySnapshot.empty) {
             return null;
         }
-        const doc = querySnapshot.docs[0];
-        const data = doc.data();
-        const createdAtTimestamp = data.createdAt as Timestamp;
-        return {
-            id: doc.id,
-            ...data,
-            createdAt: createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date(),
-        } as SupportTicket;
+
+        const tickets = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAtTimestamp = data.createdAt as Timestamp;
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date(),
+            } as SupportTicket;
+        });
+
+        // Sort client-side to get the most recent request
+        tickets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        
+        return tickets.length > 0 ? tickets[0] : null;
+
     } catch (error) {
         console.error("Error fetching open deletion request for user:", error);
+        // The original function returned null on error, so we maintain that behavior.
         return null;
     }
 }
