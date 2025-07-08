@@ -242,14 +242,14 @@ export default function VisitorDashboardPage() {
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col">
-          <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
               {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
                 <Button
                   key={filter}
                   variant={activeFilter === filter ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    'capitalize'
+                    'capitalize flex-shrink-0'
                   )}
                   onClick={() => setActiveFilter(filter)}
                 >
