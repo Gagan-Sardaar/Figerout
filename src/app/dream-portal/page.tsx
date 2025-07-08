@@ -30,12 +30,10 @@ import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-rea
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
-
-const getLockoutKey = (email: string) => `lockout_${email.toLowerCase()}`;
-const getAttemptsKey = (email: string) => `loginAttempts_${email.toLowerCase()}`;
+import { LockoutState, getLockoutState, processFailedLogin, clearSuccessfulLogin } from "@/services/security-service";
 
 export default function DreamPortalPage() {
   const [email, setEmail] = useState('');
@@ -47,10 +45,10 @@ export default function DreamPortalPage() {
   const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
-  const [loginStep, setLoginStep] = useState<'email' | 'password'>('email');
-
+  const [loginStep, setLoginStep] = useState<'email' | 'password' | 'locked'>('email');
   const [lockoutInfo, setLockoutInfo] = useState<{until: number, message: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem("loggedInUser")) {
@@ -117,18 +115,11 @@ export default function DreamPortalPage() {
     const lastEmail = localStorage.getItem('lastLoginEmail');
     if (lastEmail) {
       setEmail(lastEmail);
-      const storedLockout = localStorage.getItem(getLockoutKey(lastEmail));
-      if (storedLockout) {
-        const { until, message } = JSON.parse(storedLockout);
-        if (Date.now() < until) {
-          setLockoutInfo({ until, message });
-        }
-      }
     }
   }, [toast, authChecked]);
 
   useEffect(() => {
-    if (!lockoutInfo) {
+    if (loginStep !== 'locked' || !lockoutInfo) {
       setTimeLeft('');
       return;
     }
@@ -141,8 +132,6 @@ export default function DreamPortalPage() {
         clearInterval(timer);
         setTimeLeft("You can now try again.");
         setLockoutInfo(null);
-        localStorage.removeItem(getLockoutKey(email));
-        localStorage.removeItem(getAttemptsKey(email));
         setLoginStep('email');
         return;
       }
@@ -161,44 +150,24 @@ export default function DreamPortalPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [lockoutInfo, email]);
+  }, [loginStep, lockoutInfo]);
 
-  const handleFailedLoginAttempt = () => {
-    const attemptsKey = getAttemptsKey(email);
-    const lockoutKey = getLockoutKey(email);
-    const now = Date.now();
-    const storedAttempts = localStorage.getItem(attemptsKey);
-    let currentAttempts = storedAttempts ? JSON.parse(storedAttempts) : 0;
-    
-    currentAttempts++;
-    localStorage.setItem(attemptsKey, JSON.stringify(currentAttempts));
-    
-    let lockoutDuration = 0;
-    let lockoutMessage = "";
-    
-    // Tiered lockout logic
-    if (currentAttempts >= 9) {
-      lockoutDuration = 30 * 24 * 60 * 60 * 1000;
-      lockoutMessage = "Account locked for 30 days due to excessive failed attempts.";
-    } else if (currentAttempts >= 6) {
-      lockoutDuration = 24 * 60 * 60 * 1000;
-      lockoutMessage = "Account locked for 24 hours due to multiple failed attempts.";
-    } else if (currentAttempts >= 3) {
-      lockoutDuration = 15 * 60 * 1000;
-      lockoutMessage = "Too many failed attempts. Login has been temporarily disabled.";
-    }
+  const handleFailedLoginAttempt = async () => {
+    const newLockoutState = await processFailedLogin(email);
 
-    if (lockoutDuration > 0) {
-      const until = now + lockoutDuration;
-      const newLockoutInfo = { until, message: lockoutMessage };
-      localStorage.setItem(lockoutKey, JSON.stringify(newLockoutInfo));
-      setLockoutInfo(newLockoutInfo);
+    if (newLockoutState.until) {
+        const untilMillis = (newLockoutState.until as Timestamp).toMillis();
+        setLockoutInfo({
+            until: untilMillis,
+            message: `Too many failed attempts.`
+        });
+        setLoginStep('locked');
     }
 
     let toastDescription = "Invalid email or password. Please try again.";
-    if (currentAttempts < 3) {
-      const remainingAttempts = 3 - currentAttempts;
-      toastDescription += ` ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before lockout.`;
+    const remainingAttempts = 3 - (newLockoutState.attempts % 3);
+    if (newLockoutState.attempts < 3) {
+      toastDescription += ` ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before a 15 min lockout.`;
     }
 
     toast({
@@ -208,33 +177,43 @@ export default function DreamPortalPage() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (loginStep === 'email') {
-        if (!email) {
-            toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
-            return;
-        }
-
-        localStorage.setItem('lastLoginEmail', email);
-        const storedLockout = localStorage.getItem(getLockoutKey(email));
-        if (storedLockout) {
-          const { until, message } = JSON.parse(storedLockout);
-          if (Date.now() < until) {
-            setLockoutInfo({ until, message });
-            return;
-          }
-        }
-        setLoginStep('password');
+  const handleEmailStep = async () => {
+    if (!email) {
+        toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
         return;
     }
-    
-    if (!email || !password) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
+        return;
+    }
+
+    setIsCheckingEmail(true);
+    localStorage.setItem('lastLoginEmail', email);
+
+    try {
+        const lockout = await getLockoutState(email);
+        if (lockout && lockout.until) {
+            const untilMillis = (lockout.until as Timestamp).toMillis();
+            if (Date.now() < untilMillis) {
+                setLockoutInfo({
+                    until: untilMillis,
+                    message: "This account is temporarily locked."
+                });
+                setLoginStep('locked');
+                return;
+            }
+        }
+        setLoginStep('password');
+    } catch (error) {
+        console.error("Error checking lockout status:", error);
+        toast({ title: "Error", description: "Could not verify email status. Please try again.", variant: "destructive"});
+    } finally {
+        setIsCheckingEmail(false);
+    }
+  };
+
+  const handlePasswordStep = async () => {
+     if (!email || !password) {
       toast({ title: "Email and password required", description: "Please enter your email and password.", variant: "destructive" });
       return;
     }
@@ -254,12 +233,13 @@ export default function DreamPortalPage() {
       if (userDocSnap.exists()) {
         const userProfile = { id: userDocSnap.id, ...userDocSnap.data() } as FirestoreUser;
 
-        if (userProfile.status === 'inactive' || userProfile.status === 'pending_deletion') {
-            let title = 'Account Inactive';
+        if (userProfile.status === 'inactive' || userProfile.status === 'pending_deletion' || userProfile.status === 'blocked') {
+            let title = 'Account Access Denied';
             let description = 'Your account is currently inactive. Please contact support.';
             if (userProfile.status === 'pending_deletion') {
-                title = 'Account Deletion Pending';
                 description = 'This account is scheduled for deletion and can no longer be accessed.';
+            } else if (userProfile.status === 'blocked') {
+                description = 'This account has been blocked by an administrator.';
             }
             toast({ title, description, variant: "destructive", duration: 9000 });
             auth.signOut();
@@ -267,8 +247,7 @@ export default function DreamPortalPage() {
             return;
         }
         
-        localStorage.removeItem(getAttemptsKey(userProfile.email));
-        localStorage.removeItem(getLockoutKey(userProfile.email));
+        await clearSuccessfulLogin(userProfile.email);
 
         await addLogEntry('user_login', `${userProfile.name} (${userProfile.email}) logged in.`, { userId: userProfile.id, email: userProfile.email });
         
@@ -298,7 +277,7 @@ export default function DreamPortalPage() {
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/invalid-credential') {
-        handleFailedLoginAttempt();
+        await handleFailedLoginAttempt();
         setIsLoggingIn(false);
         return; 
       } else if (error.code === 'auth/too-many-requests') {
@@ -311,6 +290,15 @@ export default function DreamPortalPage() {
       toast({ title: "Login Failed", description: description, variant: "destructive", duration: 9000 });
     } finally {
       setIsLoggingIn(false);
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (loginStep === 'email') {
+      await handleEmailStep();
+    } else if (loginStep === 'password') {
+      await handlePasswordStep();
     }
   };
 
@@ -361,7 +349,7 @@ export default function DreamPortalPage() {
           </div>
         ) : (
           <div className="mx-auto w-full max-w-sm">
-            {lockoutInfo ? <LockoutView /> : (
+            {loginStep === 'locked' ? <LockoutView /> : (
               <AlertDialog>
                 <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
                     <CardHeader className="items-center text-center">
@@ -433,8 +421,8 @@ export default function DreamPortalPage() {
                           </>
                         )}
 
-                        <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                          {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button type="submit" className="w-full" disabled={isLoggingIn || isCheckingEmail}>
+                          {(isLoggingIn || isCheckingEmail) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           {loginStep === 'email' ? 'Continue' : 'Login'}
                         </Button>
                         <Button variant="ghost" className="w-full" asChild>

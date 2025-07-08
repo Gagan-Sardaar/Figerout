@@ -1,3 +1,4 @@
+
 export interface User {
   id: string; // This will be the Firebase Auth UID
   name: string;
@@ -5,7 +6,7 @@ export interface User {
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
   lastLogin?: { days: number; hours?: number; minutes?: number }; // This will be deprecated
-  status: 'active' | 'inactive' | 'invited' | 'pending_deletion';
+  status: 'active' | 'inactive' | 'invited' | 'pending_deletion' | 'blocked';
 }
 
 // This type was used for client-side date formatting of mock data.

@@ -18,6 +18,7 @@ import {
   FileClock,
   LifeBuoy,
   User as UserIcon,
+  Shield,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -275,6 +276,18 @@ export default function AdminLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isActive("/admin/security")}
+                        tooltip="Security"
+                    >
+                        <Link href="/admin/security">
+                        <Shield />
+                        <span className="group-data-[state=collapsed]:hidden">Security</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive("/admin/settings")}
@@ -362,5 +375,3 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
-
-    
