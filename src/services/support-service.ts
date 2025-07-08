@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc, limit, deleteField } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
@@ -41,9 +42,12 @@ export async function createDeletionRequest(userId: string, userEmail: string, r
 }
 
 export async function getDeletionRequests(): Promise<SupportTicket[]> {
-    const q = query(supportCollectionRef, where("type", "==", "account_deletion"), orderBy("createdAt", "desc"));
+    // The query was changed to remove the 'orderBy' clause.
+    // This avoids the need for a composite index in Firestore, which can be a common point of failure if not created.
+    // Sorting is now handled on the client-side after fetching the data.
+    const q = query(supportCollectionRef, where("type", "==", "account_deletion"));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
+    const tickets = querySnapshot.docs.map(doc => {
         const data = doc.data();
         const createdAtTimestamp = data.createdAt as Timestamp;
         return {
@@ -52,6 +56,9 @@ export async function getDeletionRequests(): Promise<SupportTicket[]> {
             createdAt: createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date(),
         } as SupportTicket;
     });
+
+    // Sort tickets by date descending
+    return tickets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function updateRequestStatus(ticketId: string, status: 'approved' | 'rejected'): Promise<void> {
