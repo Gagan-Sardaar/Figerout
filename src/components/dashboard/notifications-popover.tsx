@@ -38,8 +38,6 @@ export function NotificationsPopover({ user }: { user: User }) {
         setIsLoading(false);
       });
       return () => unsubscribe();
-    } else {
-        setIsLoading(false);
     }
   }, [user?.id]);
 
