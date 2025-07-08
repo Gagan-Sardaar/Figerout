@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { LogOut, User as UserIcon, Settings, LifeBuoy } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, LifeBuoy, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/footer";
 import {
@@ -52,6 +52,12 @@ function UserNav({ user }: { user: User | null }) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+             <DropdownMenuItem asChild>
+              <Link href="/dashboard">
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/dashboard/profile">
                 <UserIcon className="mr-2 h-4 w-4" />
