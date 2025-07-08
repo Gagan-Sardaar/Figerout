@@ -14,6 +14,8 @@ import {
   Loader2,
   ChevronsUpDown,
   Palette,
+  FileClock,
+  LifeBuoy,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -247,6 +249,30 @@ export default function AdminLayout({
                     <Link href="/admin/settings">
                       <Settings />
                       <span className="group-data-[state=collapsed]:hidden">App Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/support")}
+                    tooltip="Support"
+                  >
+                    <Link href="/admin/support">
+                      <LifeBuoy />
+                      <span className="group-data-[state=collapsed]:hidden">Support</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/logs")}
+                    tooltip="Logs"
+                  >
+                    <Link href="/admin/logs">
+                      <FileClock />
+                      <span className="group-data-[state=collapsed]:hidden">Logs</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

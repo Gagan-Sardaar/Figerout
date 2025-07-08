@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { LogOut, User as UserIcon, Settings } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/footer";
 import {
@@ -52,13 +52,24 @@ function UserNav({ user }: { user: User | null }) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/profile">
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>Profile</span>
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/contact">
+                  <LifeBuoy className="mr-2 h-4 w-4" />
+                  <span>Support</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
@@ -95,7 +106,7 @@ export default function DashboardLayout({
             </Link>
            <UserNav user={user} />
         </header>
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8">
           {children}
         </main>
         <AppFooter />

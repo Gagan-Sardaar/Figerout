@@ -20,6 +20,7 @@ export interface FirestoreUser {
   initials: string;
   role: 'Admin' | 'Editor' | 'Viewer';
   status: 'active' | 'inactive' | 'invited';
+  phoneNumber?: string;
 }
 
 /**

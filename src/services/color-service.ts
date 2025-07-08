@@ -110,3 +110,20 @@ export async function updateColorNote(userId: string, colorHex: string, note: st
     const docRef = doc(colorsCollectionRef(userId), colorHex.toUpperCase());
     await updateDoc(docRef, { note });
 }
+
+export async function deleteAllColors(userId: string): Promise<void> {
+    if (!userId) return;
+
+    try {
+        const userColorsRef = colorsCollectionRef(userId);
+        const querySnapshot = await getDocs(userColorsRef);
+        
+        // This is fine for a small number of documents.
+        // For larger scale, batched writes or a Cloud Function would be better.
+        const deletePromises = querySnapshot.docs.map((docSnapshot) => deleteDoc(doc(userColorsRef, docSnapshot.id)));
+        await Promise.all(deletePromises);
+    } catch (error) {
+        console.error("Error deleting all colors for user:", error);
+        throw new Error("Could not delete user's colors.");
+    }
+}
