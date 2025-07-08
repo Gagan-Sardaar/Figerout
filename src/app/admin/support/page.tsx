@@ -56,8 +56,10 @@ export default function AdminSupportPage() {
             open: { variant: 'default', text: 'Open' },
             approved: { variant: 'secondary', text: 'Approved' },
             rejected: { variant: 'outline', text: 'Rejected' },
+            cancelled: { variant: 'outline', text: 'Cancelled' },
         } as const;
-        return <Badge variant={config[status].variant}>{config[status].text}</Badge>;
+        const currentConfig = config[status] || { variant: 'outline', text: 'Unknown' };
+        return <Badge variant={currentConfig.variant}>{currentConfig.text}</Badge>;
     };
 
     if (isLoading) {

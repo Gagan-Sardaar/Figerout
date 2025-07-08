@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc, limit, deleteField } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
 import { updateUser } from './user-service';
 import { addNotification } from './notification-service';
@@ -9,7 +9,7 @@ export interface SupportTicket {
     userId: string;
     userEmail: string;
     reason: string;
-    status: 'open' | 'approved' | 'rejected';
+    status: 'open' | 'approved' | 'rejected' | 'cancelled';
     createdAt: Date;
     type: 'account_deletion';
 }
@@ -17,6 +17,13 @@ export interface SupportTicket {
 const supportCollectionRef = collection(db, 'supportTickets');
 
 export async function createDeletionRequest(userId: string, userEmail: string, reason: string): Promise<void> {
+    const q = query(supportCollectionRef, where("userId", "==", userId), where("status", "in", ["open", "approved"]));
+    const existingRequests = await getDocs(q);
+
+    if (!existingRequests.empty) {
+        throw new Error("An account deletion request is already in progress.");
+    }
+
     await addDoc(supportCollectionRef, {
         userId,
         userEmail,
@@ -90,4 +97,42 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
             });
          }
     }
+}
+
+export async function cancelDeletionRequest(userId: string): Promise<void> {
+    if (!userId) throw new Error("User ID is required.");
+    
+    const q = query(supportCollectionRef, where("userId", "==", userId), where("status", "in", ["open", "approved"]), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        throw new Error("No active deletion request found to cancel.");
+    }
+
+    const ticketDoc = querySnapshot.docs[0];
+    const originalStatus = ticketDoc.data().status;
+    const ticketId = ticketDoc.id;
+
+    // Always update ticket status
+    await updateDoc(ticketDoc.ref, { status: 'cancelled' });
+
+    // Only revert user status if it was already approved
+    if (originalStatus === 'approved') {
+        await updateUser(userId, {
+            status: 'active',
+            deletionScheduledAt: deleteField()
+        });
+    }
+    
+    // Log and notify regardless
+    await addLogEntry(
+        'deletion_request_cancelled',
+        `User ${ticketDoc.data().userEmail} cancelled their account deletion request.`,
+        { userId, ticketId, originalStatus }
+    );
+    await addNotification(userId, {
+        type: 'info',
+        title: 'Deletion Request Cancelled',
+        message: 'Your account deletion request has been successfully cancelled. Your account will not be deleted.'
+    });
 }
