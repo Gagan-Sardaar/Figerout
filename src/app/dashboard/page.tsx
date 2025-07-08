@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FilePenLine, Palette, Trash2, ChevronsUpDown } from "lucide-react";
+import { FilePenLine, Palette, Trash2, ChevronsUpDown, Camera, Image as ImageIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -120,12 +120,14 @@ const RoleSwitcher = () => {
 
 export default function VisitorDashboardPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [userName, setUserName] = useState("Visitor");
   const [user, setUser] = useState<User | null>(null);
   const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, color: null });
   const [noteContent, setNoteContent] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('loggedInUser');
@@ -209,6 +211,82 @@ export default function VisitorDashboardPage() {
       return { lighter: [], darker: [] };
   }, [dialogState]);
 
+  const resizeImage = (dataUrl: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+          const img = new window.Image();
+          img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_DIMENSION = 1280;
+              let { width, height } = img;
+              const aspectRatio = width / height;
+
+              if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                  if (aspectRatio > 1) { // Landscape
+                      width = MAX_DIMENSION;
+                      height = MAX_DIMENSION / aspectRatio;
+                  } else { // Portrait
+                      height = MAX_DIMENSION;
+                      width = MAX_DIMENSION * aspectRatio;
+                  }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                  return reject(new Error('Could not get canvas context'));
+              }
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.9)); // Use JPEG for compression
+          };
+          img.onerror = reject;
+          img.src = dataUrl;
+      });
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid File Type',
+          description: 'Please select an image file.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+            const dataUrl = reader.result as string;
+            const resizedDataUrl = await resizeImage(dataUrl);
+            sessionStorage.setItem('capturedImage', resizedDataUrl);
+            router.push('/picker');
+        } catch(error) {
+            console.error(error);
+            toast({
+                title: 'Error processing image',
+                description: 'The image could not be loaded or resized.',
+                variant: 'destructive',
+            });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+            title: 'Error reading file',
+            description: 'Something went wrong while trying to load your image.',
+            variant: 'destructive',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="bg-background text-foreground flex-1 flex flex-col">
       <div className="flex flex-col md:flex-row gap-8 flex-1 p-4 sm:p-6 md:p-8">
@@ -270,78 +348,105 @@ export default function VisitorDashboardPage() {
           </Card>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {filteredColors.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {filteredColors.map(color => (
-                <Card key={color.hex} className="bg-card text-card-foreground rounded-2xl flex flex-col overflow-hidden shadow-lg transition-transform hover:-translate-y-1">
-                  <div 
-                    style={{ backgroundColor: color.hex }} 
-                    className="h-10 relative flex items-center justify-end p-2 group cursor-pointer"
-                    onClick={() => openShadesDialog(color)}
-                  >
-                      <Palette className={cn(
-                        "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity",
-                        isColorLight(color.hex) ? "text-black" : "text-white"
-                      )} />
-                  </div>
-                  <div className="p-5 flex flex-col flex-grow">
-                    <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-medium">{color.name}</h3>
-                        <div className="flex items-center gap-0 -mt-2 -mr-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openNoteDialog(color)}>
-                                <FilePenLine className="h-4 w-4" />
-                                <span className="sr-only">Add/Edit Note</span>
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete Color</span>
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This will permanently delete the color '{color.name}' ({color.hex}). This action cannot be undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteColor(color.hex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    </div>
-                    <div className="flex-grow flex items-center">
-                        <p className="text-5xl font-light text-foreground">{color.hex.toUpperCase()}</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Saved {formatDistanceToNow(new Date(color.sharedAt), { addSuffix: true })}
-                    </p>
-                    {color.note && (
-                        <p className="mt-4 text-sm text-muted-foreground italic border-l-2 border-muted/50 pl-3 line-clamp-3">
-                            {color.note}
-                        </p>
-                    )}
-                  </div>
-                </Card>
-              ))}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <Link href="/camera" className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
+                    <Camera className="w-6 h-6" />
+                </div>
+                <div className="ml-4 text-left">
+                    <h3 className="text-lg font-semibold text-foreground">Live Capture</h3>
+                    <p className="text-sm text-muted-foreground">Use your camera.</p>
+                </div>
+            </Link>
+
+            <div onClick={handleUploadClick} className="group relative flex items-center justify-start p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 shrink-0">
+                    <ImageIcon className="w-6 h-6" />
+                </div>
+                <div className="ml-4 text-left">
+                    <h3 className="text-lg font-semibold text-foreground">Upload Image</h3>
+                    <p className="text-sm text-muted-foreground">Pick from library.</p>
+                </div>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                />
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full rounded-2xl border-2 border-dashed border-muted-foreground/20 p-12 text-center text-muted-foreground">
-                <Palette className="w-16 h-16 mb-4" />
-                <h3 className="text-xl font-semibold text-foreground">No Colors Saved Yet</h3>
-                <p className="mt-2">
-                  You haven't saved any colors for this period.
-                </p>
-                <Button asChild className="mt-4">
-                  <Link href="/choose">Find Colors</Link>
-                </Button>
-            </div>
-          )}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {filteredColors.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {filteredColors.map(color => (
+                  <Card key={color.hex} className="bg-card text-card-foreground rounded-2xl flex flex-col overflow-hidden shadow-lg transition-transform hover:-translate-y-1">
+                    <div 
+                      style={{ backgroundColor: color.hex }} 
+                      className="h-10 relative flex items-center justify-end p-2 group cursor-pointer"
+                      onClick={() => openShadesDialog(color)}
+                    >
+                        <Palette className={cn(
+                          "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity",
+                          isColorLight(color.hex) ? "text-black" : "text-white"
+                        )} />
+                    </div>
+                    <div className="p-5 flex flex-col flex-grow">
+                      <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-medium">{color.name}</h3>
+                          <div className="flex items-center gap-0 -mt-2 -mr-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openNoteDialog(color)}>
+                                  <FilePenLine className="h-4 w-4" />
+                                  <span className="sr-only">Add/Edit Note</span>
+                              </Button>
+                              <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                          <Trash2 className="h-4 w-4" />
+                                          <span className="sr-only">Delete Color</span>
+                                      </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                              This will permanently delete the color '{color.name}' ({color.hex}). This action cannot be undone.
+                                          </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteColor(color.hex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                          </div>
+                      </div>
+                      <div className="flex-grow flex items-center">
+                          <p className="text-5xl font-light text-foreground">{color.hex.toUpperCase()}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Saved {formatDistanceToNow(new Date(color.sharedAt), { addSuffix: true })}
+                      </p>
+                      {color.note && (
+                          <p className="mt-4 text-sm text-muted-foreground italic border-l-2 border-muted/50 pl-3 line-clamp-3">
+                              {color.note}
+                          </p>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full rounded-2xl border-2 border-dashed border-muted-foreground/20 p-12 text-center text-muted-foreground">
+                  <Palette className="w-16 h-16 mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground">No Colors Saved Yet</h3>
+                  <p className="mt-2">
+                    You haven't saved any colors for this period.
+                  </p>
+              </div>
+            )}
+          </div>
         </div>
 
       </div>
