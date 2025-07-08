@@ -2,6 +2,7 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
 import { updateUser } from './user-service';
+import { addNotification } from './notification-service';
 
 export interface SupportTicket {
     id: string;
@@ -48,6 +49,13 @@ export async function getDeletionRequests(): Promise<SupportTicket[]> {
 
 export async function updateRequestStatus(ticketId: string, status: 'approved' | 'rejected'): Promise<void> {
     const ticketRef = doc(db, 'supportTickets', ticketId);
+    const ticketDoc = await getDoc(ticketRef);
+    if (!ticketDoc.exists()) {
+        throw new Error("Ticket not found");
+    }
+    const ticketData = ticketDoc.data();
+    const userId = ticketData.userId;
+
     await updateDoc(ticketRef, { status });
 
     await addLogEntry(
@@ -57,21 +65,29 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
     );
 
     if (status === 'approved') {
-        const ticketDoc = await getDoc(ticketRef);
-        if (ticketDoc.exists()) {
-            const ticketData = ticketDoc.data();
-            const userId = ticketData.userId;
-            if (userId) {
-                await updateUser(userId, { 
-                    status: 'pending_deletion', 
-                    deletionScheduledAt: serverTimestamp()
-                });
-                await addLogEntry(
-                    'user_marked_for_deletion',
-                    `User account ${userId} marked for deletion following support request approval.`,
-                    { userId, ticketId }
-                );
-            }
+        if (userId) {
+            await updateUser(userId, { 
+                status: 'pending_deletion', 
+                deletionScheduledAt: serverTimestamp()
+            });
+            await addLogEntry(
+                'user_marked_for_deletion',
+                `User account ${userId} marked for deletion following support request approval.`,
+                { userId, ticketId }
+            );
+            await addNotification(userId, {
+                type: 'success',
+                title: 'Deletion Request Approved',
+                message: 'Your account deletion request has been approved. Your account and data will be permanently deleted in 30 days.'
+            });
         }
+    } else if (status === 'rejected') {
+         if (userId) {
+            await addNotification(userId, {
+                type: 'error',
+                title: 'Deletion Request Rejected',
+                message: 'Your recent account deletion request was rejected. Please contact support if you have questions.'
+            });
+         }
     }
 }
