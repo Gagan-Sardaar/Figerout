@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -43,18 +42,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/user-data";
 
-function UserNav() {
+function UserNav({ user }: { user: User }) {
   const router = useRouter();
-  const user = {
-    name: "Admin User",
-    email: "admin@figerout.com",
-    avatar: "" 
-  }
   
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
     localStorage.removeItem('originalLoggedInUser');
     router.push('/login');
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -65,7 +63,7 @@ function UserNav() {
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </div>
       <Avatar className="h-8 w-8 hidden sm:flex">
-          <AvatarFallback>A</AvatarFallback>
+          <AvatarFallback>{user.initials}</AvatarFallback>
       </Avatar>
       <Button variant="outline" size="icon" className="sm:hidden" onClick={handleLogout}>
           <LogOut className="h-4 w-4" />
@@ -86,6 +84,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'Admin' | 'Editor' | 'Viewer' | null>(null);
   const [originalUser, setOriginalUser] = useState<User | null>(null);
 
@@ -98,7 +97,9 @@ export default function AdminLayout({
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
         try {
-            const parsedUser = JSON.parse(storedUser);
+            const parsedUser: User = JSON.parse(storedUser);
+            setUser(parsedUser);
+
             if (!storedOriginalUser && parsedUser.role === 'Admin') {
                 localStorage.setItem('originalLoggedInUser', JSON.stringify(parsedUser));
                 setOriginalUser(parsedUser);
@@ -141,7 +142,7 @@ export default function AdminLayout({
     return pathname === path || (path !== "/admin" && pathname.startsWith(path));
   };
   
-  if (!userRole) {
+  if (!userRole || !user) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin" />
@@ -291,7 +292,7 @@ export default function AdminLayout({
                 </Link>
               </div>
            </div>
-           <UserNav />
+           {user && <UserNav user={user} />}
         </header>
         <main className="flex-1">
           {children}
