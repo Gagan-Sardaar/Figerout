@@ -235,17 +235,15 @@ Please verify your configuration:
 Please ensure this Project ID matches the one you are viewing in the Firebase Console.`;
       } else {
         switch (error.code) {
-            case 'auth/user-not-found':
-            case 'auth/wrong-password':
-            case 'invalid-credential':
-              description = "Invalid email or password. Please try again.";
-              break;
-            case 'auth/too-many-requests':
-              description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
-              break;
-            default:
-              description = error.message;
-              break;
+          case 'auth/invalid-credential':
+            description = "Invalid email or password. Please try again.";
+            break;
+          case 'auth/too-many-requests':
+            description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+            break;
+          default:
+            description = "An unexpected error occurred. Please try again.";
+            break;
         }
       }
       
