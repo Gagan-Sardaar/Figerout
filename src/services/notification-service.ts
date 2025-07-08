@@ -26,6 +26,7 @@ export interface AppNotification {
   type: 'info' | 'success' | 'warning' | 'error';
   link?: string;
   createdAt: Date;
+  specialAction?: 'force_logout_delete';
 }
 
 const notificationsCollectionRef = (userId: string) => collection(db, `users/${userId}/notifications`);

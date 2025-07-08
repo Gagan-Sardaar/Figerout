@@ -84,6 +84,18 @@ export default function LoginPage() {
     fetchAndSetBackground();
   }, []);
 
+  useEffect(() => {
+    const message = sessionStorage.getItem('logout_message');
+    if (message) {
+        toast({
+            title: "Account Update",
+            description: message,
+            duration: 9000,
+        });
+        sessionStorage.removeItem('logout_message');
+    }
+  }, [toast]);
+
   const handleLogin = async () => {
     if (!email || !password) {
       toast({
@@ -341,5 +353,3 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
     </div>
   )
 }
-
-    

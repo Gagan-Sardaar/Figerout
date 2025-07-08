@@ -20,6 +20,8 @@ import type { User } from "@/lib/user-data";
 import { NotificationsPopover } from "@/components/dashboard/notifications-popover";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getOpenDeletionRequestForUser, SupportTicket } from '@/services/support-service';
+import { onNotificationsChange } from '@/services/notification-service';
+import { auth } from "@/lib/firebase";
 
 function UserNav({ user }: { user: User | null }) {
   const router = useRouter();
@@ -100,6 +102,7 @@ export default function DashboardLayout({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [openDeletionRequest, setOpenDeletionRequest] = useState<SupportTicket | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('loggedInUser');
@@ -119,6 +122,30 @@ export default function DashboardLayout({
         } catch (e) { console.error(e) }
     }
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+        const unsubscribe = onNotificationsChange(user.id, (notifications) => {
+            const logoutNotification = notifications.find(
+                (n) => n.specialAction === 'force_logout_delete' && !n.read
+            );
+
+            if (logoutNotification) {
+                // Store message for login page
+                sessionStorage.setItem('logout_message', 'Your Account has been deleted as per your request');
+                
+                // Sign out
+                auth.signOut().then(() => {
+                    localStorage.removeItem('loggedInUser');
+                    localStorage.removeItem('originalLoggedInUser');
+                    router.push('/login');
+                });
+            }
+        });
+
+        return () => unsubscribe();
+    }
+  }, [user, router]);
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/40">

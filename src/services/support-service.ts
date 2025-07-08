@@ -2,7 +2,7 @@
 import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc, limit, deleteField } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
-import { updateUser } from './user-service';
+import { getUser, updateUser } from './user-service';
 import { addNotification } from './notification-service';
 
 export interface SupportTicket {
@@ -65,6 +65,10 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
     }
     const ticketData = ticketDoc.data();
     const userId = ticketData.userId;
+    
+    if (!userId) {
+        throw new Error("User ID not found on ticket");
+    }
 
     await updateDoc(ticketRef, { status });
 
@@ -75,22 +79,45 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
     );
 
     if (status === 'approved') {
-        if (userId) {
+        const userProfile = await getUser(userId);
+        if (!userProfile) {
+            await addLogEntry('error', `Could not find user profile for ${userId} during deletion approval.`);
+            return;
+        }
+
+        if (userProfile.role === 'Admin') {
+            // Admin gets 30-day grace period
             await updateUser(userId, { 
                 status: 'pending_deletion', 
                 deletionScheduledAt: serverTimestamp()
             });
             
             await addLogEntry(
-                'user_marked_for_deletion',
-                `User account ${userId} marked for deletion following support request approval.`,
+                'admin_marked_for_deletion',
+                `Admin account ${userId} marked for deletion following support request approval.`,
                 { userId, ticketId }
             );
             
             await addNotification(userId, {
                 type: 'warning',
                 title: 'Account Deletion Approved',
-                message: 'Your account deletion has been approved and your account is now disabled. It will be permanently deleted in 30 days.'
+                message: 'Your account deletion has been approved. Your account is now disabled and will be permanently deleted in 30 days.'
+            });
+        } else {
+            // Editor or Viewer gets immediate "deletion" (account deactivation)
+            await updateUser(userId, { status: 'inactive' });
+            
+            await addLogEntry(
+                'user_account_deleted',
+                `User account ${userId} was deleted (deactivated) immediately following request approval.`,
+                { userId, ticketId }
+            );
+            
+            await addNotification(userId, {
+                type: 'error',
+                title: 'Account Deleted',
+                message: 'Your account has been deleted as per your request.',
+                specialAction: 'force_logout_delete'
             });
         }
     } else if (status === 'rejected') {
