@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/lib/firebase";
-import { Loader2, Trash2, AlertCircle } from "lucide-react";
+import { Loader2, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { createDeletionRequest, cancelDeletionRequest } from "@/services/support-service";
+import { createDeletionRequest, cancelDeletionRequest, getOpenDeletionRequestForUser, SupportTicket } from "@/services/support-service";
 import { getUser, FirestoreUser } from "@/services/user-service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -22,6 +22,7 @@ export default function SupportPage() {
     const [deletionReason, setDeletionReason] = useState("");
 
     const [userProfile, setUserProfile] = useState<FirestoreUser | null>(null);
+    const [openRequest, setOpenRequest] = useState<SupportTicket | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [countdown, setCountdown] = useState<string | null>(null);
 
@@ -32,6 +33,12 @@ export default function SupportPage() {
             setIsLoading(true);
             const profile = await getUser(user.uid);
             setUserProfile(profile);
+
+            if (profile?.status !== 'pending_deletion') {
+                const request = await getOpenDeletionRequestForUser(user.uid);
+                setOpenRequest(request);
+            }
+            
             setIsLoading(false);
           } else {
             router.push("/login");
@@ -88,6 +95,8 @@ export default function SupportPage() {
               description: "Your account deletion request has been submitted for review. An admin will process it shortly.",
           });
           setDeletionReason("");
+          const request = await getOpenDeletionRequestForUser(userId);
+          setOpenRequest(request);
         } catch (error: any) {
           toast({
               title: "Request Failed",
@@ -110,6 +119,7 @@ export default function SupportPage() {
             });
             const profile = await getUser(userId);
             setUserProfile(profile);
+            setOpenRequest(null);
         } catch(error: any) {
             toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
         } finally {
@@ -159,6 +169,33 @@ export default function SupportPage() {
                             </Button>
                         </CardFooter>
                     </Card>
+                ) : openRequest ? (
+                    <Card className="max-w-2xl">
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                                Request Sent
+                            </CardTitle>
+                            <CardDescription>
+                                Your request to delete your account was sent on {new Date(openRequest.createdAt).toLocaleDateString()}. It is awaiting admin review.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Alert variant="default" className="bg-muted/50">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>What Happens Next?</AlertTitle>
+                                <AlertDescription>
+                                    Once an administrator approves your request, a 30-day grace period will begin, after which your account will be permanently deleted. You can cancel at any time.
+                                </AlertDescription>
+                            </Alert>
+                        </CardContent>
+                        <CardFooter>
+                            <Button onClick={handleCancelRequest} disabled={isSubmitting} variant="outline">
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Cancel Deletion Request
+                            </Button>
+                        </CardFooter>
+                    </Card>
                 ) : (
                     <Card className="max-w-2xl">
                         <CardHeader>
@@ -192,4 +229,3 @@ export default function SupportPage() {
         </Card>
     );
 }
-

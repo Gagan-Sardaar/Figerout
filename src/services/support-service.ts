@@ -136,3 +136,31 @@ export async function cancelDeletionRequest(userId: string): Promise<void> {
         message: 'Your account deletion request has been successfully cancelled. Your account will not be deleted.'
     });
 }
+
+export async function getOpenDeletionRequestForUser(userId: string): Promise<SupportTicket | null> {
+    if (!userId) return null;
+    try {
+        const q = query(
+            supportCollectionRef, 
+            where("userId", "==", userId), 
+            where("status", "==", "open"), 
+            orderBy("createdAt", "desc"),
+            limit(1)
+        );
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return null;
+        }
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+        const createdAtTimestamp = data.createdAt as Timestamp;
+        return {
+            id: doc.id,
+            ...data,
+            createdAt: createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date(),
+        } as SupportTicket;
+    } catch (error) {
+        console.error("Error fetching open deletion request for user:", error);
+        return null;
+    }
+}
