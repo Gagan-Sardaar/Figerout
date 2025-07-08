@@ -226,7 +226,7 @@ export default function VisitorDashboardPage() {
 
   return (
     <div className="bg-background text-foreground flex-1 flex flex-col">
-      <div className="flex flex-col md:flex-row gap-8 flex-1">
+      <div className="flex flex-col md:flex-row gap-8 h-full">
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
           <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col flex-grow">
