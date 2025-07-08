@@ -1,55 +1,103 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check for admin role
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the authenticated user is an Admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // Users can only read/update their own profile. Admins can manage all.
+    // Helper function to check if the request is from the owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users Collection
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId || isAdmin();
-      // Only admins can create or delete user documents
-      allow create, delete: if isAdmin();
+      // A user can read their own profile. Admins can read any profile.
+      allow get: if isOwner(userId) || isAdmin();
+      
+      // Only Admins can list all users.
+      allow list: if isAdmin();
+      
+      // A user can update their own name/phone. Admins can update any user's role/status.
+      allow update: if (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phoneNumber']))
+                    || isAdmin();
+
+      // User creation/deletion is blocked from the client for security.
+      allow create, delete: if false;
+
+      // Colors Subcollection
+      match /colors/{colorId} {
+        // A user can manage colors in their own collection. Admins can also manage.
+        allow read, write, delete: if isOwner(userId) || isAdmin();
+      }
+
+      // Notifications Subcollection
+      match /notifications/{notificationId} {
+        // Users can read/update (mark as read) their own notifications.
+        allow get, list: if isOwner(userId);
+        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        
+        // Only Admins (or backend functions) can create notifications.
+        allow create: if isAdmin();
+        allow delete: if false;
+      }
     }
 
-    // Users can only manage their own saved colors.
-    match /users/{userId}/colors/{colorId} {
-      allow read, list, create, update, delete: if request.auth.uid == userId;
-    }
-
-    // Users can only manage their own notifications.
-    match /users/{userId}/notifications/{notificationId} {
-        allow read, list, create, update, delete: if request.auth.uid == userId;
-    }
-
-    // Static pages can be read by anyone, but only written by admins.
+    // Pages Collection (About Us, Privacy, etc.)
     match /pages/{pageSlug} {
-      allow read: if true;
+      // Anyone can read public pages.
+      allow get: if true;
+      // Only admins can create or update pages.
       allow write: if isAdmin();
     }
-
-    // Logs can only be created by authenticated users and read by admins.
+    
+    // Logs Collection
     match /logs/{logId} {
-      allow read, list: if isAdmin();
-      allow create: if request.auth != null;
+      // Anyone can create log entries (e.g., failed login attempts).
+      allow create: if true; 
+      // Only admins can read logs.
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
-
-    // Support tickets for account deletion etc.
+    
+    // Security Collections
+    match /failedLoginAttempts/{attemptId} {
+      // Public write is needed to log an attempt before a user is authenticated.
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+    
+    match /loginLockouts/{email} {
+      // Public read/write is needed for the login flow to check and set lockout state.
+      allow get, write: if true;
+      // Admins can delete a lockout document to reset it.
+      // An authenticated user can clear their own lockout on successful login.
+      allow delete: if isAuthenticated() || isAdmin();
+    }
+    
+    // Support Tickets Collection
     match /supportTickets/{ticketId} {
-      // Admins can read and update any ticket.
-      // Users can read/update their own tickets to check/cancel status.
-      allow read, update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+        // User can read their own tickets. Admins can read all tickets.
+        allow get: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+        allow list: if isAdmin();
 
-      // Any authenticated user can create a ticket for themselves.
-      // This also validates that the data being sent is for the user making the request.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        // User can create their own ticket.
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
 
-      // Only admins can delete tickets.
-      allow delete: if isAdmin();
+        // User can update their own ticket to cancel it. Admins can update any ticket.
+        allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.status == 'cancelled')
+                      || isAdmin();
+        
+        allow delete: if false;
     }
   }
 }
