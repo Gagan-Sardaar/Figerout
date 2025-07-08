@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { LogOut, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/footer";
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,13 @@ function UserNav() {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
+      <Button asChild variant="outline" size="sm">
+          <Link href="/" target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            <span>Visit Website</span>
+          </Link>
+      </Button>
       <Button variant="outline" size="sm" onClick={handleLogout}>
         <LogOut className="mr-2 h-4 w-4" />
         <span>Logout</span>
