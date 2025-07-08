@@ -29,12 +29,12 @@ function UserNav({ user }: { user: User | null }) {
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
     localStorage.removeItem('originalLoggedInUser');
-    router.push('/login');
+    router.push('/dream-portal');
   }
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
+      <Button variant="outline" size="sm" onClick={() => router.push('/dream-portal')}>
           Login
       </Button>
     )
@@ -144,7 +144,7 @@ export default function DashboardLayout({
                 auth.signOut().then(() => {
                     localStorage.removeItem('loggedInUser');
                     localStorage.removeItem('originalLoggedInUser');
-                    router.push('/login');
+                    router.push('/dream-portal');
                 });
             }
         });
@@ -184,5 +184,7 @@ export default function DashboardLayout({
     </div>
   );
 }
+
+    
 
     

@@ -41,7 +41,7 @@ export default function SupportPage() {
             
             setIsLoading(false);
           } else {
-            router.push("/login");
+            router.push("/dream-portal");
           }
         });
         return () => unsubscribe();
@@ -229,3 +229,5 @@ export default function SupportPage() {
         </Card>
     );
 }
+
+    

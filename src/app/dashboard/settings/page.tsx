@@ -36,7 +36,7 @@ export default function SettingsPage() {
             }
         }
       } else {
-        router.push("/login");
+        router.push("/dream-portal");
       }
     });
     return () => unsubscribe();
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       await auth.signOut();
       localStorage.removeItem('loggedInUser');
       localStorage.removeItem('originalLoggedInUser');
-      router.push("/login");
+      router.push("/dream-portal");
     } catch (error) {
       console.error(error);
       toast({
@@ -202,3 +202,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -67,7 +68,7 @@ export default function ProfilePage() {
         }
       } else {
         // User is not authenticated, redirect to login.
-        router.push("/login");
+        router.push("/dream-portal");
       }
       setIsLoading(false);
     });
@@ -212,3 +213,5 @@ export default function ProfilePage() {
     </Card>
   );
 }
+
+    

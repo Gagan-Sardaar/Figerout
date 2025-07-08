@@ -53,7 +53,7 @@ function UserNav({ user }: { user: User }) {
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
     localStorage.removeItem('originalLoggedInUser');
-    router.push('/login');
+    router.push('/dream-portal');
   }
 
   if (!user) {
@@ -100,17 +100,6 @@ function UserNav({ user }: { user: User }) {
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
-              {user.role !== 'Admin' && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/support">
-                        <LifeBuoy className="mr-2 h-4 w-4" />
-                        <span>Support</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </>
-              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -159,11 +148,11 @@ export default function AdminLayout({
             }
         } catch (e) {
             console.error("Failed to parse user from localStorage", e);
-            router.replace('/login');
+            router.replace('/dream-portal');
         }
     } else {
         localStorage.removeItem('originalLoggedInUser');
-        router.replace('/login');
+        router.replace('/dream-portal');
     }
   }, [router]);
 
@@ -373,3 +362,5 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
+
+    

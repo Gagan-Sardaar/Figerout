@@ -225,7 +225,7 @@ const ColorPickerView = () => {
       name: getColorName(pickedColor),
     };
     sessionStorage.setItem('colorToSaveAfterLogin', JSON.stringify(colorToSave));
-    router.push('/login');
+    router.push('/dream-portal');
   };
 
   const handleSave = async () => {
@@ -660,3 +660,5 @@ const ColorPickerView = () => {
 };
 
 export default ColorPickerView;
+
+    
