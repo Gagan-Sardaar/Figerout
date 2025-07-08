@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -16,6 +17,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { addLogEntry } from './logging-service';
+import { getUsers } from './user-service';
+import type { BlogPost } from '@/lib/blog-data';
 
 export interface AppNotification {
   id: string;
@@ -97,4 +100,45 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
         batch.update(doc.ref, { read: true });
     });
     await batch.commit();
+}
+
+/**
+ * Sends notifications to relevant users about a new blog post.
+ * @param authorId The ID of the user who published the post.
+ * @param post The blog post data.
+ */
+export async function notifyUsersAboutPost(authorId: string, post: BlogPost): Promise<void> {
+  try {
+    const allUsers = await getUsers();
+    const targetUsers = allUsers.filter(user =>
+      (user.role === 'Editor' || user.role === 'Viewer') && user.id !== authorId
+    );
+
+    if (targetUsers.length === 0) return;
+
+    const notificationPromises = targetUsers.map(user => {
+      return addNotification(user.id, {
+        type: 'info',
+        title: 'New Blog Post!',
+        message: `Check out the new article: "${post.title}"`,
+        link: `/blog/${post.slug}`,
+      });
+    });
+
+    await Promise.all(notificationPromises);
+
+    await addLogEntry(
+        'post_notification_sent',
+        `Sent notifications for post "${post.title}" to ${targetUsers.length} users.`,
+        { postId: post.id, authorId }
+    );
+
+  } catch (error) {
+    console.error('Failed to send post notifications:', error);
+    await addLogEntry(
+      'notification_failed',
+      `Failed to send notifications for post "${post.title}".`,
+      { error: (error as Error).message }
+    );
+  }
 }

@@ -8,6 +8,7 @@ import { NewPostDialog } from "@/components/blog/new-post-dialog";
 import { BlogPostCard } from "@/components/blog/blog-post-card";
 import { blogPosts as initialBlogPosts, BlogPost } from "@/lib/blog-data";
 import { useToast } from "@/hooks/use-toast";
+import { notifyUsersAboutPost } from "@/services/notification-service";
 
 // Helper to create a slug from a title
 const createSlug = (title: string) => {
@@ -21,13 +22,16 @@ const createSlug = (title: string) => {
 export default function BlogPage() {
   const [posts, setPostsState] = useState<BlogPost[]>([]);
   const [userRole, setUserRole] = useState<'Admin' | 'Editor' | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('loggedInUser');
     if (loggedInUser) {
         try {
-            setUserRole(JSON.parse(loggedInUser).role);
+            const parsedUser = JSON.parse(loggedInUser);
+            setUserRole(parsedUser.role);
+            setUserId(parsedUser.id);
         } catch(e) { console.error(e) }
     }
     
@@ -87,21 +91,29 @@ export default function BlogPage() {
   };
 
 
-  const handleSavePost = (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
+  const handleSavePost = async (postData: Partial<BlogPost> & { title: string; content: string; status: BlogPost['status'], featuredImage?: string }) => {
     const summary = postData.content.length > 150 ? postData.content.substring(0, 150) + '...' : postData.content;
     const lastUpdated = new Date().toISOString();
+    let savedPost: BlogPost | undefined;
     
     if (postData.id) {
       // Update existing post
-      setPosts(posts.map(p => p.id === postData.id ? { 
-          ...p, 
-          ...postData, 
-          title: postData.title, 
-          content: postData.content,
-          summary: summary,
-          imageUrl: postData.featuredImage || p.imageUrl,
-          lastUpdated: lastUpdated,
-        } as BlogPost : p));
+      setPosts(posts.map(p => {
+        if (p.id === postData.id) {
+            const updatedPost = { 
+              ...p, 
+              ...postData, 
+              title: postData.title, 
+              content: postData.content,
+              summary: summary,
+              imageUrl: postData.featuredImage || p.imageUrl,
+              lastUpdated: lastUpdated,
+            } as BlogPost;
+            savedPost = updatedPost;
+            return updatedPost;
+        }
+        return p
+      }));
       toast({
           title: "Post Updated!",
           description: `"${postData.title}" has been saved.`,
@@ -128,11 +140,16 @@ export default function BlogPage() {
         focusKeywords: postData.focusKeywords,
         seoScore: postData.seoScore,
       };
+      savedPost = newPost;
       setPosts(prevPosts => [newPost, ...prevPosts]);
       toast({
         title: "Post Created!",
         description: `"${newPost.title}" has been created as a ${newPost.status}.`,
       });
+    }
+
+    if (userId && savedPost && savedPost.status === 'published') {
+      await notifyUsersAboutPost(userId, savedPost);
     }
   };
 
