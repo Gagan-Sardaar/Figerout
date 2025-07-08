@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/user-data";
 import {
-    getSavedColors,
+    onSavedColorsChange,
     deleteColor,
     updateColorNote,
     type SavedColor,
@@ -140,11 +140,10 @@ export default function VisitorDashboardPage() {
 
   useEffect(() => {
     if (user?.id) {
-        const fetchColors = async () => {
-            const colors = await getSavedColors(user.id);
-            setSavedColors(colors);
-        };
-        fetchColors();
+      const unsubscribe = onSavedColorsChange(user.id, (colors) => {
+        setSavedColors(colors);
+      });
+      return () => unsubscribe(); // Cleanup subscription on unmount
     }
   }, [user]);
 
@@ -176,7 +175,7 @@ export default function VisitorDashboardPage() {
     if (!colorToDelete) return;
 
     await deleteColor(user.id, hex);
-    setSavedColors(prev => prev.filter(color => color.hex !== hex));
+    // No need to set state here, the real-time listener will handle it
     toast({
       title: "Color Removed",
       description: `The color ${colorToDelete.name} has been removed from your collection.`,
@@ -195,9 +194,7 @@ export default function VisitorDashboardPage() {
   const handleSaveNote = async () => {
     if (!dialogState.color || !user?.id) return;
     await updateColorNote(user.id, dialogState.color.hex, noteContent);
-    setSavedColors(prev => prev.map(c => 
-      c.hex === dialogState.color!.hex ? { ...c, note: noteContent } : c
-    ));
+    // No need to set state here, the real-time listener will handle it
     toast({
       title: "Note Saved",
       description: `Your note for ${dialogState.color.name} has been saved.`,

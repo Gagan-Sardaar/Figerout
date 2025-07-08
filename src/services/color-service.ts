@@ -13,6 +13,7 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  onSnapshot,
 } from "firebase/firestore";
 
 export type SavedColor = {
@@ -48,6 +49,42 @@ export async function getSavedColors(userId: string): Promise<SavedColor[]> {
         console.error("Error fetching saved colors:", error);
         return [];
     }
+}
+
+/**
+ * Sets up a real-time listener for a user's saved colors.
+ * @param userId The user's ID.
+ * @param callback The function to call with the updated colors array.
+ * @returns An unsubscribe function to clean up the listener.
+ */
+export function onSavedColorsChange(
+    userId: string,
+    callback: (colors: SavedColor[]) => void
+): () => void {
+    if (!userId) {
+        return () => {}; // Return an empty unsubscribe function
+    }
+
+    const q = query(colorsCollectionRef(userId), orderBy("sharedAt", "desc"));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const colors = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const sharedAtTimestamp = data.sharedAt as Timestamp;
+            return {
+                id: doc.id,
+                hex: data.hex,
+                name: data.name,
+                sharedAt: sharedAtTimestamp?.toDate ? sharedAtTimestamp.toDate().toISOString() : new Date().toISOString(),
+                note: data.note,
+            };
+        });
+        callback(colors);
+    }, (error) => {
+        console.error("Error listening to saved colors:", error);
+    });
+
+    return unsubscribe;
 }
 
 export async function saveColor(userId: string, color: Omit<SavedColor, 'sharedAt' | 'id'>): Promise<SavedColor> {
