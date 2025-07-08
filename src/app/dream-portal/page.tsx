@@ -311,9 +311,13 @@ export default function DreamPortalPage() {
         setLockoutInfo(null);
         setLockoutExpired(false);
         setLoginStep('email');
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        toast({ title: 'Error', description: 'Could not send login link. Please try again.', variant: 'destructive' });
+        let description = 'Could not send login link. Please try again.';
+        if (error.code === 'auth/operation-not-allowed') {
+            description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
+        }
+        toast({ title: 'Error sending link', description: description, variant: 'destructive' });
     } finally {
         setIsSendingLink(false);
     }
