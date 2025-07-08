@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,23 +9,6 @@ import { useRouter } from 'next/navigation';
 
 function UserNav() {
   const router = useRouter();
-  const [user, setUser] = useState({ name: 'Visitor', email: 'visitor@figerout.com', initials: 'V' });
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-        try {
-            const parsedUser = JSON.parse(storedUser);
-            setUser({
-                name: parsedUser.name,
-                email: parsedUser.email,
-                initials: parsedUser.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-            });
-        } catch (e) {
-            console.error("Failed to parse user from localStorage", e);
-        }
-    }
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
@@ -36,10 +18,6 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="text-right hidden sm:block">
-        <div className="font-semibold text-sm">{user.name}</div>
-        <div className="text-xs text-muted-foreground">{user.email}</div>
-      </div>
       <Button variant="outline" size="sm" onClick={handleLogout}>
         <LogOut className="mr-2 h-4 w-4" />
         <span>Logout</span>
