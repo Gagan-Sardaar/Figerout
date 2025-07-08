@@ -39,10 +39,10 @@ type Slide = {
 
 const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'name'>[], photographer: string; photographerUrl: string; }[] = [
     { 
-        photoId: '20245084',
+        photoId: '2886937',
         hint: 'woman mirror',
-        photographer: 'KC CHEN',
-        photographerUrl: 'https://www.pexels.com/@kcchen/',
+        photographer: 'Dima Valkov',
+        photographerUrl: 'https://www.pexels.com/@dima-valkov/',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
