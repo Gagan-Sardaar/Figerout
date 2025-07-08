@@ -14,6 +14,7 @@ import {
   Users,
   Loader2,
   ChevronsUpDown,
+  Palette,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -195,6 +196,18 @@ export default function AdminLayout({
                 <Link href="/admin/blog">
                   <Newspaper />
                   <span className="group-data-[state=collapsed]:hidden">Blog</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/admin/colors")}
+                tooltip="Colors"
+              >
+                <Link href="/admin/colors">
+                  <Palette />
+                  <span className="group-data-[state=collapsed]:hidden">Colors</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
