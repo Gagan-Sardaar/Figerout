@@ -7,13 +7,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp, LogOut } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CookieBanner } from '@/components/cookie-banner';
 import { useToast } from '@/hooks/use-toast';
-import type { User } from '@/lib/user-data';
+import type { User as AuthUser } from '@/lib/user-data';
 
 
 type Position = {
@@ -33,12 +33,16 @@ type Slide = {
   callouts: Callout[];
   hint: string;
   photoId: string;
+  photographer: string;
+  photographerUrl: string;
 };
 
-const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'name'>[] }[] = [
+const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'name'>[], photographer: string; photographerUrl: string; }[] = [
     { 
-        photoId: '32648254',
+        photoId: '20245084',
         hint: 'woman mirror',
+        photographer: 'KC CHEN',
+        photographerUrl: 'https://www.pexels.com/@kcchen/',
         callouts: [
             { hex: "#f2bfc8", position: { top: "55%", left: "55%" } }
         ] 
@@ -46,6 +50,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '6988665',
         hint: 'green leaves',
+        photographer: 'Teona Swift',
+        photographerUrl: 'https://www.pexels.com/@teona-swift/',
         callouts: [
             { hex: "#c3c7a6", position: { top: "60%", left: "45%" } }
         ] 
@@ -53,6 +59,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '8367798',
         hint: 'red car',
+        photographer: 'Riley K..',
+        photographerUrl: 'https://www.pexels.com/@riley-k--162383833/',
         callouts: [
             { hex: "#6a1910", position: { top: "60%", left: "50%" } }
         ] 
@@ -60,6 +68,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '3755021',
         hint: 'concrete building',
+        photographer: 'Scott Webb',
+        photographerUrl: 'https://www.pexels.com/@scott-webb-123491/',
         callouts: [
             { hex: "#37251b", position: { top: "55%", left: "40%" }, mobilePosition: { top: "50%", left: "40%" } },
             { hex: "#c3b9b3", position: { top: "65%", left: "55%" }, mobilePosition: { top: "62%", left: "56%" } }
@@ -68,6 +78,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '6686434',
         hint: 'modern building',
+        photographer: 'Thgusstavo Santana',
+        photographerUrl: 'https://www.pexels.com/@thgusstavo-santana-3620913/',
         callouts: [
             { hex: "#80a6cb", position: { top: "65%", left: "60%" }, mobilePosition: { top: "60%", left: "60%" } }
         ] 
@@ -75,6 +87,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '7680203',
         hint: 'pink flowers',
+        photographer: 'MATEJ',
+        photographerUrl: 'https://www.pexels.com/@matej-drha-1149959/',
         callouts: [
             { hex: "#e9cfd3", position: { top: "60%", left: "50%" } }
         ] 
@@ -82,6 +96,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '8317652',
         hint: 'woman coat',
+        photographer: 'Tima Miroshnichenko',
+        photographerUrl: 'https://www.pexels.com/@tima-miroshnichenko/',
         callouts: [
             { hex: "#a794bb", position: { top: "60%", left: "45%" } }
         ] 
@@ -89,6 +105,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '720815',
         hint: 'yellow flowers',
+        photographer: 'Pok Rie',
+        photographerUrl: 'https://www.pexels.com/@pok-rie-33563/',
         callouts: [
             { hex: "#eed137", position: { top: "65%", left: "55%" }, mobilePosition: { top: "60%", left: "55%" } }
         ] 
@@ -96,6 +114,8 @@ const slidesConfig: { photoId: string; hint: string; callouts: Omit<Callout, 'na
     { 
         photoId: '4668556',
         hint: 'glass building',
+        photographer: 'Max Rahubovskiy',
+        photographerUrl: 'https://www.pexels.com/@max-rahubovskiy-1249610/',
         callouts: [
             { hex: "#596e73", position: { top: "60%", left: "55%" } }
         ] 
@@ -111,10 +131,11 @@ const WelcomeScreen = () => {
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [isCreditExpanded, setIsCreditExpanded] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
@@ -365,6 +386,33 @@ const WelcomeScreen = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* Photographer credit */}
+            <div
+                className="absolute bottom-2 right-2 z-20"
+                onMouseEnter={() => setIsCreditExpanded(true)}
+                onMouseLeave={() => setIsCreditExpanded(false)}
+            >
+                <a
+                  href={activeSlide.photographerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5 text-xs text-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out hover:text-white"
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <div
+                    className={cn(
+                      'grid grid-cols-[0fr] transition-[grid-template-columns,margin-left] duration-300 ease-in-out',
+                      isCreditExpanded && 'ml-1 grid-cols-[1fr]'
+                    )}
+                  >
+                    <span className="overflow-hidden whitespace-nowrap">
+                      Photo by {activeSlide.photographer}
+                    </span>
+                  </div>
+                </a>
+            </div>
+
           <CookieBanner />
         </>
       )}
