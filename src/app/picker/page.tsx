@@ -349,7 +349,7 @@ const ColorPickerView = () => {
                     <p className="text-xs text-white/70 uppercase">{getColorName(pickedColor)}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" className="h-8 px-3 text-white/80 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
+                    <Button className="h-8 rounded-md px-3 bg-black text-white/90 hover:bg-zinc-800 hover:text-white flex items-center gap-1.5" onClick={handleShare}>
                         <Share2 className="w-4 h-4" />
                         <span className="text-xs">Share</span>
                     </Button>
@@ -523,39 +523,39 @@ const ColorPickerView = () => {
             className="bg-zinc-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
-             <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                {isUserLoggedIn ? (
-                  <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSave}
-                      className={cn(
-                          "h-8 w-8 rounded-full transition-colors",
-                          isPickedColorLight 
-                              ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
-                              : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
-                      )}
-                      aria-label="Save color"
-                  >
-                      <Save className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSaveRedirect}
-                      className={cn(
-                          "h-8 w-8 rounded-full transition-colors",
-                           isPickedColorLight 
-                              ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
-                              : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
-                      )}
-                      aria-label="Login to save"
-                  >
-                      <LogIn className="h-4 w-4" />
-                  </Button>
-                )}
-             </div>
+            <div className="absolute top-4 left-4 z-10">
+              {isUserLoggedIn ? (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSave}
+                    className={cn(
+                        "h-8 w-8 rounded-full transition-colors",
+                        isPickedColorLight 
+                            ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                            : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                    )}
+                    aria-label="Save color"
+                >
+                    <Save className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSaveRedirect}
+                    className={cn(
+                        "h-8 w-8 rounded-full transition-colors",
+                         isPickedColorLight 
+                            ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                            : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                    )}
+                    aria-label="Login to save"
+                >
+                    <LogIn className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <Button
                 variant="ghost"
                 size="icon"
