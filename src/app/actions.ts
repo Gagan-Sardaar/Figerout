@@ -72,7 +72,7 @@ export async function searchPexelsImage(query: string): Promise<PexelsSearchImag
       return null;
     }
   } catch (err) {
-    console.error(`Fetch failed for Pexels search query "${query}":`, err);
+    console.error(`Fetch operation failed for Pexels search query "${query}":`, err);
     return null;
   }
 }
