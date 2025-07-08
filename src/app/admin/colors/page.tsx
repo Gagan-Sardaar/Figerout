@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -58,7 +57,7 @@ export default function AdminColorsPage() {
             };
             fetchMyColors();
         } else {
-            router.replace('/login');
+            router.replace('/dream-portal');
             return;
         }
     }, [router, toast]);

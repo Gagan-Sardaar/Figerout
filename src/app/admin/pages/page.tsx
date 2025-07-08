@@ -581,10 +581,10 @@ export default function PagesPage() {
                   router.replace('/admin');
               }
           } catch (e) {
-              router.replace('/login');
+              router.replace('/dream-portal');
           }
       } else {
-          router.replace('/login');
+          router.replace('/dream-portal');
       }
   }, [router]);
   

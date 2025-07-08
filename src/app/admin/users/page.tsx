@@ -45,7 +45,7 @@ export default function UsersPage() {
         return;
       }
     } else {
-      router.replace('/login');
+      router.replace('/dream-portal');
       return;
     }
 
