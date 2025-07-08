@@ -44,8 +44,19 @@ export default function LoginPage() {
   const router = useRouter();
   const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
+    if (localStorage.getItem("loggedInUser")) {
+      router.push("/");
+    } else {
+      setAuthChecked(true);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (!authChecked) return;
+
     const fetchAndSetBackground = async () => {
       const storedBg = localStorage.getItem('loginBackground');
       const now = new Date().getTime();
@@ -82,9 +93,11 @@ export default function LoginPage() {
     };
 
     fetchAndSetBackground();
-  }, []);
+  }, [authChecked]);
 
   useEffect(() => {
+    if (!authChecked) return;
+    
     const message = sessionStorage.getItem('logout_message');
     if (message) {
         toast({
@@ -94,7 +107,7 @@ export default function LoginPage() {
         });
         sessionStorage.removeItem('logout_message');
     }
-  }, [toast]);
+  }, [toast, authChecked]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -221,6 +234,14 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
     }
   };
 
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-black">
+        <Loader2 className="h-10 w-10 animate-spin text-white" />
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex min-h-svh items-center justify-center p-4 bg-background transition-all duration-1000"
@@ -233,17 +254,17 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
       <div className="absolute inset-0 bg-black/60 z-0" />
       
       <div className="relative z-10 w-full">
+        <div className="text-center mb-6">
+            <Link href="/" className="font-headline text-5xl font-extrabold tracking-tighter text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                Figerout
+            </Link>
+        </div>
         {isLoading ? (
           <div className="flex justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-white" />
           </div>
         ) : (
           <div className="mx-auto w-full max-w-sm">
-            <div className="text-center mb-6">
-                <Link href="/" className="font-headline text-5xl font-extrabold tracking-tighter text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                    Figerout
-                </Link>
-            </div>
             <AlertDialog>
               <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
                   <CardHeader className="items-center text-center">
