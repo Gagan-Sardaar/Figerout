@@ -182,7 +182,7 @@ export default function AdminColorsPage() {
                                             onClick={() => openShadesDialog(color)}
                                         >
                                             <Palette className={cn(
-                                                "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity",
+                                                "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none",
                                                 isColorLight(color.hex) ? "text-black" : "text-white"
                                             )} />
                                         </div>

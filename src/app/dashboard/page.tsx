@@ -294,7 +294,7 @@ export default function VisitorDashboardPage() {
                       onClick={() => openShadesDialog(color)}
                     >
                         <Palette className={cn(
-                          "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity",
+                          "w-8 h-8 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none",
                           isColorLight(color.hex) ? "text-black" : "text-white"
                         )} />
                     </div>
@@ -329,7 +329,7 @@ export default function VisitorDashboardPage() {
                           </div>
                       </div>
                       <div className="flex-grow flex items-center">
-                          <p className="text-4xl font-light text-foreground">{color.hex.toUpperCase()}</p>
+                          <p className="text-3xl font-light text-foreground">{color.hex.toUpperCase()}</p>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
                         Saved {formatDistanceToNow(new Date(color.sharedAt), { addSuffix: true })}
