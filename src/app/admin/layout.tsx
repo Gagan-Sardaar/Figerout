@@ -98,13 +98,17 @@ function UserNav({ user }: { user: User }) {
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/support">
-                    <LifeBuoy className="mr-2 h-4 w-4" />
-                    <span>Support</span>
-                </Link>
-              </DropdownMenuItem>
+              {user.role !== 'Admin' && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/support">
+                        <LifeBuoy className="mr-2 h-4 w-4" />
+                        <span>Support</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
