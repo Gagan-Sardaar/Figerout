@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldAlert, KeyRound, ServerCrash, Unplug, ShieldCheck, ShieldX, Unlock } from "lucide-react";
 import { formatDistanceToNow, format } from 'date-fns';
-import { getRecentFailedLogins, resetLockout, FailedLoginAttempt } from '@/services/security-service';
+import { onFailedLoginsChange, resetLockout, FailedLoginAttempt } from '@/services/security-service';
 import { getUserByEmail, getBlockedUsers, updateUser, FirestoreUser } from '@/services/user-service';
 import { addLogEntry } from '@/services/logging-service';
 import { Timestamp } from 'firebase/firestore';
@@ -28,37 +28,34 @@ export default function AdminSecurityPage() {
     const [emailToReset, setEmailToReset] = useState("");
     const [emailToBlock, setEmailToBlock] = useState("");
 
-    const fetchSecurityData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const [logins, blocked] = await Promise.all([
-                getRecentFailedLogins(50),
-                getBlockedUsers()
-            ]);
-            setFailedLogins(logins);
-            setBlockedUsers(blocked);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Could not load security data.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [toast]);
-
     useEffect(() => {
         const storedUser = localStorage.getItem('loggedInUser');
         if (storedUser) {
             const user = JSON.parse(storedUser);
-            if (user.role === 'Admin') {
-                setIsAllowed(true);
-                fetchSecurityData();
-            } else {
+            if (user.role !== 'Admin') {
                 router.replace('/admin');
+                return;
             }
+
+            setIsAllowed(true);
+
+            // Fetch non-realtime data
+            getBlockedUsers().then(setBlockedUsers).catch(err => {
+                console.error(err);
+                toast({ title: "Error", description: "Could not load blocked users.", variant: "destructive" });
+            });
+
+            // Set up listener for real-time data
+            const unsubscribe = onFailedLoginsChange((logins) => {
+                setFailedLogins(logins);
+                if (isLoading) setIsLoading(false);
+            });
+
+            return () => unsubscribe();
         } else {
             router.replace('/dream-portal');
         }
-    }, [router, fetchSecurityData]);
+    }, [router, toast, isLoading]);
 
     const handleResetLockout = async () => {
         if (!emailToReset.trim()) return;

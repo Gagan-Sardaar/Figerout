@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp, Timestamp, orderBy, limit, getDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp, Timestamp, orderBy, limit, getDoc, onSnapshot } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
 
 export interface FailedLoginAttempt {
@@ -91,11 +91,21 @@ export async function clearSuccessfulLogin(email: string): Promise<void> {
     }
 }
 
-export async function getRecentFailedLogins(entryLimit = 50): Promise<FailedLoginAttempt[]> {
-    const q = query(failedLoginsCollectionRef, orderBy('timestamp', 'desc'), limit(entryLimit));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
+export function onFailedLoginsChange(
+  callback: (attempts: FailedLoginAttempt[]) => void,
+  entryLimit = 50
+): () => void {
+  const q = query(failedLoginsCollectionRef, orderBy('timestamp', 'desc'), limit(entryLimit));
+
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const attempts = querySnapshot.docs.map((doc) => {
       const data = doc.data();
       return { id: doc.id, ...data } as FailedLoginAttempt;
     });
+    callback(attempts);
+  }, (error) => {
+    console.error("Error listening to failed login attempts:", error);
+  });
+
+  return unsubscribe;
 }
