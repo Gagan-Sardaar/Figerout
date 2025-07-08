@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X, HeartCrack } from 'lucide-react';
+import { Share2, RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Palette, Save, Loader2, Copy, X, HeartCrack, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName, generateColorShades, isColorLight } from '@/lib/color-utils';
 import { generateColorHistory } from '@/ai/flows/generate-color-history';
@@ -533,20 +533,38 @@ const ColorPickerView = () => {
             className="bg-zinc-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
-             <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSave}
-                className={cn(
-                    "absolute top-4 left-4 h-8 w-8 rounded-full z-10 transition-colors",
-                    isPickedColorLight 
-                        ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
-                        : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+             <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSave}
+                    className={cn(
+                        "h-8 w-8 rounded-full transition-colors",
+                        isPickedColorLight 
+                            ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                            : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                    )}
+                    aria-label="Save color"
+                >
+                    <Save className="h-4 w-4" />
+                </Button>
+                {!isUserLoggedIn && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSaveRedirect}
+                        className={cn(
+                            "h-8 w-8 rounded-full transition-colors",
+                             isPickedColorLight 
+                                ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                                : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                        )}
+                        aria-label="Login to save"
+                    >
+                        <LogIn className="h-4 w-4" />
+                    </Button>
                 )}
-                aria-label="Save color"
-            >
-                <Save className="h-4 w-4" />
-            </Button>
+             </div>
             <Button
                 variant="ghost"
                 size="icon"
