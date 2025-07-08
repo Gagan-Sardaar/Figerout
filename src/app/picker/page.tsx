@@ -524,35 +524,36 @@ const ColorPickerView = () => {
             onClick={(e) => e.stopPropagation()}
           >
              <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleSave}
-                    className={cn(
-                        "h-8 w-8 rounded-full transition-colors",
-                        isPickedColorLight 
-                            ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
-                            : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
-                    )}
-                    aria-label="Save color"
-                >
-                    <Save className="h-4 w-4" />
-                </Button>
-                {!isUserLoggedIn && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleSaveRedirect}
-                        className={cn(
-                            "h-8 w-8 rounded-full transition-colors",
-                             isPickedColorLight 
-                                ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
-                                : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                        aria-label="Login to save"
-                    >
-                        <LogIn className="h-4 w-4" />
-                    </Button>
+                {isUserLoggedIn ? (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSave}
+                      className={cn(
+                          "h-8 w-8 rounded-full transition-colors",
+                          isPickedColorLight 
+                              ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                              : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                      )}
+                      aria-label="Save color"
+                  >
+                      <Save className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSaveRedirect}
+                      className={cn(
+                          "h-8 w-8 rounded-full transition-colors",
+                           isPickedColorLight 
+                              ? "bg-black/10 text-black/70 hover:bg-black/20 hover:text-black" 
+                              : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                      )}
+                      aria-label="Login to save"
+                  >
+                      <LogIn className="h-4 w-4" />
+                  </Button>
                 )}
              </div>
             <Button
