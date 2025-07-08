@@ -237,7 +237,7 @@ export default function AdminColorsPage() {
             </Accordion>
             
             <Dialog open={dialogState.isOpen} onOpenChange={() => setDialogState({ isOpen: false, type: null, color: null, userId: null })}>
-                <DialogContent>
+                <DialogContent className="max-h-[90svh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>
                             {dialogState.type === 'note' ? (dialogState.color?.note ? 'Edit Note' : 'Add Note') : 'Color Shades'}

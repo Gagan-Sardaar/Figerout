@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FilePenLine, Palette, Trash2, ChevronsUpDown, Camera, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { FilePenLine, Palette, Trash2, Camera, Image as ImageIcon, ExternalLink, Brush } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,14 +38,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from 'date-fns';
 import { generateColorShades, isColorLight } from "@/lib/color-utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/user-data";
 import {
     onSavedColorsChange,
@@ -60,62 +52,6 @@ type DialogState = {
     isOpen: boolean;
     type: 'note' | 'shades' | null;
     color: SavedColor | null;
-}
-
-const RoleSwitcher = () => {
-    const router = useRouter();
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [originalUser, setOriginalUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('loggedInUser');
-        if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
-        }
-        const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
-        if (storedOriginalUser) {
-            setOriginalUser(JSON.parse(storedOriginalUser));
-        }
-    }, []);
-
-    const handleSwitchRole = (newRole: 'Admin' | 'Editor' | 'Viewer') => {
-        const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
-        if (!storedOriginalUser) return;
-
-        const userToModify = JSON.parse(storedOriginalUser);
-        userToModify.role = newRole;
-        localStorage.setItem('loggedInUser', JSON.stringify(userToModify));
-
-        if (newRole === 'Viewer') {
-            window.location.reload();
-        } else {
-            router.push('/admin');
-        }
-    };
-
-    if (!currentUser || originalUser?.role !== 'Admin') {
-        return null;
-    }
-
-    return (
-        <div className="pt-4">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between text-base px-3 py-2 h-auto text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white">
-                        <span>View: {currentUser.role}</span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" side="top">
-                    <DropdownMenuLabel>Switch Dashboard View</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleSwitchRole('Admin')}>Admin</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSwitchRole('Editor')}>Editor</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSwitchRole('Viewer')}>Viewer</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-    );
 }
 
 export default function VisitorDashboardPage() {
@@ -296,59 +232,56 @@ export default function VisitorDashboardPage() {
           <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col flex-grow">
               <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4 hidden md:flex">
               <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
-                  {user?.initials || 'V'}
+                  {user?.initials}
               </AvatarFallback>
               </Avatar>
               <h1 className="text-xl md:text-3xl font-bold truncate">{userName}</h1>
               <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
               <div className="space-y-2 pt-6">
+                <Button asChild className="w-full justify-start text-base px-3 py-2 h-auto bg-black text-primary-foreground/90 hover:bg-zinc-800">
+                  <Link href="/choose" className="flex items-center gap-3">
+                    <Brush className="w-4 h-4" />
+                    <span>Find New Color</span>
+                  </Link>
+                </Button>
                  <Button asChild variant="outline" className="w-full justify-start text-base px-3 py-2 h-auto bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90 hover:bg-primary-foreground/20">
                     <Link href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                         <ExternalLink className="w-4 h-4" />
                         <span>Visit Website</span>
                     </Link>
                  </Button>
-                 <Button asChild className="w-full justify-start text-base px-3 py-2 h-auto bg-black text-primary-foreground/90 hover:bg-zinc-800">
-                  <Link href="/camera" className="flex items-center gap-3">
-                    <Camera className="w-4 h-4" />
-                    <span>Live Capture</span>
-                  </Link>
-                </Button>
-                <Button onClick={handleUploadClick} variant="outline" className="w-full justify-start text-base px-3 py-2 h-auto bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90 hover:bg-primary-foreground/20">
-                    <ImageIcon className="w-4 h-4 mr-3" />
-                    <span>Upload Image</span>
-                </Button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                />
               </div>
 
               <div className="mt-auto">
-                <RoleSwitcher />
+                {user?.role === 'Admin' && (
+                    <div className="pt-4">
+                        <Button asChild variant="ghost" className="w-full justify-start text-base px-3 py-2 h-auto text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white">
+                           <Link href="/admin">
+                            Switch to Admin View
+                           </Link>
+                        </Button>
+                    </div>
+                )}
               </div>
           </Card>
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col">
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-              {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
-                <Button
-                  key={filter}
-                  variant={activeFilter === filter ? "secondary" : "ghost"}
-                  size="sm"
-                  className={cn(
-                    'capitalize flex-shrink-0'
-                  )}
-                  onClick={() => setActiveFilter(filter)}
-                >
-                  {filter === 'all' ? 'ALL' : filter}
-                </Button>
-              ))}
+          <div className="mb-6 overflow-x-auto pb-2 -mx-2 px-2">
+              <div className="flex items-center gap-2 flex-nowrap w-max">
+                  {(['all', 'daily', 'weekly', 'monthly'] as const).map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={activeFilter === filter ? "secondary" : "ghost"}
+                      size="sm"
+                      className="capitalize"
+                      onClick={() => setActiveFilter(filter)}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+              </div>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2">
             {filteredColors.length > 0 ? (
@@ -425,7 +358,7 @@ export default function VisitorDashboardPage() {
       </div>
 
        <Dialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen: false, type: null, color: null })}>
-            <DialogContent>
+            <DialogContent className="max-h-[90svh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {dialogState.type === 'note' ? (dialogState.color?.note ? 'Edit Note' : 'Add Note') : 'Color Shades'}
