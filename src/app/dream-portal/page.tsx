@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
@@ -34,6 +34,8 @@ import { doc, getDoc } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
 
+const getLockoutKey = (email: string) => `lockout_${email.toLowerCase()}`;
+const getAttemptsKey = (email: string) => `loginAttempts_${email.toLowerCase()}`;
 
 export default function DreamPortalPage() {
   const [email, setEmail] = useState('');
@@ -46,6 +48,9 @@ export default function DreamPortalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [loginStep, setLoginStep] = useState<'email' | 'password'>('email');
+
+  const [lockoutInfo, setLockoutInfo] = useState<{until: number, message: string} | null>(null);
+  const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
     if (localStorage.getItem("loggedInUser")) {
@@ -108,40 +113,129 @@ export default function DreamPortalPage() {
         });
         sessionStorage.removeItem('logout_message');
     }
+
+    const lastEmail = localStorage.getItem('lastLoginEmail');
+    if (lastEmail) {
+      setEmail(lastEmail);
+      const storedLockout = localStorage.getItem(getLockoutKey(lastEmail));
+      if (storedLockout) {
+        const { until, message } = JSON.parse(storedLockout);
+        if (Date.now() < until) {
+          setLockoutInfo({ until, message });
+        }
+      }
+    }
   }, [toast, authChecked]);
+
+  useEffect(() => {
+    if (!lockoutInfo) {
+      setTimeLeft('');
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const distance = lockoutInfo.until - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+        setTimeLeft("You can now try again.");
+        setLockoutInfo(null);
+        localStorage.removeItem(getLockoutKey(email));
+        localStorage.removeItem(getAttemptsKey(email));
+        setLoginStep('email');
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      let timeLeftString = '';
+      if (days > 0) timeLeftString += `${days}d `;
+      if (hours > 0 || days > 0) timeLeftString += `${String(hours).padStart(2, '0')}:`;
+      timeLeftString += `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      setTimeLeft(timeLeftString.trim());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutInfo, email]);
+
+  const handleFailedLoginAttempt = () => {
+    const attemptsKey = getAttemptsKey(email);
+    const lockoutKey = getLockoutKey(email);
+    const now = Date.now();
+    const storedAttempts = localStorage.getItem(attemptsKey);
+    let currentAttempts = storedAttempts ? JSON.parse(storedAttempts) : 0;
+    
+    currentAttempts++;
+    localStorage.setItem(attemptsKey, JSON.stringify(currentAttempts));
+    
+    let lockoutDuration = 0;
+    let lockoutMessage = "";
+    
+    // Tiered lockout logic
+    if (currentAttempts >= 9) {
+      lockoutDuration = 30 * 24 * 60 * 60 * 1000;
+      lockoutMessage = "Account locked for 30 days due to excessive failed attempts.";
+    } else if (currentAttempts >= 6) {
+      lockoutDuration = 24 * 60 * 60 * 1000;
+      lockoutMessage = "Account locked for 24 hours due to multiple failed attempts.";
+    } else if (currentAttempts >= 3) {
+      lockoutDuration = 15 * 60 * 1000;
+      lockoutMessage = "Too many failed attempts. Login has been temporarily disabled.";
+    }
+
+    if (lockoutDuration > 0) {
+      const until = now + lockoutDuration;
+      const newLockoutInfo = { until, message: lockoutMessage };
+      localStorage.setItem(lockoutKey, JSON.stringify(newLockoutInfo));
+      setLockoutInfo(newLockoutInfo);
+    }
+
+    let toastDescription = "Invalid email or password. Please try again.";
+    if (currentAttempts < 3) {
+      const remainingAttempts = 3 - currentAttempts;
+      toastDescription += ` ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before lockout.`;
+    }
+
+    toast({
+      title: "Login Failed",
+      description: toastDescription,
+      variant: "destructive",
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (loginStep === 'email') {
         if (!email) {
-            toast({
-                title: "Email required",
-                description: "Please enter your email address.",
-                variant: "destructive",
-            });
+            toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
             return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            toast({
-                title: "Invalid Email",
-                description: "Please enter a valid email address.",
-                variant: "destructive"
-            });
+            toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
             return;
         }
-        // A real app might check if the user exists first.
+
+        localStorage.setItem('lastLoginEmail', email);
+        const storedLockout = localStorage.getItem(getLockoutKey(email));
+        if (storedLockout) {
+          const { until, message } = JSON.parse(storedLockout);
+          if (Date.now() < until) {
+            setLockoutInfo({ until, message });
+            return;
+          }
+        }
         setLoginStep('password');
         return;
     }
     
-    // Login Step
     if (!email || !password) {
-      toast({
-        title: "Email and password required",
-        description: "Please enter your email and password.",
-        variant: "destructive",
-      });
+      toast({ title: "Email and password required", description: "Please enter your email and password.", variant: "destructive" });
       return;
     }
 
@@ -152,14 +246,7 @@ export default function DreamPortalPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       authUser = userCredential.user;
       
-      // DIAGNOSTIC LOG: Check which Firebase project the app is connected to.
-      console.log(`[DIAGNOSTIC] Connected to Firebase project: ${db.app.options.projectId}`);
-
-      if (!authUser) {
-        throw new Error("Authentication failed, user not found.");
-      }
-
-      console.log('Successfully authenticated. Looking for profile with UID:', authUser.uid);
+      if (!authUser) throw new Error("Authentication failed, user not found.");
       
       const userDocRef = doc(db, "users", authUser.uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -174,22 +261,16 @@ export default function DreamPortalPage() {
                 title = 'Account Deletion Pending';
                 description = 'This account is scheduled for deletion and can no longer be accessed.';
             }
-            toast({
-                title,
-                description,
-                variant: "destructive",
-                duration: 9000,
-            });
+            toast({ title, description, variant: "destructive", duration: 9000 });
             auth.signOut();
             setIsLoggingIn(false);
             return;
         }
         
-        await addLogEntry(
-          'user_login',
-          `${userProfile.name} (${userProfile.email}) logged in.`,
-          { userId: userProfile.id, email: userProfile.email }
-        );
+        localStorage.removeItem(getAttemptsKey(userProfile.email));
+        localStorage.removeItem(getLockoutKey(userProfile.email));
+
+        await addLogEntry('user_login', `${userProfile.name} (${userProfile.email}) logged in.`, { userId: userProfile.id, email: userProfile.email });
         
         localStorage.setItem('loggedInUser', JSON.stringify(userProfile));
         
@@ -204,10 +285,7 @@ export default function DreamPortalPage() {
           }
         }
         
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${userProfile.name}. Redirecting...`,
-        });
+        toast({ title: "Login Successful", description: `Welcome back, ${userProfile.name}. Redirecting...` });
         
         if (userProfile.role === 'Admin' || userProfile.role === 'Editor') {
           router.push('/admin');
@@ -219,40 +297,18 @@ export default function DreamPortalPage() {
       }
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
-      const projectId = db.app.options.projectId;
-
-      if (error.message === "User authenticated but profile not found in database.") {
-        description = `Login successful, but your user profile was not found in the Firestore database.
-
-Please verify your configuration:
-
-1.  **Firestore Data:** A user document must exist in the \`users\` collection with the ID:
-    **${authUser?.uid}**
-
-2.  **Project Config:** Your app is configured to use the Firebase Project ID:
-    **${projectId || 'Not Found'}**
-
-Please ensure this Project ID matches the one you are viewing in the Firebase Console.`;
-      } else {
-        switch (error.code) {
-          case 'auth/invalid-credential':
-            description = "Invalid email or password. Please try again.";
-            break;
-          case 'auth/too-many-requests':
-            description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
-            break;
-          default:
-            description = "An unexpected error occurred. Please try again.";
-            break;
-        }
+      if (error.code === 'auth/invalid-credential') {
+        handleFailedLoginAttempt();
+        setIsLoggingIn(false);
+        return; 
+      } else if (error.code === 'auth/too-many-requests') {
+        description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+      } else if (error.message === "User authenticated but profile not found in database.") {
+        const projectId = db.app.options.projectId;
+        description = `Login successful, but your user profile was not found. Please verify your config. Project: ${projectId || 'Not Found'}. User UID: ${authUser?.uid}`;
       }
       
-      toast({
-        title: "Login Failed",
-        description: description,
-        variant: "destructive",
-        duration: 9000,
-      });
+      toast({ title: "Login Failed", description: description, variant: "destructive", duration: 9000 });
     } finally {
       setIsLoggingIn(false);
     }
@@ -265,6 +321,22 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
       </div>
     );
   }
+
+  const LockoutView = () => (
+    <Card className="bg-background/80 backdrop-blur-sm border-destructive/50 text-foreground">
+      <CardHeader className="items-center text-center">
+        <AlertTriangle className="h-12 w-12 text-destructive" />
+        <CardTitle className="text-2xl text-destructive">Login Locked</CardTitle>
+        <CardDescription>
+          {lockoutInfo?.message}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="text-center">
+        <p className="text-sm text-muted-foreground">Time remaining:</p>
+        <p className="text-4xl font-mono font-bold tracking-widest">{timeLeft}</p>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div
@@ -289,109 +361,111 @@ Please ensure this Project ID matches the one you are viewing in the Firebase Co
           </div>
         ) : (
           <div className="mx-auto w-full max-w-sm">
-            <AlertDialog>
-              <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
-                  <CardHeader className="items-center text-center">
-                      <CardTitle className="text-2xl">{loginStep === 'email' ? 'Login' : 'Enter Password'}</CardTitle>
-                      <CardDescription>
-                          {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
-                      </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSubmit} className="grid gap-4">
-                      {loginStep === 'email' ? (
-                        <div className="grid gap-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="m@example.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="bg-background/50 border-white/20 focus:bg-background/70"
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <>
+            {lockoutInfo ? <LockoutView /> : (
+              <AlertDialog>
+                <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
+                    <CardHeader className="items-center text-center">
+                        <CardTitle className="text-2xl">{loginStep === 'email' ? 'Login' : 'Enter Password'}</CardTitle>
+                        <CardDescription>
+                            {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleSubmit} className="grid gap-4">
+                        {loginStep === 'email' ? (
                           <div className="grid gap-2">
-                            <Label htmlFor="email-display">Email</Label>
-                            <div className="flex items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
-                              <span className="truncate">{email}</span>
-                              <Button variant="link" size="sm" type="button" className="h-auto p-0 text-primary" onClick={() => {
-                                setLoginStep('email');
-                                setPassword('');
-                              }}>
-                                Change
-                              </Button>
-                            </div>
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="m@example.com"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="bg-background/50 border-white/20 focus:bg-background/70"
+                              autoFocus
+                            />
                           </div>
-                          <div className="grid gap-2">
-                            <div className="flex items-center">
-                              <Label htmlFor="password">Password</Label>
-                              <Link
-                                href="/forgot-password"
-                                className="ml-auto inline-block text-sm underline"
-                              >
-                                Forgot your password?
-                              </Link>
+                        ) : (
+                          <>
+                            <div className="grid gap-2">
+                              <Label htmlFor="email-display">Email</Label>
+                              <div className="flex items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+                                <span className="truncate">{email}</span>
+                                <Button variant="link" size="sm" type="button" className="h-auto p-0 text-primary" onClick={() => {
+                                  setLoginStep('email');
+                                  setPassword('');
+                                }}>
+                                  Change
+                                </Button>
+                              </div>
                             </div>
-                            <div className="relative">
-                              <Input
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
-                                autoFocus
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                              >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
+                            <div className="grid gap-2">
+                              <div className="flex items-center">
+                                <Label htmlFor="password">Password</Label>
+                                <Link
+                                  href="/forgot-password"
+                                  className="ml-auto inline-block text-sm underline"
+                                >
+                                  Forgot your password?
+                                </Link>
+                              </div>
+                              <div className="relative">
+                                <Input
+                                  id="password"
+                                  type={showPassword ? "text" : "password"}
+                                  required
+                                  value={password}
+                                  onChange={(e) => setPassword(e.target.value)}
+                                  className="bg-background/50 border-white/20 focus:bg-background/70 pr-10"
+                                  autoFocus
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                                  aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
 
-                      <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                        {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {loginStep === 'email' ? 'Continue' : 'Login'}
-                      </Button>
-                      <Button variant="ghost" className="w-full" asChild>
-                          <Link href="/">
-                              <ArrowLeft className="mr-2 h-4 w-4" />
-                              Back to Home
-                          </Link>
-                      </Button>
-                    </form>
-                    <div className="mt-4 text-center text-sm">
-                        Don&apos;t have an account?{" "}
-                        <AlertDialogTrigger asChild>
-                            <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
-                        </AlertDialogTrigger>
-                    </div>
-                  </CardContent>
-              </Card>
+                        <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                          {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {loginStep === 'email' ? 'Continue' : 'Login'}
+                        </Button>
+                        <Button variant="ghost" className="w-full" asChild>
+                            <Link href="/">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Home
+                            </Link>
+                        </Button>
+                      </form>
+                      <div className="mt-4 text-center text-sm">
+                          Don&apos;t have an account?{" "}
+                          <AlertDialogTrigger asChild>
+                              <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
+                          </AlertDialogTrigger>
+                      </div>
+                    </CardContent>
+                </Card>
 
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                  <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
-                  </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                  <AlertDialogAction>OK</AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogAction>OK</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
       </div>
