@@ -298,7 +298,7 @@ export default function DreamPortalPage() {
   const handleSendLoginLink = async () => {
     setIsSendingLink(true);
     const actionCodeSettings = {
-        url: `${window.location.origin}/finish-login`,
+        url: `${window.location.origin}/finish-dream`,
         handleCodeInApp: true,
     };
     try {
