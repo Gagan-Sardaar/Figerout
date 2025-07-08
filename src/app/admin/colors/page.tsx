@@ -41,7 +41,7 @@ export default function AdminColorsPage() {
         const storedUser = localStorage.getItem('loggedInUser');
         if (storedUser) {
             const user = JSON.parse(storedUser);
-            if (user.role === 'Viewer') {
+            if (user.role !== 'Admin') {
                 router.replace('/admin');
                 return;
             }

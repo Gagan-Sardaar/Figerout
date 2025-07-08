@@ -199,20 +199,20 @@ export default function AdminLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/admin/colors")}
-                tooltip="Colors"
-              >
-                <Link href="/admin/colors">
-                  <Palette />
-                  <span className="group-data-[state=collapsed]:hidden">Colors</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             {userRole === 'Admin' && (
               <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/colors")}
+                    tooltip="Colors"
+                  >
+                    <Link href="/admin/colors">
+                      <Palette />
+                      <span className="group-data-[state=collapsed]:hidden">Colors</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
