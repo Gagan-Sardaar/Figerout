@@ -1,5 +1,4 @@
 
-'use server';
 /**
  * @fileOverview A service for managing user data in Firebase Firestore.
  */

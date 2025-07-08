@@ -1,5 +1,4 @@
 
-'use server';
 /**
  * @fileOverview A service for managing static page content using Firebase Firestore.
  */
