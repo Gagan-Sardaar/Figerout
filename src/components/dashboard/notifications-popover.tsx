@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Bell, Check, Info, AlertTriangle, XCircle, Mail } from 'lucide-react';
+import { Bell, Check, Info, AlertTriangle, XCircle, Mail, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -26,13 +26,18 @@ const notificationIcons = {
 export function NotificationsPopover({ user }: { user: User }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user?.id) {
+      setIsLoading(true);
       const unsubscribe = onNotificationsChange(user.id, (newNotifications) => {
         setNotifications(newNotifications);
+        setIsLoading(false);
       });
       return () => unsubscribe();
+    } else {
+        setIsLoading(false);
     }
   }, [user?.id]);
 
@@ -46,6 +51,51 @@ export function NotificationsPopover({ user }: { user: User }) {
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      );
+    }
+    if (notifications.length === 0) {
+      return (
+         <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+              <Mail className="h-10 w-10 mb-4" />
+              <p className="text-sm">You have no new notifications.</p>
+        </div>
+      );
+    }
+    return (
+        <div className="flex flex-col">
+            {notifications.map((notification) => (
+            <div
+                key={notification.id}
+                className={cn(
+                "flex items-start gap-4 p-4 transition-colors hover:bg-accent hover:text-accent-foreground",
+                !notification.read && 'bg-muted/50'
+                )}
+                onClick={() => handleNotificationClick(notification)}
+                role="button"
+            >
+                <div className="mt-1 shrink-0">{notificationIcons[notification.type]}</div>
+                <div className="flex-grow">
+                <p className="font-semibold text-sm">{notification.title}</p>
+                <p className="text-xs text-muted-foreground">{notification.message}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                    {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+                </p>
+                </div>
+                {!notification.read && (
+                <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></div>
+                )}
+            </div>
+            ))}
+        </div>
+    );
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -67,38 +117,7 @@ export function NotificationsPopover({ user }: { user: User }) {
           <h4 className="font-medium">Notifications</h4>
         </div>
         <ScrollArea className="h-96">
-          {notifications.length > 0 ? (
-            <div className="flex flex-col">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    "flex items-start gap-4 p-4 transition-colors hover:bg-accent hover:text-accent-foreground",
-                    !notification.read && 'bg-muted/50'
-                  )}
-                  onClick={() => handleNotificationClick(notification)}
-                  role="button"
-                >
-                  <div className="mt-1 shrink-0">{notificationIcons[notification.type]}</div>
-                  <div className="flex-grow">
-                    <p className="font-semibold text-sm">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
-                    </p>
-                  </div>
-                  {!notification.read && (
-                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-              <Mail className="h-10 w-10 mb-4" />
-              <p className="text-sm">You have no new notifications.</p>
-            </div>
-          )}
+            {renderContent()}
         </ScrollArea>
       </PopoverContent>
     </Popover>
