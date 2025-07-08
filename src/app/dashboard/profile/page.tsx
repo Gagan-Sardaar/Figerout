@@ -35,13 +35,15 @@ export default function ProfilePage() {
     defaultValues: { name: "", phoneNumber: "" },
   });
 
+  const { reset } = form;
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         const userProfile = await getUser(firebaseUser.uid);
         if (userProfile) {
           setUser(userProfile);
-          form.reset({
+          reset({
             name: userProfile.name,
             phoneNumber: userProfile.phoneNumber || "",
           });
@@ -54,16 +56,24 @@ export default function ProfilePage() {
             );
           }
         } else {
-          router.push("/login");
+          // This is an error state: user is authenticated but has no profile document.
+          // Don't redirect, as this is confusing. Log the error and inform the user.
+          console.error("Authenticated user has no profile in Firestore:", firebaseUser.uid);
+          toast({
+            title: "Profile Error",
+            description: "Could not load your profile data. Please contact support.",
+            variant: "destructive"
+          });
         }
       } else {
+        // User is not authenticated, redirect to login.
         router.push("/login");
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router, form]);
+  }, [router, reset, toast]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -123,6 +133,21 @@ export default function ProfilePage() {
       </Card>
     );
   }
+  
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Error Loading Profile</CardTitle>
+          <CardDescription>We were unable to retrieve your profile information.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Please try refreshing the page. If the problem persists, please contact support.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
 
   return (
     <Card>
