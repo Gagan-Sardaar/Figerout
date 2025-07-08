@@ -1,5 +1,5 @@
 
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc, limit, deleteField } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
 import { updateUser } from './user-service';
@@ -42,9 +42,6 @@ export async function createDeletionRequest(userId: string, userEmail: string, r
 }
 
 export async function getDeletionRequests(): Promise<SupportTicket[]> {
-    // The query was changed to remove the 'orderBy' clause.
-    // This avoids the need for a composite index in Firestore, which can be a common point of failure if not created.
-    // Sorting is now handled on the client-side after fetching the data.
     const q = query(supportCollectionRef, where("type", "==", "account_deletion"));
     const querySnapshot = await getDocs(q);
     const tickets = querySnapshot.docs.map(doc => {
@@ -57,7 +54,6 @@ export async function getDeletionRequests(): Promise<SupportTicket[]> {
         } as SupportTicket;
     });
 
-    // Sort tickets by date descending
     return tickets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
@@ -74,8 +70,8 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
 
     await addLogEntry(
         'support_request_updated',
-        `Support ticket ${ticketId} was ${status}.`,
-        { ticketId, status }
+        `Support ticket ${ticketId} for user ${ticketData.userEmail} was ${status}.`,
+        { ticketId, status, userId }
     );
 
     if (status === 'approved') {
@@ -84,15 +80,17 @@ export async function updateRequestStatus(ticketId: string, status: 'approved' |
                 status: 'pending_deletion', 
                 deletionScheduledAt: serverTimestamp()
             });
+            
             await addLogEntry(
                 'user_marked_for_deletion',
                 `User account ${userId} marked for deletion following support request approval.`,
                 { userId, ticketId }
             );
+            
             await addNotification(userId, {
-                type: 'success',
-                title: 'Deletion Request Approved',
-                message: 'Your account deletion request has been approved. Your account and data will be permanently deleted in 30 days.'
+                type: 'warning',
+                title: 'Account Deletion Approved',
+                message: 'Your account deletion has been approved and your account is now disabled. It will be permanently deleted in 30 days.'
             });
         }
     } else if (status === 'rejected') {
@@ -120,10 +118,8 @@ export async function cancelDeletionRequest(userId: string): Promise<void> {
     const originalStatus = ticketDoc.data().status;
     const ticketId = ticketDoc.id;
 
-    // Always update ticket status
     await updateDoc(ticketDoc.ref, { status: 'cancelled' });
 
-    // Only revert user status if it was already approved
     if (originalStatus === 'approved') {
         await updateUser(userId, {
             status: 'active',
@@ -131,12 +127,12 @@ export async function cancelDeletionRequest(userId: string): Promise<void> {
         });
     }
     
-    // Log and notify regardless
     await addLogEntry(
         'deletion_request_cancelled',
         `User ${ticketDoc.data().userEmail} cancelled their account deletion request.`,
         { userId, ticketId, originalStatus }
     );
+
     await addNotification(userId, {
         type: 'info',
         title: 'Deletion Request Cancelled',
@@ -150,7 +146,7 @@ export async function getOpenDeletionRequestForUser(userId: string): Promise<Sup
         const q = query(
             supportCollectionRef, 
             where("userId", "==", userId), 
-            where("status", "==", "open"), 
+            where("status", "in", ["open", "approved"]),
             orderBy("createdAt", "desc"),
             limit(1)
         );
