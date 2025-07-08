@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -134,7 +135,7 @@ export default function SettingsPage() {
                 </div>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive" outline>
+                        <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/90 hover:text-destructive-foreground">
                             <Trash2 className="mr-2 h-4 w-4" /> Reset Colors
                         </Button>
                     </AlertDialogTrigger>
