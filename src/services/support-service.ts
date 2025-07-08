@@ -1,5 +1,6 @@
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy } from "firebase/firestore";
+import { addLogEntry } from './logging-service';
 
 export interface SupportTicket {
     id: string;
@@ -22,6 +23,12 @@ export async function createDeletionRequest(userId: string, userEmail: string, r
         createdAt: serverTimestamp(),
         type: 'account_deletion',
     });
+
+    await addLogEntry(
+        'support_request_created',
+        `User ${userEmail} requested account deletion.`,
+        { userId, userEmail, reason }
+    );
 }
 
 export async function getDeletionRequests(): Promise<SupportTicket[]> {
@@ -41,4 +48,10 @@ export async function getDeletionRequests(): Promise<SupportTicket[]> {
 export async function updateRequestStatus(ticketId: string, status: 'approved' | 'rejected'): Promise<void> {
     const ticketRef = doc(db, 'supportTickets', ticketId);
     await updateDoc(ticketRef, { status });
+
+    await addLogEntry(
+        'support_request_updated',
+        `Support ticket ${ticketId} was ${status}.`,
+        { ticketId, status }
+    );
 }

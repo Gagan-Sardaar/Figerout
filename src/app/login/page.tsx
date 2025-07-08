@@ -32,6 +32,7 @@ import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
+import { addLogEntry } from "@/services/logging-service";
 
 
 export default function LoginPage() {
@@ -114,6 +115,12 @@ export default function LoginPage() {
 
       if (userDocSnap.exists()) {
         const userProfile = { id: userDocSnap.id, ...userDocSnap.data() } as FirestoreUser;
+        
+        await addLogEntry(
+          'user_login',
+          `${userProfile.name} (${userProfile.email}) logged in.`,
+          { userId: userProfile.id, email: userProfile.email }
+        );
         
         localStorage.setItem('loggedInUser', JSON.stringify(userProfile));
         
