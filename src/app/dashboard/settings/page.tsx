@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Loader2, Trash2, ShieldQuestion, Mail, ShieldAlert } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { createDeletionRequest } from "@/services/support-service";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -70,23 +71,34 @@ export default function SettingsPage() {
   };
   
   const handleRequestDeletion = async () => {
+      if (!userId || !userEmail) {
+        toast({ title: "Error", description: "Could not identify user. Please try again.", variant: "destructive" });
+        return;
+      }
       if (!deletionReason) {
         toast({ title: "Reason Required", description: "Please provide a reason for deleting your account.", variant: "destructive" });
         return;
       }
       setIsSubmitting(true);
-      // Placeholder for actual submission logic
-      console.log("Account Deletion Requested:", { userId, reason: deletionReason });
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "Deletion Request Sent",
-        description: "Your account deletion request has been submitted for review.",
-      });
-
-      setIsSubmitting(false);
-      setIsDeleteRequestDialogOpen(false);
-      setDeletionReason("");
+      try {
+        await createDeletionRequest(userId, userEmail, deletionReason);
+        toast({
+            title: "Deletion Request Sent",
+            description: "Your account deletion request has been submitted for review. An admin will process it shortly.",
+        });
+        setIsDeleteRequestDialogOpen(false);
+        setDeletionReason("");
+      } catch (error) {
+        console.error("Failed to submit deletion request:", error);
+        toast({
+            title: "Request Failed",
+            description: "Could not submit your request. Please try again later.",
+            variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
   };
 
 
