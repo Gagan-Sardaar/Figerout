@@ -18,10 +18,9 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button asChild variant="outline" size="sm">
+      <Button asChild variant="outline" size="icon" className="h-9 w-9">
           <Link href="/" target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="mr-2 h-4 w-4" />
-            <span>Visit Website</span>
+            <ExternalLink className="h-4 w-4" />
           </Link>
       </Button>
       <Button variant="outline" size="sm" onClick={handleLogout}>
