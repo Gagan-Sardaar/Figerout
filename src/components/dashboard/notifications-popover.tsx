@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Check, Info, AlertTriangle, XCircle, Mail, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,7 @@ export function NotificationsPopover({ user }: { user: User }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (user?.id) {
@@ -45,9 +47,10 @@ export function NotificationsPopover({ user }: { user: User }) {
     if (!notification.read) {
       await markNotificationAsRead(user.id, notification.id);
     }
-    // If there's a link, you could navigate to it here.
-    // e.g., if (notification.link) router.push(notification.link);
     setIsOpen(false);
+    if (notification.link) {
+      router.push(notification.link);
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -80,7 +83,7 @@ export function NotificationsPopover({ user }: { user: User }) {
                 onClick={() => handleNotificationClick(notification)}
                 role="button"
             >
-                <div className="mt-1 shrink-0">{notificationIcons[notification.type]}</div>
+                <div className="mt-1 shrink-0">{notificationIcons[notification.type] || notificationIcons.info}</div>
                 <div className="flex-grow">
                 <p className="font-semibold text-sm">{notification.title}</p>
                 <p className="text-xs text-muted-foreground">{notification.message}</p>

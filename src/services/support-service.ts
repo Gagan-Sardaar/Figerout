@@ -2,7 +2,7 @@
 import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, serverTimestamp, Timestamp, orderBy, getDoc, limit, deleteField } from "firebase/firestore";
 import { addLogEntry } from './logging-service';
-import { getUser, updateUser } from './user-service';
+import { getUser, getUsers, updateUser } from './user-service';
 import { addNotification } from './notification-service';
 
 export interface SupportTicket {
@@ -34,6 +34,30 @@ export async function createDeletionRequest(userId: string, userEmail: string, r
         type: 'account_deletion',
     });
 
+    // Notify all admins about the new request
+    try {
+        const allUsers = await getUsers();
+        const admins = allUsers.filter(user => user.role === 'Admin');
+
+        const notificationPromises = admins.map(admin => {
+            return addNotification(admin.id, {
+                type: 'info',
+                title: 'New Deletion Request',
+                message: `User ${userEmail} requests account deletion.`,
+                link: '/admin/support'
+            });
+        });
+
+        await Promise.all(notificationPromises);
+    } catch (error) {
+        console.error("Failed to send deletion request notifications to admins:", error);
+        await addLogEntry(
+            'notification_failed',
+            `Failed to notify admins about deletion request from ${userEmail}.`,
+            { error: (error as Error).message }
+        );
+    }
+
     await addLogEntry(
         'support_request_created',
         `User ${userEmail} requested account deletion.`,
@@ -42,6 +66,7 @@ export async function createDeletionRequest(userId: string, userEmail: string, r
 }
 
 export async function getDeletionRequests(): Promise<SupportTicket[]> {
+    // Querying without ordering to avoid needing a composite index
     const q = query(supportCollectionRef, where("type", "==", "account_deletion"));
     const querySnapshot = await getDocs(q);
     const tickets = querySnapshot.docs.map(doc => {
@@ -54,6 +79,7 @@ export async function getDeletionRequests(): Promise<SupportTicket[]> {
         } as SupportTicket;
     });
 
+    // Sort client-side
     return tickets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
