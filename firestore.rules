@@ -1,57 +1,55 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if the requesting user is an Admin
+    // Helper function to check for admin role
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // Users can manage their own profile, Admins can manage any profile
+    // Users can only read/update their own profile. Admins can manage all.
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      allow update: if request.auth.uid == userId || isAdmin();
-      // Only an authenticated user can create their own document
-      allow create: if request.auth.uid == userId;
-      // No one can delete user documents directly through the client
-      allow delete: if false;
-
-      // Rules for the 'colors' subcollection
-      match /colors/{colorId} {
-        allow read, write: if request.auth.uid == userId || isAdmin();
-      }
-
-      // Rules for the 'notifications' subcollection
-      match /notifications/{notificationId} {
-        allow read: if request.auth.uid == userId;
-        // Admins can create notifications for users.
-        allow create: if isAdmin();
-        // Users can only update the 'read' status of their own notifications.
-        allow update: if request.auth.uid == userId && request.resource.data.keys().hasOnly(['read']);
-        // Users cannot delete notifications.
-        allow delete: if false;
-      }
+      allow read, update: if request.auth.uid == userId || isAdmin();
+      // Only admins can create or delete user documents
+      allow create, delete: if isAdmin();
     }
 
-    // Only Admins can read logs.
-    // In a production app, writing logs should be done via a secure backend.
-    // For this app, we'll restrict writing to Admins as well.
-    match /logs/{logId} {
-      allow read, write: if isAdmin();
+    // Users can only manage their own saved colors.
+    match /users/{userId}/colors/{colorId} {
+      allow read, list, create, update, delete: if request.auth.uid == userId;
     }
 
-    // Static pages can be read by anyone, but only managed by Admins.
+    // Users can only manage their own notifications.
+    match /users/{userId}/notifications/{notificationId} {
+        allow read, list, create, update, delete: if request.auth.uid == userId;
+    }
+
+    // Static pages can be read by anyone, but only written by admins.
     match /pages/{pageSlug} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Users can create support tickets. Admins can read/update them.
-    match /supportTickets/{ticketId} {
+    // Logs can only be created by authenticated users and read by admins.
+    match /logs/{logId} {
+      allow read, list: if isAdmin();
       allow create: if request.auth != null;
-      allow read, update: if isAdmin();
-      allow delete: if false; // Don't allow deletion of tickets
+    }
+
+    // Support tickets for account deletion etc.
+    match /supportTickets/{ticketId} {
+      // Admins can read and update any ticket.
+      // Users can read/update their own tickets to check/cancel status.
+      allow read, update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+
+      // Any authenticated user can create a ticket for themselves.
+      // This also validates that the data being sent is for the user making the request.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Only admins can delete tickets.
+      allow delete: if isAdmin();
     }
   }
 }
