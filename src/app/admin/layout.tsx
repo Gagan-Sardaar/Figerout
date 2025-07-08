@@ -167,15 +167,15 @@ export default function AdminLayout({
     }
   }, [router]);
 
-  const handleSwitchRole = (newRole: 'Admin' | 'Editor' | 'Viewer') => {
+  const handleSwitchRole = (newRole: 'Admin' | 'Editor' | 'Visitor') => {
     const storedOriginalUser = localStorage.getItem('originalLoggedInUser');
     if (!storedOriginalUser) return;
 
     const userToModify = JSON.parse(storedOriginalUser);
-    userToModify.role = newRole;
+    userToModify.role = newRole === 'Visitor' ? 'Viewer' : newRole;
     localStorage.setItem('loggedInUser', JSON.stringify(userToModify));
     
-    if (newRole === 'Viewer') {
+    if (newRole === 'Visitor') {
       router.push('/dashboard');
     } else {
       window.location.reload();
@@ -245,20 +245,22 @@ export default function AdminLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {(userRole === 'Admin' || userRole === 'Editor') && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/admin/colors")}
+                  tooltip="Colors"
+                >
+                  <Link href="/admin/colors">
+                    <Palette />
+                    <span className="group-data-[state=collapsed]:hidden">Colors</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             {userRole === 'Admin' && (
               <>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/colors")}
-                    tooltip="Colors"
-                  >
-                    <Link href="/admin/colors">
-                      <Palette />
-                      <span className="group-data-[state=collapsed]:hidden">Colors</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
@@ -328,7 +330,7 @@ export default function AdminLayout({
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="w-full justify-between group-data-[state=collapsed]:size-8 group-data-[state=collapsed]:p-0">
-                              <span className="group-data-[state=collapsed]:hidden">View: {userRole}</span>
+                              <span className="group-data-[state=collapsed]:hidden">View: {userRole === 'Viewer' ? 'Visitor' : userRole}</span>
                               <ChevronsUpDown className="h-4 w-4 shrink-0 group-data-[state=expanded]:opacity-50" />
                           </Button>
                       </DropdownMenuTrigger>
@@ -341,8 +343,8 @@ export default function AdminLayout({
                           <DropdownMenuItem onClick={() => handleSwitchRole('Editor')}>
                               Editor
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleSwitchRole('Viewer')}>
-                              Viewer
+                          <DropdownMenuItem onClick={() => handleSwitchRole('Visitor')}>
+                              Visitor
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
