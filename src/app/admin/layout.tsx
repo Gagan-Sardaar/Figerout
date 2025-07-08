@@ -17,6 +17,7 @@ import {
   Palette,
   FileClock,
   LifeBuoy,
+  User as UserIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/user-data";
+import { NotificationsPopover } from "@/components/dashboard/notifications-popover";
 
 function UserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -61,21 +63,55 @@ function UserNav({ user }: { user: User }) {
   return (
     <div className="flex items-center gap-2">
       <ThemeToggle />
-      <div className="text-right hidden sm:block">
-        <div className="font-semibold text-sm">{user.name}</div>
-        <div className="text-xs text-muted-foreground">{user.email}</div>
-      </div>
-      <Avatar className="h-8 w-8 hidden sm:flex">
-          <AvatarFallback>{user.initials}</AvatarFallback>
-      </Avatar>
-      <Button variant="outline" size="icon" className="sm:hidden" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
-          <span className="sr-only">Logout</span>
-      </Button>
-      <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Logout</span>
-      </Button>
+      <NotificationsPopover user={user} />
+      <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                      <AvatarFallback>{user.initials}</AvatarFallback>
+                  </Avatar>
+              </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <span>Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/profile">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/support">
+                    <LifeBuoy className="mr-2 h-4 w-4" />
+                    <span>Support</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+              </DropdownMenuItem>
+          </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
@@ -329,3 +365,5 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
+
+    
