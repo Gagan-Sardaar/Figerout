@@ -4,13 +4,16 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BadgeCheck, ShieldCheck, ChevronUp } from 'lucide-react';
+import { BadgeCheck, ShieldCheck, ChevronUp, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getColorName } from '@/lib/color-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CookieBanner } from '@/components/cookie-banner';
+import { useToast } from '@/hooks/use-toast';
+import type { User } from '@/lib/user-data';
 
 
 type Position = {
@@ -108,13 +111,31 @@ const WelcomeScreen = () => {
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('originalLoggedInUser');
+    setUser(null);
+    setIsLoggedIn(false);
+    toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out."
+    })
+  }
 
   useEffect(() => {
     setIsMounted(true);
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
-        setIsLoggedIn(true);
+        try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            setIsLoggedIn(true);
+        } catch(e) { console.error(e); }
     }
   }, []);
 
@@ -236,10 +257,16 @@ const WelcomeScreen = () => {
         <>
           <div className="absolute top-6 right-6 z-20">
             {isMounted && (
-                isLoggedIn ? (
-                    <Button asChild variant="outline" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
-                        <Link href="/dashboard">Dashboard</Link>
-                    </Button>
+                isLoggedIn && user ? (
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
+                            <Link href={user.role === 'Admin' || user.role === 'Editor' ? '/admin' : '/dashboard'}>Dashboard</Link>
+                        </Button>
+                         <Button onClick={handleLogout} variant="outline" size="icon" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
+                            <LogOut className="h-4 w-4" />
+                            <span className="sr-only">Logout</span>
+                        </Button>
+                    </div>
                 ) : (
                     <Button asChild variant="outline" className="bg-background/20 text-white backdrop-blur-sm border-white/20 hover:bg-white/20 hover:text-white">
                         <Link href="/login">Login</Link>
