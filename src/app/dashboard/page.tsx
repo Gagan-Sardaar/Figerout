@@ -149,6 +149,83 @@ export default function VisitorDashboardPage() {
     }
   }, [user]);
 
+  const resizeImage = (dataUrl: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+          const img = new window.Image();
+          img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_DIMENSION = 1280;
+              let { width, height } = img;
+              const aspectRatio = width / height;
+
+              if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                  if (aspectRatio > 1) { // Landscape
+                      width = MAX_DIMENSION;
+                      height = MAX_DIMENSION / aspectRatio;
+                  } else { // Portrait
+                      height = MAX_DIMENSION;
+                      width = MAX_DIMENSION * aspectRatio;
+                  }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                  return reject(new Error('Could not get canvas context'));
+              }
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.9)); // Use JPEG for compression
+          };
+          img.onerror = reject;
+          img.src = dataUrl;
+      });
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid File Type',
+          description: 'Please select an image file.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+            const dataUrl = reader.result as string;
+            const resizedDataUrl = await resizeImage(dataUrl);
+            sessionStorage.setItem('capturedImage', resizedDataUrl);
+            router.push('/picker');
+        } catch(error) {
+            console.error(error);
+            toast({
+                title: 'Error processing image',
+                description: 'The image could not be loaded or resized.',
+                variant: 'destructive',
+            });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+            title: 'Error reading file',
+            description: 'Something went wrong while trying to load your image.',
+            variant: 'destructive',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+
   const filteredColors = useMemo(() => {
     const now = new Date();
     return savedColors.filter(color => {
@@ -219,7 +296,7 @@ export default function VisitorDashboardPage() {
           <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col flex-grow">
               <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4">
               <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
-                  F
+                  {user?.initials || 'V'}
               </AvatarFallback>
               </Avatar>
               <p className="text-primary-foreground/80 text-sm md:text-base">Saved Colors for</p>
@@ -227,12 +304,23 @@ export default function VisitorDashboardPage() {
               <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
               <div className="space-y-2 pt-6">
-                <Button asChild className="w-full justify-start text-base px-3 py-2 h-auto bg-black text-primary-foreground/90 hover:bg-zinc-800">
-                  <Link href="/choose" className="flex items-center gap-3">
+                 <Button asChild className="w-full justify-start text-base px-3 py-2 h-auto bg-black text-primary-foreground/90 hover:bg-zinc-800">
+                  <Link href="/camera" className="flex items-center gap-3">
                     <Camera className="w-4 h-4" />
-                    <span>Find New Color</span>
+                    <span>Live Capture</span>
                   </Link>
                 </Button>
+                <Button onClick={handleUploadClick} variant="outline" className="w-full justify-start text-base px-3 py-2 h-auto bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90 hover:bg-primary-foreground/20">
+                    <ImageIcon className="w-4 h-4 mr-3" />
+                    <span>Upload Image</span>
+                </Button>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                />
               </div>
 
               <div className="mt-auto">
@@ -370,3 +458,5 @@ export default function VisitorDashboardPage() {
     </div>
   );
 }
+
+    
