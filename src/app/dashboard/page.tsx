@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -13,7 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FilePenLine, Palette, Trash2, ChevronsUpDown, Camera, Image as ImageIcon } from "lucide-react";
+import { FilePenLine, Palette, Trash2, ChevronsUpDown, Camera, Image as ImageIcon, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -302,6 +303,12 @@ export default function VisitorDashboardPage() {
               <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
               <div className="space-y-2 pt-6">
+                 <Button asChild variant="outline" className="w-full justify-start text-base px-3 py-2 h-auto bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90 hover:bg-primary-foreground/20">
+                    <Link href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Visit Website</span>
+                    </Link>
+                 </Button>
                  <Button asChild className="w-full justify-start text-base px-3 py-2 h-auto bg-black text-primary-foreground/90 hover:bg-zinc-800">
                   <Link href="/camera" className="flex items-center gap-3">
                     <Camera className="w-4 h-4" />
@@ -456,5 +463,3 @@ export default function VisitorDashboardPage() {
     </div>
   );
 }
-
-    
