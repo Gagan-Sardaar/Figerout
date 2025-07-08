@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
   useEffect(() => {
@@ -25,6 +26,15 @@ export default function SettingsPage() {
       if (user) {
         setUserEmail(user.email);
         setUserId(user.uid);
+
+        const storedUser = localStorage.getItem('loggedInUser');
+        if (storedUser) {
+            try {
+                setUserRole(JSON.parse(storedUser).role);
+            } catch (e) {
+                console.error("Failed to parse user role from local storage", e);
+            }
+        }
       } else {
         router.push("/login");
       }
@@ -91,7 +101,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!userEmail) {
+  if (!userEmail || !userRole) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin" />
@@ -155,36 +165,38 @@ export default function SettingsPage() {
                 </AlertDialog>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-destructive/20 p-4">
-                <div className="space-y-0.5 mb-4 sm:mb-0">
-                    <p className="text-sm font-medium">Deactivate Account</p>
-                    <p className="text-xs text-muted-foreground">
-                        Temporarily deactivate your account. You will be logged out.
-                    </p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                      <XCircle className="mr-2 h-4 w-4" /> Deactivate Account
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure you want to deactivate?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        You will be logged out and will not be able to log back in until your account is reactivated by support. Your data will not be deleted.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeactivateAccount} disabled={isDeactivating} className="bg-destructive hover:bg-destructive/90">
-                        {isDeactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Deactivate
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            </div>
+            {userRole !== 'Admin' && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-destructive/20 p-4">
+                  <div className="space-y-0.5 mb-4 sm:mb-0">
+                      <p className="text-sm font-medium">Deactivate Account</p>
+                      <p className="text-xs text-muted-foreground">
+                          Temporarily deactivate your account. You will be logged out.
+                      </p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">
+                        <XCircle className="mr-2 h-4 w-4" /> Deactivate Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to deactivate?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          You will be logged out and will not be able to log back in until your account is reactivated by support. Your data will not be deleted.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeactivateAccount} disabled={isDeactivating} className="bg-destructive hover:bg-destructive/90">
+                          {isDeactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Deactivate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+              </div>
+            )}
         </CardContent>
       </Card>
     </div>
