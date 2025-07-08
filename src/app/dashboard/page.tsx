@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -294,12 +293,11 @@ export default function VisitorDashboardPage() {
         
         <div className="md:w-1/3 lg:w-1/4 flex-shrink-0 flex flex-col">
           <Card className="bg-primary text-primary-foreground p-4 md:p-6 rounded-2xl flex flex-col flex-grow">
-              <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4">
+              <Avatar className="h-12 w-12 md:h-16 md:w-16 mb-4 hidden md:flex">
               <AvatarFallback className="text-2xl md:text-3xl font-bold bg-primary-foreground/20 text-primary-foreground">
                   {user?.initials || 'V'}
               </AvatarFallback>
               </Avatar>
-              <p className="text-primary-foreground/80 text-sm md:text-base">Saved Colors for</p>
               <h1 className="text-xl md:text-3xl font-bold truncate">{userName}</h1>
               <p className="text-xs md:text-sm text-primary-foreground/60 mt-1 truncate">{user?.email}</p>
 
