@@ -99,6 +99,9 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       authUser = userCredential.user;
       
+      // DIAGNOSTIC LOG: Check which Firebase project the app is connected to.
+      console.log(`[DIAGNOSTIC] Connected to Firebase project: ${db.app.options.projectId}`);
+
       if (!authUser) {
         throw new Error("Authentication failed, user not found.");
       }
