@@ -47,7 +47,11 @@ export default function DreamPortalPage() {
   const [isSendingSignupLink, setIsSendingSignupLink] = useState(false);
   const [unauthorizedDomainError, setUnauthorizedDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [currentOrigin, setCurrentOrigin] = useState('');
 
+  useEffect(() => {
+      setCurrentOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     if (localStorage.getItem("loggedInUser")) {
@@ -363,7 +367,7 @@ export default function DreamPortalPage() {
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
       toast({
         title: "Setup Link Sent!",
-        description: `A link to create your account has been sent to ${email}. Please check your inbox and spam folder.`,
+        description: `A link to create your account has been sent to ${email}. Check your inbox and spam folder.`,
       });
       setLoginStep('email');
     } catch (error: any) {
@@ -375,6 +379,8 @@ export default function DreamPortalPage() {
           setLockoutInfo({ until: 0, message: "This app's domain is not authorized in your Firebase project." });
           setLoginStep('locked');
           return;
+      } else if (error.code === 'auth/quota-exceeded') {
+        description = "The daily quota for sending email links has been exceeded. Please try again tomorrow.";
       }
       toast({ title: "Error", description: description, variant: "destructive"});
     } finally {
@@ -517,9 +523,9 @@ export default function DreamPortalPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pb-4">
-                      <form onSubmit={handleSubmit} className="grid gap-2">
+                      <form onSubmit={handleSubmit} className="grid gap-4">
                         {loginStep === 'password' ? (
-                          <>
+                          <div className="space-y-4">
                             <div className="grid gap-1">
                               <Label htmlFor="email-display">Email</Label>
                               <div className="flex items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
@@ -562,7 +568,7 @@ export default function DreamPortalPage() {
                                 </button>
                               </div>
                             </div>
-                             <Button type="submit" className="w-full mt-2" disabled={isLoggingIn}>
+                             <Button type="submit" className="w-full" disabled={isLoggingIn}>
                               {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                               Login
                             </Button>
@@ -580,7 +586,7 @@ export default function DreamPortalPage() {
                               {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
                               Login with email link
                             </Button>
-                          </>
+                          </div>
                         ) : (
                           <div className="grid gap-1">
                             <Label htmlFor="email">Email</Label>
@@ -594,11 +600,6 @@ export default function DreamPortalPage() {
                               className="bg-background/50 border-white/20 focus:bg-background/70"
                               autoFocus
                             />
-                             {loginStep === 'signup' && (
-                                <p className="text-xs text-muted-foreground px-1 pt-1">
-                                  If you don&apos;t receive an email, ensure your app&apos;s domain is added to your Firebase project&apos;s &quot;Authorized domains&quot;.
-                                </p>
-                            )}
                           </div>
                         )}
                         
@@ -609,10 +610,29 @@ export default function DreamPortalPage() {
                            </Button>
                         )}
                         {loginStep === 'signup' && (
-                          <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
-                            {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Send Setup Link
-                          </Button>
+                          <div className="space-y-4 pt-2">
+                              <Alert variant="default" className="text-left bg-muted/50 border-primary/20">
+                                  <AlertTriangle className="h-4 w-4 text-primary" />
+                                  <AlertTitle className="text-primary font-semibold">Action Required for Setup</AlertTitle>
+                                  <AlertDescription className="text-xs text-muted-foreground leading-relaxed">
+                                      For security, the setup email can only be sent if your app's current domain is authorized in Firebase.
+                                      <div className="mt-2">Go to: <br/><b className="text-foreground">Authentication &rarr; Settings &rarr; Authorized domains</b></div>
+                                      <div className="mt-2">Add this domain:</div>
+                                      <div className="relative">
+                                          <code className="mt-1 block bg-muted p-2 rounded-md text-sm font-mono break-all pr-10">{currentOrigin || 'Loading domain...'}</code>
+                                          {currentOrigin && (
+                                              <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(currentOrigin); toast({title: "Domain copied!"}) }}>
+                                                  <Copy className="h-4 w-4" />
+                                              </Button>
+                                          )}
+                                      </div>
+                                  </AlertDescription>
+                              </Alert>
+                              <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
+                                  {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Send Setup Link
+                              </Button>
+                          </div>
                         )}
                       </form>
                     </CardContent>
@@ -630,7 +650,7 @@ export default function DreamPortalPage() {
                               <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('signup')}>Sign up</Button>
                           </div>
                       )}
-                      {loginStep === 'signup' && (
+                      {(loginStep === 'password' || loginStep === 'signup') && (
                             <div className="text-center text-sm text-muted-foreground">
                               Already have an account?{" "}
                               <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('email')}>Login</Button>
