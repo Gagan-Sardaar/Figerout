@@ -20,6 +20,8 @@ It's a best practice to use a separate Firebase project for production.
     - **Authentication**: Enable `Email/Password` and `Email link (passwordless sign-in)`.
     - **Firestore**: Create a new database in **Production mode**.
 
+> **Why a separate project?** Using a separate project for production is a critical best practice. It protects your live user data from accidental changes during development, ensures your live app remains stable while you test new features, and allows you to enforce stricter security rules for your production environment.
+
 ### 2. Configure Environment Variables
 
 Create a `.env.local` file in your project root for your production keys. This file should not be committed to source control.
