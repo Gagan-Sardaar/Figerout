@@ -570,10 +570,15 @@ export default function DreamPortalPage() {
                            </Button>
                         )}
                         {loginStep === 'signup' && (
-                          <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
-                            {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Send Setup Link
-                          </Button>
+                          <>
+                            <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
+                              {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              Send Setup Link
+                            </Button>
+                            <p className="text-xs text-center text-muted-foreground px-2 pt-1">
+                              If you don&apos;t receive an email, please ensure your app&apos;s domain is added to your Firebase project&apos;s &quot;Authorized domains&quot;.
+                            </p>
+                          </>
                         )}
                         {loginStep === 'password' && (
                           <>
@@ -657,5 +662,3 @@ export default function DreamPortalPage() {
     </div>
   )
 }
-
-    
