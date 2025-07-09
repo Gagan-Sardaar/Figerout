@@ -9,6 +9,7 @@ export interface FailedLoginAttempt {
   timestamp: Timestamp;
   ipAddress: string; // Placeholder
   location: string; // Placeholder
+  lockoutPeriod?: string;
 }
 
 export interface LockoutState {
@@ -35,31 +36,41 @@ export async function processFailedLogin(email: string): Promise<LockoutState> {
     const lowercasedEmail = email.toLowerCase();
     const docRef = doc(lockoutsCollectionRef, lowercasedEmail);
 
-    // Log the attempt first
-    await addDoc(failedLoginsCollectionRef, {
-        email: lowercasedEmail,
-        timestamp: serverTimestamp(),
-        ipAddress: "127.0.0.1 (simulated)",
-        location: "Local (simulated)",
-    });
-
     const currentState = await getLockoutState(lowercasedEmail);
     const now = new Date();
     
     let attempts = (currentState?.attempts || 0) + 1;
     let lockoutUntil: Date | null = null;
     let lockoutMessage = "";
+    let lockoutPeriod = "";
 
     if (attempts >= 9) {
         lockoutUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
         lockoutMessage = `Account locked for 30 days.`;
+        lockoutPeriod = "30 days";
     } else if (attempts >= 6) {
         lockoutUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
         lockoutMessage = `Account locked for 24 hours.`;
+        lockoutPeriod = "24 hours";
     } else if (attempts >= 3) {
         lockoutUntil = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes
         lockoutMessage = `Login locked for 15 minutes.`;
+        lockoutPeriod = "15 minutes";
     }
+
+    // Log the attempt now that we have the lockout period
+    const logData: any = {
+        email: lowercasedEmail,
+        timestamp: serverTimestamp(),
+        ipAddress: "127.0.0.1 (simulated)",
+        location: "Local (simulated)",
+    };
+
+    if (lockoutPeriod) {
+        logData.lockoutPeriod = lockoutPeriod;
+    }
+    
+    await addDoc(failedLoginsCollectionRef, logData);
 
     const newState: LockoutState = {
         email: lowercasedEmail,

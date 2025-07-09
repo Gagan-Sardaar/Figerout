@@ -200,6 +200,7 @@ export default function AdminSecurityPage() {
                                     <TableHead>Email</TableHead>
                                     <TableHead>IP Address</TableHead>
                                     <TableHead>Location</TableHead>
+                                    <TableHead>Locking Period</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -220,6 +221,13 @@ export default function AdminSecurityPage() {
                                     <TableCell className="font-medium">{log.email}</TableCell>
                                     <TableCell className="font-mono text-xs">{log.ipAddress}</TableCell>
                                     <TableCell>{log.location}</TableCell>
+                                    <TableCell>
+                                        {log.lockoutPeriod ? (
+                                            <Badge variant="destructive">{log.lockoutPeriod}</Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">—</span>
+                                        )}
+                                    </TableCell>
                                 </TableRow>
                                 ))}
                             </TableBody>
