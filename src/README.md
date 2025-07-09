@@ -52,7 +52,9 @@ firebase deploy --only firestore:rules
 
 ### 5. Configure for Firebase App Hosting
 
-Your project is already configured for Firebase App Hosting, the recommended way to deploy Next.js apps to Firebase.
+Your project is already configured for **Firebase App Hosting**, the recommended way to deploy Next.js apps to Firebase.
+
+> **Important:** In the Firebase Console, you will see two similar services: "Hosting" and "App Hosting". Make sure you are working in the **App Hosting** section. App Hosting is designed to run full-stack Next.js applications like this one, while the classic Hosting service is primarily for static content.
 
 Open `apphosting.yaml` and replace `your-prod-project-id` with your actual production Firebase Project ID. This will automatically connect your app to Firebase Hosting.
 
