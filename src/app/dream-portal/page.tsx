@@ -289,6 +289,8 @@ export default function DreamPortalPage() {
       } else if (error.message === "User authenticated but profile not found in database.") {
         const projectId = db.app.options.projectId;
         description = `Login successful, but your user profile was not found. Please verify your config. Project: ${projectId || 'Not Found'}. User UID: ${authUser?.uid}`;
+      } else if (error.code === 'auth/quota-exceeded') {
+        description = "The daily quota for sending email links has been exceeded. Please try again tomorrow, or log in with your password.";
       }
       
       toast({ title: "Login Failed", description: description, variant: "destructive", duration: 9000 });
@@ -322,10 +324,10 @@ export default function DreamPortalPage() {
             setUnauthorizedDomainError(window.location.origin);
             setIsSendingLink(false);
             return;
-        } else if (error.code === 'auth/quota-exceeded') {
-            description = "The daily quota for sending email links has been exceeded. Please try again tomorrow, or log in with your password.";
         } else if (error.code === 'auth/operation-not-allowed') {
             description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
+        } else if (error.code === 'auth/quota-exceeded') {
+            description = "The daily quota for sending email links has been exceeded. Please try again tomorrow, or log in with your password.";
         }
         
         toast({ title: 'Error Sending Link', description, variant: 'destructive', duration: 9000 });
@@ -374,7 +376,7 @@ export default function DreamPortalPage() {
                     <p className="mb-2">To use email link sign-in, you must add this domain to your Firebase project's authorized domains list:</p>
                     <code className="mt-2 mb-2 block bg-muted p-2 rounded-md text-sm font-mono break-all">{unauthorizedDomainError}</code>
                     <p className="mb-4 text-xs">Go to Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains to add it.</p>
-                    <Button onClick={handleSendLoginLink} className="w-full" disabled={isSendingLink}>
+                    <Button onClick={() => { setUnauthorizedDomainError(null); handleSendLoginLink(); }} className="w-full" disabled={isSendingLink}>
                         {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         I've added the domain, try again
                     </Button>
@@ -433,14 +435,14 @@ export default function DreamPortalPage() {
             {loginStep === 'locked' ? <LockoutView /> : (
               <AlertDialog>
                 <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
-                    <CardHeader className="items-center text-center">
+                    <CardHeader className="items-center text-center pb-4">
                         <CardTitle className="text-2xl">{loginStep === 'email' ? 'Login' : 'Enter Password'}</CardTitle>
                         <CardDescription>
                             {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <form onSubmit={handleSubmit} className="grid gap-4">
+                      <form onSubmit={handleSubmit} className="grid gap-3">
                         {loginStep === 'email' ? (
                           <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
@@ -509,7 +511,7 @@ export default function DreamPortalPage() {
                         
                         {loginStep === 'password' && (
                           <>
-                            <div className="relative my-2">
+                            <div className="relative my-1">
                               <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/20" />
                               </div>
@@ -533,7 +535,7 @@ export default function DreamPortalPage() {
                             </Link>
                         </Button>
                       </form>
-                      <div className="mt-4 text-center text-sm">
+                      <div className="mt-2 text-center text-sm">
                           Don&apos;t have an account?{" "}
                           <AlertDialogTrigger asChild>
                               <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
