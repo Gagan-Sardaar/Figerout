@@ -26,6 +26,7 @@ import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
 import { LockoutState, getLockoutState, processFailedLogin, clearSuccessfulLogin } from "@/services/security-service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export default function DreamPortalPage() {
   const [email, setEmail] = useState('');
