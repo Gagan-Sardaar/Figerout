@@ -379,6 +379,8 @@ export default function DreamPortalPage() {
           setLockoutInfo({ until: 0, message: "This app's domain is not authorized in your Firebase project." });
           setLoginStep('locked');
           return;
+      } else if (error.code === 'auth/operation-not-allowed') {
+        description = "The Email/Password sign-in provider must be enabled in your Firebase project to send setup links.";
       } else if (error.code === 'auth/quota-exceeded') {
         description = "The daily quota for sending email links has been exceeded. Please try again tomorrow.";
       }
@@ -611,23 +613,27 @@ export default function DreamPortalPage() {
                         )}
                         {loginStep === 'signup' && (
                           <div className="space-y-4 pt-2">
-                              <Alert variant="default" className="text-left bg-muted/50 border-primary/20">
-                                  <AlertTriangle className="h-4 w-4 text-primary" />
-                                  <AlertTitle className="text-primary font-semibold">Action Required for Setup</AlertTitle>
-                                  <AlertDescription className="text-xs text-muted-foreground leading-relaxed">
-                                      For security, the setup email can only be sent if your app's current domain is authorized in Firebase.
-                                      <div className="mt-2">Go to: <br/><b className="text-foreground">Authentication &rarr; Settings &rarr; Authorized domains</b></div>
-                                      <div className="mt-2">Add this domain:</div>
-                                      <div className="relative">
-                                          <code className="mt-1 block bg-muted p-2 rounded-md text-sm font-mono break-all pr-10">{currentOrigin || 'Loading domain...'}</code>
+                              <Card className="text-left bg-muted/50 border-primary/20">
+                                  <CardHeader className="p-4">
+                                      <CardTitle className="text-base text-primary font-semibold">Step 1: Authorize Your Domain</CardTitle>
+                                      <CardDescription className="text-xs text-muted-foreground leading-relaxed">
+                                          For security, you must add this app's domain to Firebase before a setup link can be sent.
+                                      </CardDescription>
+                                  </CardHeader>
+                                  <CardContent className="p-4 pt-0 text-xs">
+                                      <p className="font-medium">In your Firebase Console, go to:</p>
+                                      <p className="text-muted-foreground"><b className="text-foreground">Authentication &rarr; Settings &rarr; Authorized domains</b></p>
+                                      <p className="font-medium mt-2">Click "Add domain" and paste this:</p>
+                                       <div className="relative mt-1">
+                                          <code className="bg-muted p-2 rounded-md text-sm font-mono break-all pr-10 block">{currentOrigin || 'Loading domain...'}</code>
                                           {currentOrigin && (
                                               <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(currentOrigin); toast({title: "Domain copied!"}) }}>
                                                   <Copy className="h-4 w-4" />
                                               </Button>
                                           )}
                                       </div>
-                                  </AlertDescription>
-                              </Alert>
+                                  </CardContent>
+                              </Card>
                               <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
                                   {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                   Send Setup Link
@@ -693,3 +699,5 @@ export default function DreamPortalPage() {
     </div>
   )
 }
+
+    
