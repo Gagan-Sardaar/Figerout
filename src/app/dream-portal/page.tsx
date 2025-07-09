@@ -504,6 +504,26 @@ export default function DreamPortalPage() {
                           {(isLoggingIn || isCheckingEmail) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           {loginStep === 'email' ? 'Continue' : 'Login'}
                         </Button>
+                        
+                        {loginStep === 'password' && (
+                          <>
+                            <div className="relative my-2">
+                              <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-white/20" />
+                              </div>
+                              <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background/80 px-2 text-muted-foreground backdrop-blur-sm">
+                                  Or
+                                </span>
+                              </div>
+                            </div>
+                            <Button variant="outline" type="button" onClick={handleSendLoginLink} disabled={isSendingLink} className="bg-background/50 border-white/20 hover:bg-background/70">
+                              {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                              Login with email link
+                            </Button>
+                          </>
+                        )}
+                        
                         <Button variant="ghost" className="w-full" asChild>
                             <Link href="/">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
