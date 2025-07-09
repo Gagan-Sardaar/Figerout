@@ -34,6 +34,7 @@ import { doc, getDoc, Timestamp } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
 import { LockoutState, getLockoutState, processFailedLogin, clearSuccessfulLogin } from "@/services/security-service";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function DreamPortalPage() {
   const [email, setEmail] = useState('');
@@ -51,6 +52,7 @@ export default function DreamPortalPage() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [lockoutExpired, setLockoutExpired] = useState(false);
   const [isSendingLink, setIsSendingLink] = useState(false);
+  const [unauthorizedDomainError, setUnauthorizedDomainError] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -297,6 +299,7 @@ export default function DreamPortalPage() {
 
   const handleSendLoginLink = async () => {
     setIsSendingLink(true);
+    setUnauthorizedDomainError(null);
     const actionCodeSettings = {
         url: `${window.location.origin}/finish-dream`,
         handleCodeInApp: true,
@@ -313,11 +316,15 @@ export default function DreamPortalPage() {
         setLoginStep('email');
     } catch (error: any) {
         console.error(error);
+        if (error.code === 'auth/unauthorized-continue-uri') {
+            setUnauthorizedDomainError(window.location.origin);
+            setIsSendingLink(false);
+            return;
+        }
+
         let description = 'Could not send login link. Please try again.';
         if (error.code === 'auth/operation-not-allowed') {
             description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
-        } else if (error.code === 'auth/unauthorized-continue-uri') {
-            description = `The current domain (${window.location.origin}) is not authorized for this action. Please add it to the 'Authorized domains' list in your Firebase Authentication settings.`;
         }
         toast({ title: 'Error Sending Link', description, variant: 'destructive', duration: 9000 });
     } finally {
@@ -346,13 +353,32 @@ export default function DreamPortalPage() {
     <Card className="bg-background/80 backdrop-blur-sm border-destructive/50 text-foreground">
       <CardHeader className="items-center text-center">
         <AlertTriangle className="h-12 w-12 text-destructive" />
-        <CardTitle className="text-2xl text-destructive">Login Locked</CardTitle>
+        <CardTitle className="text-2xl text-destructive">
+            {unauthorizedDomainError ? 'Domain Not Authorized' : 'Login Locked'}
+        </CardTitle>
         <CardDescription>
-          {lockoutInfo?.message}
+          {unauthorizedDomainError ?
+            "This app's domain must be authorized in Firebase." :
+            lockoutInfo?.message
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        {lockoutExpired ? (
+        {unauthorizedDomainError ? (
+             <Alert variant="destructive" className="text-left">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Action Required</AlertTitle>
+                <AlertDescription>
+                    <p className="mb-2">To use email link sign-in, you must add this domain to your Firebase project's authorized domains list:</p>
+                    <code className="mt-2 mb-2 block bg-muted p-2 rounded-md text-sm font-mono break-all">{unauthorizedDomainError}</code>
+                    <p className="mb-4 text-xs">Go to Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains to add it.</p>
+                    <Button onClick={handleSendLoginLink} className="w-full" disabled={isSendingLink}>
+                        {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        I've added the domain, try again
+                    </Button>
+                </AlertDescription>
+            </Alert>
+        ) : lockoutExpired ? (
             <div className="space-y-4">
                 <p className="font-semibold text-lg">You can now try again</p>
                 <div className="flex flex-col gap-2">
