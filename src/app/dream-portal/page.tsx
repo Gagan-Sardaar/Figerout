@@ -312,9 +312,8 @@ export default function DreamPortalPage() {
         console.error(error);
         let description = 'Could not send login link. Please try again.';
 
-        if (error.code === 'auth/unauthorized-continue-uri') {
+        if (error.code === 'auth/unauthorized-continue-uri' || (error.message && error.message.includes('unauthorized-continue-uri'))) {
             setUnauthorizedDomainError(window.location.origin);
-            setIsSendingLink(false);
             setLockoutInfo({ until: 0, message: "The domain for the login link is not authorized in your Firebase project." });
             setLoginStep('locked');
             return;
@@ -369,9 +368,8 @@ export default function DreamPortalPage() {
       console.error("Signup error:", error);
       let description = "Could not send setup link. Please try again.";
 
-      if (error.code === 'auth/unauthorized-continue-uri') {
+      if (error.code === 'auth/unauthorized-continue-uri' || (error.message && error.message.includes('unauthorized-continue-uri'))) {
           setUnauthorizedDomainError(window.location.origin);
-          setIsSendingSignupLink(false);
           setLockoutInfo({ until: 0, message: "The domain for the sign-up link is not authorized in your Firebase project." });
           setLoginStep('locked');
           return;
@@ -659,3 +657,5 @@ export default function DreamPortalPage() {
     </div>
   )
 }
+
+    
