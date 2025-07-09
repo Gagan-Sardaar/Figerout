@@ -39,10 +39,10 @@ export async function processFailedLogin(email: string): Promise<LockoutState> {
     const currentState = await getLockoutState(lowercasedEmail);
     const now = new Date();
     
-    let attempts = (currentState?.attempts || 0) + 1;
+    const attempts = (currentState?.attempts || 0) + 1;
     let lockoutUntil: Date | null = null;
     let lockoutMessage = "";
-    let lockoutPeriod = "";
+    let lockoutPeriod: string | undefined = undefined;
 
     if (attempts >= 9) {
         lockoutUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
@@ -58,19 +58,14 @@ export async function processFailedLogin(email: string): Promise<LockoutState> {
         lockoutPeriod = "15 minutes";
     }
 
-    // Log the attempt now that we have the lockout period
-    const logData: any = {
+    // Log the attempt with the lockout period. Firestore omits 'undefined' fields.
+    await addDoc(failedLoginsCollectionRef, {
         email: lowercasedEmail,
         timestamp: serverTimestamp(),
         ipAddress: "127.0.0.1 (simulated)",
         location: "Local (simulated)",
-    };
-
-    if (lockoutPeriod) {
-        logData.lockoutPeriod = lockoutPeriod;
-    }
-    
-    await addDoc(failedLoginsCollectionRef, logData);
+        lockoutPeriod: lockoutPeriod,
+    });
 
     const newState: LockoutState = {
         email: lowercasedEmail,
