@@ -15,22 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
 import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
-import { signInWithEmailAndPassword, User as FirebaseUser, sendSignInLinkToEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, User as FirebaseUser, sendSignInLinkToEmail, fetchSignInMethodsForEmail, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc, Timestamp } from "firebase/firestore";
 import type { FirestoreUser } from "@/services/user-service";
 import { addLogEntry } from "@/services/logging-service";
@@ -47,12 +37,13 @@ export default function DreamPortalPage() {
   const [backgroundDetails, setBackgroundDetails] = useState<{ url: string; photographer: string; photographerUrl: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
-  const [loginStep, setLoginStep] = useState<'email' | 'password' | 'locked'>('email');
+  const [loginStep, setLoginStep] = useState<'email' | 'password' | 'locked' | 'signup'>('email');
   const [lockoutInfo, setLockoutInfo] = useState<{until: number, message: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [lockoutExpired, setLockoutExpired] = useState(false);
   const [isSendingLink, setIsSendingLink] = useState(false);
+  const [isSendingSignupLink, setIsSendingSignupLink] = useState(false);
   const [unauthorizedDomainError, setUnauthorizedDomainError] = useState<string | null>(null);
 
 
@@ -337,12 +328,55 @@ export default function DreamPortalPage() {
     }
   };
 
+  const handleSendSignupLink = async () => {
+    if (!email) {
+      toast({ title: "Email required", description: "Please enter your email address to sign up.", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
+        return;
+    }
+
+    setIsSendingSignupLink(true);
+    try {
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      if (methods.length > 0) {
+        toast({
+          title: "Email Already Registered",
+          description: "This email is already in use. Please try logging in instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const actionCodeSettings = {
+        url: `${window.location.origin}/create-account`,
+        handleCodeInApp: true,
+      };
+
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+      toast({
+        title: "Setup Link Sent!",
+        description: `A link to create your account has been sent to ${email}. Check your inbox.`,
+      });
+      setLoginStep('email');
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      toast({ title: "Error", description: "Could not send setup link. Please try again.", variant: "destructive"});
+    } finally {
+      setIsSendingSignupLink(false);
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (loginStep === 'email') {
       await handleEmailStep();
     } else if (loginStep === 'password') {
       await handlePasswordStep();
+    } else if (loginStep === 'signup') {
+      await handleSendSignupLink();
     }
   };
 
@@ -410,6 +444,20 @@ export default function DreamPortalPage() {
     </Card>
   );
 
+  const cardTitles = {
+    email: 'Login',
+    password: 'Enter Password',
+    signup: 'Create an Account',
+    locked: 'Login Locked',
+  };
+
+  const cardDescriptions = {
+    email: 'Enter your email to continue',
+    password: `Signing in as ${email}`,
+    signup: 'Enter your email to receive a setup link.',
+    locked: '',
+  };
+
   return (
     <div
       className="flex min-h-svh items-center justify-center p-4 bg-background transition-all duration-1000"
@@ -434,31 +482,16 @@ export default function DreamPortalPage() {
         ) : (
           <div className="mx-auto w-full max-w-sm">
             {loginStep === 'locked' ? <LockoutView /> : (
-              <AlertDialog>
                 <Card className="bg-background/80 backdrop-blur-sm border-white/10 text-foreground">
                     <CardHeader className="items-center text-center pb-4">
-                        <CardTitle className="text-2xl">{loginStep === 'email' ? 'Login' : 'Enter Password'}</CardTitle>
+                        <CardTitle className="text-2xl">{cardTitles[loginStep]}</CardTitle>
                         <CardDescription>
-                            {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
+                            {cardDescriptions[loginStep]}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pb-4">
                       <form onSubmit={handleSubmit} className="grid gap-4">
-                        {loginStep === 'email' ? (
-                          <div className="grid gap-1">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="m@example.com"
-                              required
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className="bg-background/50 border-white/20 focus:bg-background/70"
-                              autoFocus
-                            />
-                          </div>
-                        ) : (
+                        {loginStep === 'password' ? (
                           <>
                             <div className="grid gap-1">
                               <Label htmlFor="email-display">Email</Label>
@@ -503,15 +536,40 @@ export default function DreamPortalPage() {
                               </div>
                             </div>
                           </>
+                        ) : (
+                          <div className="grid gap-1">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="m@example.com"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="bg-background/50 border-white/20 focus:bg-background/70"
+                              autoFocus
+                            />
+                          </div>
                         )}
-
-                        <Button type="submit" className="w-full" disabled={isLoggingIn || isCheckingEmail}>
-                          {(isLoggingIn || isCheckingEmail) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {loginStep === 'email' ? 'Continue' : 'Login'}
-                        </Button>
                         
+                        {loginStep === 'email' && (
+                           <Button type="submit" className="w-full" disabled={isCheckingEmail}>
+                             {isCheckingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                             Continue
+                           </Button>
+                        )}
+                        {loginStep === 'signup' && (
+                          <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
+                            {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Setup Link
+                          </Button>
+                        )}
                         {loginStep === 'password' && (
                           <>
+                            <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                              {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              Login
+                            </Button>
                             <div className="relative my-0">
                               <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/20" />
@@ -531,33 +589,28 @@ export default function DreamPortalPage() {
                       </form>
                     </CardContent>
                     <CardFooter className="flex-col items-center gap-2 pt-4 border-t border-white/10">
-                        <Button variant="ghost" className="w-full text-sm" asChild>
-                            <Link href="/">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Home
-                            </Link>
-                        </Button>
-                        <div className="text-center text-sm">
-                          Don&apos;t have an account?{" "}
-                          <AlertDialogTrigger asChild>
-                              <Button variant="link" className="underline p-0 h-auto text-primary text-sm">Sign up</Button>
-                          </AlertDialogTrigger>
-                        </div>
+                        {loginStep !== 'password' && (
+                            <Button variant="ghost" className="w-full text-sm" asChild>
+                                <Link href="/">
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back to Home
+                                </Link>
+                            </Button>
+                        )}
+                        {loginStep === 'email' && (
+                            <div className="text-center text-sm">
+                                Don&apos;t have an account?{" "}
+                                <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('signup')}>Sign up</Button>
+                            </div>
+                        )}
+                        {loginStep === 'signup' && (
+                             <div className="text-center text-sm">
+                                Already have an account?{" "}
+                                <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('email')}>Login</Button>
+                            </div>
+                        )}
                     </CardFooter>
                 </Card>
-
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Registration Coming Soon!</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        We're currently in an invite-only phase. Public sign-ups will be available soon. Please check back later!
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogAction>OK</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             )}
           </div>
         )}

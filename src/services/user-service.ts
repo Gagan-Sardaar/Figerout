@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
   limit,
+  setDoc,
 } from "firebase/firestore";
 
 export interface FirestoreUser {
@@ -24,6 +25,34 @@ export interface FirestoreUser {
   phoneNumber?: string;
   deletionScheduledAt?: any; // To allow passing serverTimestamp()
 }
+
+/**
+ * Creates a new user document in Firestore.
+ * @param uid The Firebase Auth UID for the new user.
+ * @param data An object containing the user's email and name.
+ * @returns The newly created user profile.
+ */
+export async function createUser(uid: string, data: { email: string; name: string }): Promise<FirestoreUser> {
+    const userRef = doc(db, 'users', uid);
+    const initials = data.name
+        .split(' ')
+        .map(n => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+        
+    const newUser: Omit<FirestoreUser, 'id'> = {
+        name: data.name,
+        email: data.email.toLowerCase(),
+        initials,
+        role: 'Viewer',
+        status: 'active',
+    };
+
+    await setDoc(userRef, newUser);
+    return { id: uid, ...newUser };
+}
+
 
 /**
  * Fetches a single user from the 'users' collection in Firestore.
