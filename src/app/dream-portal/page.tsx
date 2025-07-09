@@ -315,6 +315,8 @@ export default function DreamPortalPage() {
         if (error.code === 'auth/unauthorized-continue-uri') {
             setUnauthorizedDomainError(window.location.origin);
             setIsSendingLink(false);
+            setLockoutInfo({ until: 0, message: "The domain for the login link is not authorized in your Firebase project." });
+            setLoginStep('locked');
             return;
         } else if (error.code === 'auth/operation-not-allowed') {
             description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
@@ -339,6 +341,7 @@ export default function DreamPortalPage() {
     }
 
     setIsSendingSignupLink(true);
+    setUnauthorizedDomainError(null);
     try {
       const methods = await fetchSignInMethodsForEmail(auth, email);
       if (methods.length > 0) {
@@ -347,6 +350,7 @@ export default function DreamPortalPage() {
           description: "This email is already in use. Please try logging in instead.",
           variant: "destructive",
         });
+        setIsSendingSignupLink(false);
         return;
       }
       
@@ -358,12 +362,21 @@ export default function DreamPortalPage() {
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
       toast({
         title: "Setup Link Sent!",
-        description: `A link to create your account has been sent to ${email}. Check your inbox.`,
+        description: `A link to create your account has been sent to ${email}. Please check your inbox and spam folder.`,
       });
       setLoginStep('email');
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast({ title: "Error", description: "Could not send setup link. Please try again.", variant: "destructive"});
+      let description = "Could not send setup link. Please try again.";
+
+      if (error.code === 'auth/unauthorized-continue-uri') {
+          setUnauthorizedDomainError(window.location.origin);
+          setIsSendingSignupLink(false);
+          setLockoutInfo({ until: 0, message: "The domain for the sign-up link is not authorized in your Firebase project." });
+          setLoginStep('locked');
+          return;
+      }
+      toast({ title: "Error", description: description, variant: "destructive"});
     } finally {
       setIsSendingSignupLink(false);
     }
