@@ -38,8 +38,6 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:...:web:...
 PEXELS_API_KEY=your_pexels_api_key
 ```
 
-You must also add these environment variables to your hosting provider's settings (e.g., Vercel, Netlify, Firebase App Hosting).
-
 ### 3. Authorize Your Domain
 
 - In your **production** Firebase project, go to **Authentication > Settings > Authorized domains**.
@@ -52,10 +50,44 @@ The `firestore.rules` file in this project has been updated with secure rules su
 firebase deploy --only firestore:rules
 ```
 
-### 5. Build and Deploy Your App
+### 5. Configure for Firebase App Hosting
 
-- Run the build command:
-  ```bash
-  npm run build
-  ```
-- Deploy the application to your hosting provider of choice.
+Your project is already configured for Firebase App Hosting, the recommended way to deploy Next.js apps to Firebase.
+
+Open `apphosting.yaml` and replace `your-prod-project-id` with your actual production Firebase Project ID. This will automatically connect your app to Firebase Hosting.
+
+```yaml
+hosting:
+  site: your-prod-project-id
+```
+
+### 6. Deploy to Firebase App Hosting
+
+You'll use the Firebase Command Line Interface (CLI) to deploy your app.
+
+1.  **Install the Firebase CLI** if you haven't already:
+    ```bash
+    npm install -g firebase-tools
+    ```
+
+2.  **Login to Firebase:**
+    ```bash
+    firebase login
+    ```
+
+3.  **Link your local project** to your production Firebase project. Run the following command and select your production project from the list:
+    ```bash
+    firebase use --add
+    ```
+
+4.  **Create the App Hosting backend:** This is a one-time setup command.
+    ```bash
+    firebase apphosting:backends:create
+    ```
+
+5.  **Deploy your app:**
+    ```bash
+    firebase deploy
+    ```
+
+After deployment is complete, your application will be live on the domain provided by Firebase Hosting.
