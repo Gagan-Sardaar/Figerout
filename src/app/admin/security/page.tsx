@@ -210,10 +210,10 @@ export default function AdminSecurityPage() {
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger className="text-muted-foreground text-xs cursor-default">
-                                                {formatDistanceToNow((log.timestamp as unknown as Timestamp).toDate(), { addSuffix: true })}
+                                                {formatDistanceToNow(log.timestamp, { addSuffix: true })}
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                <p>{(log.timestamp as unknown as Timestamp).toDate().toLocaleString()}</p>
+                                                <p>{log.timestamp.toLocaleString()}</p>
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>

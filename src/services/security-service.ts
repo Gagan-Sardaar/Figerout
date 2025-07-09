@@ -6,7 +6,7 @@ import { addLogEntry } from './logging-service';
 export interface FailedLoginAttempt {
   id?: string;
   email: string;
-  timestamp: Timestamp;
+  timestamp: Date;
   ipAddress: string; // Placeholder
   location: string; // Placeholder
   lockoutPeriod?: string;
@@ -31,53 +31,53 @@ export async function getLockoutState(email: string): Promise<LockoutState | nul
     return null;
 }
 
-// This function simulates what a backend would do.
 export async function processFailedLogin(email: string): Promise<LockoutState> {
     const lowercasedEmail = email.toLowerCase();
-    const docRef = doc(lockoutsCollectionRef, lowercasedEmail);
+    const lockoutDocRef = doc(lockoutsCollectionRef, lowercasedEmail);
+    const currentLockoutState = await getLockoutState(lowercasedEmail);
 
-    const currentState = await getLockoutState(lowercasedEmail);
+    const attempts = (currentLockoutState?.attempts || 0) + 1;
     const now = new Date();
-    
-    const attempts = (currentState?.attempts || 0) + 1;
-    let lockoutUntil: Date | null = null;
+
+    let newLockoutUntil: Date | null = null;
     let lockoutMessage = "";
-    let lockoutPeriod: string | undefined = undefined;
+    let lockoutPeriodLog: string | undefined = undefined;
 
     if (attempts >= 9) {
-        lockoutUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-        lockoutMessage = `Account locked for 30 days.`;
-        lockoutPeriod = "30 days";
+        newLockoutUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        lockoutMessage = "Account locked for 30 days.";
+        lockoutPeriodLog = "30 days";
     } else if (attempts >= 6) {
-        lockoutUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
-        lockoutMessage = `Account locked for 24 hours.`;
-        lockoutPeriod = "24 hours";
+        newLockoutUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        lockoutMessage = "Account locked for 24 hours.";
+        lockoutPeriodLog = "24 hours";
     } else if (attempts >= 3) {
-        lockoutUntil = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes
-        lockoutMessage = `Login locked for 15 minutes.`;
-        lockoutPeriod = "15 minutes";
+        newLockoutUntil = new Date(now.getTime() + 15 * 60 * 1000);
+        lockoutMessage = "Login locked for 15 minutes.";
+        lockoutPeriodLog = "15 minutes";
     }
 
-    // Log the attempt with the lockout period. Firestore omits 'undefined' fields.
+    // This log entry is for the security dashboard table
     await addDoc(failedLoginsCollectionRef, {
         email: lowercasedEmail,
         timestamp: serverTimestamp(),
         ipAddress: "127.0.0.1 (simulated)",
         location: "Local (simulated)",
-        lockoutPeriod: lockoutPeriod,
+        lockoutPeriod: lockoutPeriodLog, // This is the field in question
     });
-
-    const newState: LockoutState = {
+    
+    // This state is for enforcing the lockout
+    const newLockoutStateData: LockoutState = {
         email: lowercasedEmail,
         attempts: attempts,
-        until: lockoutUntil ? Timestamp.fromDate(lockoutUntil) : null,
+        until: newLockoutUntil ? Timestamp.fromDate(newLockoutUntil) : null,
     };
-
-    await setDoc(docRef, newState);
+    await setDoc(lockoutDocRef, newLockoutStateData);
     
+    // This is for the general-purpose activity log
     await addLogEntry('failed_login_attempt', `Failed login for ${email}. Attempt #${attempts}. ${lockoutMessage}`, { email, attempts });
     
-    return newState;
+    return newLockoutStateData;
 }
 
 export async function resetLockout(email: string): Promise<void> {
@@ -90,11 +90,12 @@ export async function resetLockout(email: string): Promise<void> {
 export async function clearSuccessfulLogin(email: string): Promise<void> {
     const lowercasedEmail = email.toLowerCase();
     const docRef = doc(lockoutsCollectionRef, lowercasedEmail);
-    const currentState = await getLockoutState(lowercasedEmail);
-    // Only clear if not under a long-term lockout
-    if (currentState && currentState.attempts < 6) {
-       await deleteDoc(docRef);
-    }
+    // On successful login, always remove the lockout state.
+    await deleteDoc(docRef).catch((e) => {
+        if (e.code !== 'not-found') { // It's ok if the doc doesn't exist.
+            console.error("Error clearing successful login state:", e);
+        }
+    });
 }
 
 export function onFailedLoginsChange(
@@ -106,7 +107,15 @@ export function onFailedLoginsChange(
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
     const attempts = querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      return { id: doc.id, ...data } as FailedLoginAttempt;
+      const timestamp = data.timestamp as Timestamp;
+      return {
+        id: doc.id,
+        email: data.email,
+        timestamp: timestamp?.toDate ? timestamp.toDate() : new Date(),
+        ipAddress: data.ipAddress,
+        location: data.location,
+        lockoutPeriod: data.lockoutPeriod,
+      } as FailedLoginAttempt;
     });
     callback(attempts);
   }, (error) => {
