@@ -316,16 +316,18 @@ export default function DreamPortalPage() {
         setLoginStep('email');
     } catch (error: any) {
         console.error(error);
+        let description = 'Could not send login link. Please try again.';
+
         if (error.code === 'auth/unauthorized-continue-uri') {
             setUnauthorizedDomainError(window.location.origin);
             setIsSendingLink(false);
             return;
-        }
-
-        let description = 'Could not send login link. Please try again.';
-        if (error.code === 'auth/operation-not-allowed') {
+        } else if (error.code === 'auth/quota-exceeded') {
+            description = "The daily quota for sending email links has been exceeded. Please try again tomorrow, or log in with your password.";
+        } else if (error.code === 'auth/operation-not-allowed') {
             description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
         }
+        
         toast({ title: 'Error Sending Link', description, variant: 'destructive', duration: 9000 });
     } finally {
         setIsSendingLink(false);
