@@ -9,6 +9,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -441,10 +442,10 @@ export default function DreamPortalPage() {
                             {loginStep === 'email' ? 'Enter your email to continue' : `Signing in as ${email}`}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleSubmit} className="grid gap-3">
+                    <CardContent className="pb-4">
+                      <form onSubmit={handleSubmit} className="grid gap-4">
                         {loginStep === 'email' ? (
-                          <div className="grid gap-2">
+                          <div className="grid gap-1">
                             <Label htmlFor="email">Email</Label>
                             <Input
                               id="email"
@@ -459,7 +460,7 @@ export default function DreamPortalPage() {
                           </div>
                         ) : (
                           <>
-                            <div className="grid gap-2">
+                            <div className="grid gap-1">
                               <Label htmlFor="email-display">Email</Label>
                               <div className="flex items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
                                 <span className="truncate">{email}</span>
@@ -471,7 +472,7 @@ export default function DreamPortalPage() {
                                 </Button>
                               </div>
                             </div>
-                            <div className="grid gap-2">
+                            <div className="grid gap-1">
                               <div className="flex items-center">
                                 <Label htmlFor="password">Password</Label>
                                 <Link
@@ -511,7 +512,7 @@ export default function DreamPortalPage() {
                         
                         {loginStep === 'password' && (
                           <>
-                            <div className="relative my-1">
+                            <div className="relative my-0">
                               <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/20" />
                               </div>
@@ -527,21 +528,22 @@ export default function DreamPortalPage() {
                             </Button>
                           </>
                         )}
-                        
-                        <Button variant="ghost" className="w-full" asChild>
+                      </form>
+                    </CardContent>
+                    <CardFooter className="flex-col items-center gap-2 pt-4 border-t border-white/10">
+                        <Button variant="ghost" className="w-full text-sm" asChild>
                             <Link href="/">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Back to Home
                             </Link>
                         </Button>
-                      </form>
-                      <div className="mt-2 text-center text-sm">
+                        <div className="text-center text-sm">
                           Don&apos;t have an account?{" "}
                           <AlertDialogTrigger asChild>
-                              <Button variant="link" className="underline p-0 h-auto text-primary">Sign up</Button>
+                              <Button variant="link" className="underline p-0 h-auto text-primary text-sm">Sign up</Button>
                           </AlertDialogTrigger>
-                      </div>
-                    </CardContent>
+                        </div>
+                    </CardFooter>
                 </Card>
 
                 <AlertDialogContent>
