@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { searchPexelsImage } from "@/app/actions";
-import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
+import { Loader2, User, Eye, EyeOff, ArrowLeft, AlertTriangle, Mail, Copy, Check } from "lucide-react";
 import { saveColor } from "@/services/color-service";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, User as FirebaseUser, sendSignInLinkToEmail, fetchSignInMethodsForEmail, sendPasswordResetEmail } from "firebase/auth";
@@ -45,6 +45,7 @@ export default function DreamPortalPage() {
   const [isSendingLink, setIsSendingLink] = useState(false);
   const [isSendingSignupLink, setIsSendingSignupLink] = useState(false);
   const [unauthorizedDomainError, setUnauthorizedDomainError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
 
   useEffect(() => {
@@ -314,7 +315,7 @@ export default function DreamPortalPage() {
 
         if (error.code === 'auth/unauthorized-continue-uri' || (error.message && error.message.includes('unauthorized-continue-uri'))) {
             setUnauthorizedDomainError(window.location.origin);
-            setLockoutInfo({ until: 0, message: "The domain for the login link is not authorized in your Firebase project." });
+            setLockoutInfo({ until: 0, message: "This app's domain is not authorized in your Firebase project." });
             setLoginStep('locked');
             return;
         } else if (error.code === 'auth/operation-not-allowed') {
@@ -370,7 +371,7 @@ export default function DreamPortalPage() {
 
       if (error.code === 'auth/unauthorized-continue-uri' || (error.message && error.message.includes('unauthorized-continue-uri'))) {
           setUnauthorizedDomainError(window.location.origin);
-          setLockoutInfo({ until: 0, message: "The domain for the sign-up link is not authorized in your Firebase project." });
+          setLockoutInfo({ until: 0, message: "This app's domain is not authorized in your Firebase project." });
           setLoginStep('locked');
           return;
       }
@@ -391,6 +392,15 @@ export default function DreamPortalPage() {
     }
   };
 
+  const handleCopyDomain = () => {
+    if (unauthorizedDomainError) {
+        navigator.clipboard.writeText(unauthorizedDomainError);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        toast({ title: "Domain Copied!", description: "The domain has been copied to your clipboard." });
+    }
+  };
+
   if (!authChecked) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-black">
@@ -408,7 +418,7 @@ export default function DreamPortalPage() {
         </CardTitle>
         <CardDescription>
           {unauthorizedDomainError ?
-            "This app's domain must be authorized in Firebase." :
+            lockoutInfo?.message :
             lockoutInfo?.message
           }
         </CardDescription>
@@ -420,7 +430,12 @@ export default function DreamPortalPage() {
                 <AlertTitle>Action Required</AlertTitle>
                 <AlertDescription>
                     <p className="mb-2">To use email link sign-in, you must add this domain to your Firebase project's authorized domains list:</p>
-                    <code className="mt-2 mb-2 block bg-muted p-2 rounded-md text-sm font-mono break-all">{unauthorizedDomainError}</code>
+                    <div className="relative">
+                        <code className="mt-2 mb-2 block bg-muted p-2 rounded-md text-sm font-mono break-all pr-10">{unauthorizedDomainError}</code>
+                        <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={handleCopyDomain}>
+                            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                    </div>
                     <p className="mb-4 text-xs">Go to Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains to add it.</p>
                     <Button onClick={() => { setUnauthorizedDomainError(null); handleSendLoginLink(); }} className="w-full" disabled={isSendingLink}>
                         {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -501,7 +516,7 @@ export default function DreamPortalPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pb-4">
-                      <form onSubmit={handleSubmit} className="grid gap-4">
+                      <form onSubmit={handleSubmit} className="grid gap-2">
                         {loginStep === 'password' ? (
                           <>
                             <div className="grid gap-1">
@@ -546,47 +561,11 @@ export default function DreamPortalPage() {
                                 </button>
                               </div>
                             </div>
-                          </>
-                        ) : (
-                          <div className="grid gap-1">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="m@example.com"
-                              required
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className="bg-background/50 border-white/20 focus:bg-background/70"
-                              autoFocus
-                            />
-                          </div>
-                        )}
-                        
-                        {loginStep === 'email' && (
-                           <Button type="submit" className="w-full" disabled={isCheckingEmail}>
-                             {isCheckingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                             Continue
-                           </Button>
-                        )}
-                        {loginStep === 'signup' && (
-                          <>
-                            <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
-                              {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                              Send Setup Link
-                            </Button>
-                            <p className="text-xs text-center text-muted-foreground px-2 pt-1">
-                              If you don&apos;t receive an email, please ensure your app&apos;s domain is added to your Firebase project&apos;s &quot;Authorized domains&quot;.
-                            </p>
-                          </>
-                        )}
-                        {loginStep === 'password' && (
-                          <>
-                            <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                             <Button type="submit" className="w-full mt-2" disabled={isLoggingIn}>
                               {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                               Login
                             </Button>
-                            <div className="relative my-0">
+                            <div className="relative my-1">
                               <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/20" />
                               </div>
@@ -601,30 +580,61 @@ export default function DreamPortalPage() {
                               Login with email link
                             </Button>
                           </>
+                        ) : (
+                          <div className="grid gap-1">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="m@example.com"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="bg-background/50 border-white/20 focus:bg-background/70"
+                              autoFocus
+                            />
+                             {loginStep === 'signup' && (
+                                <p className="text-xs text-muted-foreground px-1 pt-1">
+                                  If you don&apos;t receive an email, ensure your app&apos;s domain is added to your Firebase project&apos;s &quot;Authorized domains&quot;.
+                                </p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {loginStep === 'email' && (
+                           <Button type="submit" className="w-full" disabled={isCheckingEmail}>
+                             {isCheckingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                             Continue
+                           </Button>
+                        )}
+                        {loginStep === 'signup' && (
+                          <Button type="submit" className="w-full" disabled={isSendingSignupLink}>
+                            {isSendingSignupLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Setup Link
+                          </Button>
                         )}
                       </form>
                     </CardContent>
-                    <CardFooter className="flex-col items-center gap-2 pt-4 border-t border-white/10">
-                        {loginStep !== 'password' && (
-                            <Button variant="ghost" className="w-full text-sm" asChild>
-                                <Link href="/">
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Back to Home
-                                </Link>
-                            </Button>
-                        )}
-                        {loginStep === 'email' && (
-                            <div className="text-center text-sm">
-                                Don&apos;t have an account?{" "}
-                                <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('signup')}>Sign up</Button>
-                            </div>
-                        )}
-                        {loginStep === 'signup' && (
-                             <div className="text-center text-sm">
-                                Already have an account?{" "}
-                                <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('email')}>Login</Button>
-                            </div>
-                        )}
+                    <CardFooter className="flex flex-col items-center gap-2 pt-2">
+                       <Button variant="ghost" className="w-full text-sm font-normal text-muted-foreground" asChild>
+                          <Link href="/">
+                              <ArrowLeft className="mr-2 h-4 w-4" />
+                              Back to Home
+                          </Link>
+                      </Button>
+                      <Separator className="w-1/2 bg-white/10 my-1"/>
+                      {loginStep === 'email' && (
+                          <div className="text-center text-sm text-muted-foreground">
+                              Don&apos;t have an account?{" "}
+                              <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('signup')}>Sign up</Button>
+                          </div>
+                      )}
+                      {loginStep === 'signup' && (
+                            <div className="text-center text-sm text-muted-foreground">
+                              Already have an account?{" "}
+                              <Button variant="link" type="button" className="underline p-0 h-auto text-primary text-sm" onClick={() => setLoginStep('email')}>Login</Button>
+                          </div>
+                      )}
                     </CardFooter>
                 </Card>
             )}
