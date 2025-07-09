@@ -316,8 +316,10 @@ export default function DreamPortalPage() {
         let description = 'Could not send login link. Please try again.';
         if (error.code === 'auth/operation-not-allowed') {
             description = 'Email link sign-in is not enabled in your Firebase project. Please enable it in the Authentication settings of your Firebase console.';
+        } else if (error.code === 'auth/unauthorized-continue-uri') {
+            description = `The current domain (${window.location.origin}) is not authorized for this action. Please add it to the 'Authorized domains' list in your Firebase Authentication settings.`;
         }
-        toast({ title: 'Error sending link', description: description, variant: 'destructive' });
+        toast({ title: 'Error Sending Link', description, variant: 'destructive', duration: 9000 });
     } finally {
         setIsSendingLink(false);
     }
