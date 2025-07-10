@@ -7,6 +7,9 @@ runConfig:
   # cpu: 1
   # memoryMiB: 512
 
+# The directory that contains your application source code.
+rootDir: /
+
 # Environment variables and secrets.
 # env:
   # Configure environment variables.
