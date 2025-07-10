@@ -24,3 +24,4 @@ rootDir: /
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET
   #   secret: mySecretRef
+backend: figerout-8f8d5
