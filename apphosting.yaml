@@ -1,22 +1,23 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
-
-# Production-ready compute settings.
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  cpu: 1
-  memoryMiB: 512
-  maxInstances: 10 # Allow scaling up to 10 instances for production traffic.
+  minInstances: 0
+  # maxInstances: 100
+  # concurrency: 80
+  # cpu: 1
+  # memoryMiB: 512
 
-# Automatically connect your backend to a Firebase Hosting site
-# upon deployment. This makes your app accessible at your Firebase project's URL.
-# https://firebase.google.com/docs/app-hosting/configure#connect-backend-hosting
-hosting:
-  # The "site" value is the ID of the hosting site to which you want to connect.
-  # This is usually the same as your Firebase Project ID.
-  # You can find this value in the Firebase console.
-  site: your-prod-project-id
+# Environment variables and secrets.
+# env:
+  # Configure environment variables.
+  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
+  # - variable: MESSAGE
+  #   value: Hello world!
+  #   availability:
+  #     - BUILD
+  #     - RUNTIME
 
-# To deploy with environment variables (like your PEXELS_API_KEY), run this command:
-# firebase apphosting:backends:update --update-env-vars=PEXELS_API_KEY=your_key_here
-#
-# DO NOT check your secret values into source control.
+  # Grant access to secrets in Cloud Secret Manager.
+  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+  # - variable: MY_SECRET
+  #   secret: mySecretRef
